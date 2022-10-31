@@ -3,7 +3,6 @@ import modules.helper as helper
 import modules.models as models
 
 
-
 def main():
     project_path, data_path, config = helper.initialize(sys.argv)
     train_set, test_set, number_of_columns = helper.process(data_path, config)
