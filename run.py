@@ -12,4 +12,4 @@ def main():
     helper.plot(test_data, reconstructed_data)
 
 if __name__ == "__main__":
-	main()
+    main()
