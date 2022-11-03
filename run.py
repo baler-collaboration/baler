@@ -10,7 +10,9 @@ def main():
     model = models.george_SAE(n_features=number_of_columns, z_dim=25)
 
     test_data, reconstructed_data = helper.train(model,number_of_columns,train_set,test_set,project_path,config)
-    helper.plot(test_data, reconstructed_data)
+    test_data_renorm = helper.undo_normalization(test_data,test_set,train_set,config)
+    reconstructed_data_renorm = helper.undo_normalization(reconstructed_data,test_set,train_set,config)
+    helper.plot(test_data_renorm, reconstructed_data_renorm)
 
 if __name__ == "__main__":
     main()

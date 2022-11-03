@@ -1,8 +1,12 @@
+from argparse import Namespace
+from matplotlib.pyplot import sca
 from matplotlib.style import library
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import MinMaxScaler
 import json
 import pandas as pd
 import uproot 
+import numpy as np
 
 def import_config(config_path):
     with open (config_path) as json_config:
@@ -33,12 +37,16 @@ def load_data(data_path,config):
         df = pd.read_csv(data_path,low_memory=False)
     elif ".root" in data_path[-5:]:
         tree = uproot.open(data_path)[config["Branch"]][config["Collection"]][config["Objects"]]
-        df = tree.arrays(Type_clearing(tree), library="pd")
+        global Names
+        Names = Type_clearing(tree)
+        df = tree.arrays(Names, library="pd")
     return df
 
 def clean_data(df,config):
     df = df.drop(columns=config["dropped_variables"])
     df = df.dropna()
+    global cleared_column_names
+    cleared_column_names = list(df)
     #df.to_csv(config.pre_processed_csv_path)
     #columns = list(df.columns)
     return df
@@ -47,7 +55,17 @@ def normalize_data(df,config):
     if  config["custom_norm"] == True:
         pass
     elif config["custom_norm"] == False:
-        pass
+        global min_max_scaler
+        min_max_scaler = MinMaxScaler()
+        
+        df = np.transpose(np.array(df))
+
+        scaled_df = min_max_scaler.fit_transform(df)
+
+        global scaling_array 
+        scaling_array = min_max_scaler.scale_
+
+        df = pd.DataFrame(scaled_df.T,columns=cleared_column_names)
     return df
     epoch_loss = running_loss / counter
     print(f" Train Loss: {loss:.6f}")
@@ -58,3 +76,28 @@ def split(df, test_size,random_state):
 
 def get_columns(df):
     return list(df.columns)
+
+def undo_normalization(data,test_set,train_set,config):
+    if  config["custom_norm"] == True:
+        pass
+    elif config["custom_norm"] == False:
+
+        # To find out which indices have been selected for training/testing, we check:
+        scaling_list = scaling_array.tolist()
+        train_set_list = train_set.index.tolist()
+        test_set_list = test_set.index.tolist()
+
+        #Get the scaling values we're interested in
+        # This loop is very slow. Needs to be faster. Too tired at the moment to fix it, but I don't think its that hard.
+        for index in sorted(train_set_list, reverse=True):
+            del scaling_list[index]
+        
+        # Drop the list of variables which we won't use anymore from the dataframe:
+        # We now take the trained data as input, make it a dataframe with the indices of the test_set.
+        # The data will be a np.array when outputed from the training. 
+        data = pd.DataFrame(data,index=test_set_list,columns=cleared_column_names)
+        data = (data.T / np.array(scaling_list)).T
+
+
+        print("After training and all, the value is: ",data.loc[data.index[0],"recoGenJets_slimmedGenJets__PAT.obj.m_state.p4Polar_.fCoordinates.fPt"])
+    return data
