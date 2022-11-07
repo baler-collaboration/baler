@@ -1,7 +1,6 @@
 import sys
 import modules.helper as helper
 import modules.models as models
-import pickle
 
 def main():
     input_path, output_path, model, config, mode = helper.get_arguments()
@@ -12,10 +11,9 @@ def main():
         test_data, reconstructed_data = helper.train(model,number_of_columns,train_set,test_set,output_path,config)
         test_data_renorm = helper.undo_normalization(test_data,test_set,train_set,config)
         reconstructed_data_renorm = helper.undo_normalization(reconstructed_data,test_set,train_set,config)
-        with open(output_path+'before.pickle', 'wb') as handle:
-            pickle.dump(test_data_renorm, handle)
-        with open(output_path+'after.pickle', 'wb') as handle:
-            pickle.dump(reconstructed_data_renorm, handle)
+
+        helper.to_pickle(test_data_renorm, output_path+'before.pickle')
+        helper.to_pickle(reconstructed_data_renorm, output_path+'after.pickle')
 
     elif mode == "plot":
         helper.plot(input_path, output_path)

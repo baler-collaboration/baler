@@ -4,6 +4,7 @@ import modules.plotting as plotting
 import modules.data_processing as data_processing
 import argparse
 import json
+import pickle
 
 def get_arguments():
     parser = argparse.ArgumentParser(
@@ -23,6 +24,10 @@ def get_arguments():
     if args.config: config = data_processing.import_config(args.config)
     else: config = args.config
     return args.input, args.output, args.model, config, args.mode
+
+def to_pickle(data, path):
+    with open(path, 'wb') as handle:
+        pickle.dump(data, handle)
 
 def process(data_path, config):
     df = data_processing.load_data(data_path,config)
