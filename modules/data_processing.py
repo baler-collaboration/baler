@@ -97,7 +97,4 @@ def undo_normalization(data,test_set,train_set,config):
         # The data will be a np.array when outputed from the training. 
         data = pd.DataFrame(data,index=test_set_list,columns=cleared_column_names)
         data = (data.T / np.array(scaling_list)).T
-
-
-        print("After training and all, the value is: ",data.loc[data.index[0],"recoGenJets_slimmedGenJets__PAT.obj.m_state.p4Polar_.fCoordinates.fPt"])
     return data

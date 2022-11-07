@@ -24,7 +24,6 @@ def get_arguments():
 def process(data_path, config):
     df = data_processing.load_data(data_path,config)
     df = data_processing.clean_data(df,config)
-    print("As a double check, the 159363rd pt value is before norm & de-norm: ",df.loc[df.index[159363],"recoGenJets_slimmedGenJets__PAT.obj.m_state.p4Polar_.fCoordinates.fPt"])
     df = data_processing.normalize_data(df,config)
     train_set, test_set = data_processing.split(df, test_size=config["test_size"], random_state=1)
     number_of_columns = len(data_processing.get_columns(df))
