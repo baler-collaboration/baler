@@ -20,7 +20,9 @@ def get_arguments():
     parser.add_argument('--output', type=str, required=True, help='Path of output data')
     parser.add_argument('--mode', type=str, required=True, help='train, compress, decompress, plot')
     args = parser.parse_args()
-    return args.input, args.output, args.model, data_processing.import_config(args.config), args.mode
+    if args.config: config = data_processing.import_config(args.config)
+    else: config = args.config
+    return args.input, args.output, args.model, config, args.mode
 
 def process(data_path, config):
     df = data_processing.load_data(data_path,config)
