@@ -4,6 +4,7 @@ import modules.plotting as plotting
 import modules.data_processing as data_processing
 import argparse
 import json
+import pickle
 
 def get_arguments():
     parser = argparse.ArgumentParser(
@@ -18,13 +19,19 @@ def get_arguments():
     parser.add_argument('--model', type=str, required=False, help='Path to previously derived machinelearning model')
     parser.add_argument('--input', type=str, required=True, help='Path to input data set for compression')
     parser.add_argument('--output', type=str, required=True, help='Path of output data')
+    parser.add_argument('--mode', type=str, required=True, help='train, compress, decompress, plot')
     args = parser.parse_args()
-    return args.input, args.output, args.model, data_processing.import_config(args.config)
+    if args.config: config = data_processing.import_config(args.config)
+    else: config = args.config
+    return args.input, args.output, args.model, config, args.mode
+
+def to_pickle(data, path):
+    with open(path, 'wb') as handle:
+        pickle.dump(data, handle)
 
 def process(data_path, config):
     df = data_processing.load_data(data_path,config)
     df = data_processing.clean_data(df,config)
-    print("As a double check, the 159363rd pt value is before norm & de-norm: ",df.loc[df.index[159363],"recoGenJets_slimmedGenJets__PAT.obj.m_state.p4Polar_.fCoordinates.fPt"])
     df = data_processing.normalize_data(df,config)
     train_set, test_set = data_processing.split(df, test_size=config["test_size"], random_state=1)
     number_of_columns = len(data_processing.get_columns(df))
