@@ -2,14 +2,24 @@ import modules.models as models
 import modules.training as training
 import modules.plotting as plotting
 import modules.data_processing as data_processing
+import argparse
+import json
 
-def initialize(arguments):
-    project_name = arguments[1]
-    project_path = f"projects/{project_name}/"
-    config_path = arguments[2]
-    data_path = arguments[3]
-    config = data_processing.import_config(config_path)
-    return project_path, data_path, config
+def get_arguments():
+    parser = argparse.ArgumentParser(
+                    prog = "baler.py",
+                    description =   '''Baler is a machine learning based compression tool for big data.\n
+                                    Baler has three running modes:\n
+                                    \t1. Derivation: Using a configuration file and a "small" input dataset, Baler derives a machine learning model optimized to compress and decompress your data.\n
+                                    \t2. Compression: Using a previously derived model and a large input dataset, Baler compresses your data and outputs a smaller compressed file.\n
+                                    \t3. Decompression: Using a previously compressed file as input and a model, Baler decompresses your data into a larger file.''',
+                    epilog = 'Enjoy!')
+    parser.add_argument('--config', type=str, required=False, help='Path to config file')
+    parser.add_argument('--model', type=str, required=False, help='Path to previously derived machinelearning model')
+    parser.add_argument('--input', type=str, required=True, help='Path to input data set for compression')
+    parser.add_argument('--output', type=str, required=True, help='Path of output data')
+    args = parser.parse_args()
+    return args.input, args.output, args.model, data_processing.import_config(args.config)
 
 def process(data_path, config):
     df = data_processing.load_data(data_path,config)
