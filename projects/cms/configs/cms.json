@@ -1,10 +1,11 @@
 {
-    "epochs" : 10,
+    "epochs" : 2,
     "custom_norm" : false,
     "l1" : true,
     "reg_param" : 0.001,
     "RHO" : 0.05,
     "lr" : 0.001,
+    "batch_size" : 512,
     "test_size" : 0.15,
     "Branch" : "Events",
     "Collection": "recoGenJets_slimmedGenJets__PAT.",
