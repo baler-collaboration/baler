@@ -39,6 +39,7 @@ def validate(model, test_dl, test_ds, model_children,reg_param):
 
 def train(model,variables, train_data, test_data, parent_path, config):
     learning_rate = config["lr"]
+    bs = config["batch_size"]
     reg_param = config["reg_param"]
     RHO = config["RHO"]
     l1 = config["l1"]
@@ -52,8 +53,6 @@ def train(model,variables, train_data, test_data, parent_path, config):
                              torch.tensor(train_data.values, dtype=torch.float))
     valid_ds = TensorDataset(torch.tensor(test_data.values, dtype=torch.float),
                              torch.tensor(test_data.values, dtype=torch.float))
-
-    bs = 512
 
     # Converts the TensorDataset into a DataLoader object and combines into one DataLoaders object (a basic wrapper
     # around several DataLoader objects).
@@ -80,9 +79,11 @@ def train(model,variables, train_data, test_data, parent_path, config):
     pd.DataFrame(val_loss).to_csv(parent_path+"loss_val_data.csv")
 
     data = torch.tensor(test_data.values, dtype=torch.float)
-
+    encoded_data = model.encode(data)
+    
     pred = model(data)
     pred = pred.detach().numpy()
     data = data.detach().numpy()
+    encoded_data = encoded_data.detach().numpy()
 
-    return data, pred
+    return data, pred, encoded_data

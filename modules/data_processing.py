@@ -7,11 +7,29 @@ import json
 import pandas as pd
 import uproot 
 import numpy as np
+import torch 
 
 def import_config(config_path):
     with open (config_path) as json_config:
         config = json.load(json_config)
     return config
+
+def save_model(model,model_path):
+
+    # Add functionality to save full model or just state_dict. 
+
+    return torch.save(model,model_path)
+
+def load_model(model_path):
+    model = torch.load(model_path)
+
+    # Add functionality to check if state_dict has been saved or not.
+
+    #if isinstance(model,OrderedDict) == True:
+    #        model.load_state_dict(model)
+    #        return model
+    #else:
+    return model 
 
 def Type_clearing(TTree):
     typenames = TTree.typenames()
@@ -88,11 +106,10 @@ def undo_normalization(data,test_set,train_set,config):
         test_set_list = test_set.index.tolist()
 
         #Get the scaling values we're interested in
-        # This loop is very slow. Needs to be faster. Too tired at the moment to fix it, but I don't think its that hard.
+        # This loop is very slow. Needs to be faster.
         for index in sorted(train_set_list, reverse=True):
             del scaling_list[index]
         
-        # Drop the list of variables which we won't use anymore from the dataframe:
         # We now take the trained data as input, make it a dataframe with the indices of the test_set.
         # The data will be a np.array when outputed from the training. 
         data = pd.DataFrame(data,index=test_set_list,columns=cleared_column_names)
