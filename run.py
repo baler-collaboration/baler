@@ -3,39 +3,52 @@ import modules.helper as helper
 import modules.models as models
 import torch 
 import torch.optim as optim
+import time
 
 def main():
     input_path, output_path, model, config, mode = helper.get_arguments()
 
     if mode == "train":
         train_set, test_set, number_of_columns = helper.process(input_path, config)
-        model = models.george_SAE(n_features=number_of_columns, z_dim=25)
-        test_data, reconstructed_data = helper.train(model,number_of_columns,train_set,test_set,output_path,config)
+        model = models.george_SAE(n_features=number_of_columns, z_dim=4)
+        test_data, reconstructed_data, encoded_data = helper.train(model,number_of_columns,train_set,test_set,output_path,config)
+
+        print("Un-normalzing...")
+        start = time.time()
         test_data_renorm = helper.undo_normalization(test_data,test_set,train_set,config)
         reconstructed_data_renorm = helper.undo_normalization(reconstructed_data,test_set,train_set,config)
+        end = time.time()
+        print("Un-normalization took: ",f"{(end - start) / 60:.3} minutes")
 
+        helper.to_pickle(encoded_data, output_path+'encoded_data.pickle')
         helper.to_pickle(test_data_renorm, output_path+'before.pickle')
         helper.to_pickle(reconstructed_data_renorm, output_path+'after.pickle')
+        helper.model_saver(model,output_path+'model_george.pt')
 
     elif mode == "plot":
         helper.plot(input_path, output_path)
 
-    optimizer = optim.Adam(model.parameters(),lr=0.001)
+    elif model == True and mode == "compress":
+        # We need to process the data first
+        train_set, test_set, number_of_columns = helper.process(input_path, config)
 
-    print("Model's state_dict:")
-    for param_tensor in model.state_dict():
-        print(param_tensor, "\t", model.state_dict()[param_tensor].size())
+        # Load the model
+        model = helper.model_loader(model)
+    
+        # Find a way to use the encoder with the given model. Currently the encoder is a model
 
-    print("Model weight:")    
-    print(model.weight)
+    elif mode == "info":# and model == True):
+        print("\n Loading the model and printing some information \n")
+        print("================================================ \n ")
+        model = helper.model_loader(model)
 
-    print("Model bias:")    
-    print(model.bias)
+        print("Model name and structure: \n",model.eval())
+        params = list(model.parameters())
+        print("Length of parameter list:",len(params))
+        print("Size of each element in params:",params[0].size())        
 
-    print("---")
-    print("Optimizer's state_dict:")
-    for var_name in optimizer.state_dict():
-        print(var_name, "\t", optimizer.state_dict()[var_name])
+
+
 
 if __name__ == "__main__":
     main()

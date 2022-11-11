@@ -7,11 +7,29 @@ import json
 import pandas as pd
 import uproot 
 import numpy as np
+import torch 
 
 def import_config(config_path):
     with open (config_path) as json_config:
         config = json.load(json_config)
     return config
+
+def save_model(model,model_path):
+
+    # Add functionality to save full model or just state_dict. 
+
+    return torch.save(model,model_path)
+
+def load_model(model_path):
+    model = torch.load(model_path)
+
+    # Add functionality to check if state_dict has been saved or not.
+
+    #if isinstance(model,OrderedDict) == True:
+    #        model.load_state_dict(model)
+    #        return model
+    #else:
+    return model 
 
 def Type_clearing(TTree):
     typenames = TTree.typenames()

@@ -79,9 +79,11 @@ def train(model,variables, train_data, test_data, parent_path, config):
     pd.DataFrame(val_loss).to_csv(parent_path+"loss_val_data.csv")
 
     data = torch.tensor(test_data.values, dtype=torch.float)
-
+    encoded_data = model.encode(data)
+    
     pred = model(data)
     pred = pred.detach().numpy()
     data = data.detach().numpy()
+    encoded_data = encoded_data.detach().numpy()
 
-    return data, pred
+    return data, pred, encoded_data

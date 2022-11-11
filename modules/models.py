@@ -47,6 +47,10 @@ class george_SAE(nn.Module):
         loss = mse_loss + reg_param * l1_loss
         return loss
 
+"""
+Georges model has just been split into Encoding and Decoding. None of these are used at the moment. 
+"""
+
 class Baler_Encoder(nn.Module):
     def __init__(self,n_features,z_dim):
         super(Baler_Encoder,self).__init__()
@@ -71,6 +75,16 @@ class Baler_Encoder(nn.Module):
         # z = x.view(batch_size,a,b,c) ? What is this
         return self.encode(x)
 
+    def loss(self, model_children, true_data, reconstructed_data, reg_param):
+        mse = nn.MSELoss()
+        mse_loss = mse(reconstructed_data, true_data)
+        l1_loss = 0
+        values = true_data
+        for i in range(len(model_children)):
+            values = F.relu((model_children[i](values)))
+            l1_loss += torch.mean(torch.abs(values))
+        loss = mse_loss + reg_param * l1_loss
+        return loss
 
 class Baler_Decoder(nn.Module):
     def __init__(self,n_features,z_dim):
@@ -95,3 +109,14 @@ class Baler_Decoder(nn.Module):
     def forward(self, x):
         # z = x.view(batch_size,a,b,c) ? What is this
         return self.decode(x)
+
+    def loss(self, model_children, true_data, reconstructed_data, reg_param):
+        mse = nn.MSELoss()
+        mse_loss = mse(reconstructed_data, true_data)
+        l1_loss = 0
+        values = true_data
+        for i in range(len(model_children)):
+            values = F.relu((model_children[i](values)))
+            l1_loss += torch.mean(torch.abs(values))
+        loss = mse_loss + reg_param * l1_loss
+        return loss

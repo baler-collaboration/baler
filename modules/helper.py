@@ -19,7 +19,8 @@ def get_arguments():
     parser.add_argument('--model', type=str, required=False, help='Path to previously derived machinelearning model')
     parser.add_argument('--input', type=str, required=True, help='Path to input data set for compression')
     parser.add_argument('--output', type=str, required=True, help='Path of output data')
-    parser.add_argument('--mode', type=str, required=True, help='train, compress, decompress, plot')
+    parser.add_argument('--mode', type=str, required=True, help='train, compress, decompress, plot, info ')
+
     args = parser.parse_args()
     if args.config: config = data_processing.import_config(args.config)
     else: config = args.config
@@ -39,11 +40,16 @@ def process(data_path, config):
     return train_set, test_set, number_of_columns
 
 def train(model,number_of_columns,train_set,test_set,project_path,config):
-    return training.train(model,number_of_columns,train_set,test_set,project_path,config)
+    return training.train(model, number_of_columns, train_set, test_set, project_path, config)
 
-#This returns a thing called data which is the final
 def undo_normalization(data,test_set,train_set,config):
-    return data_processing.undo_normalization(data, test_set,train_set, config)
+    return data_processing.undo_normalization(data, test_set, train_set, config)
     
 def plot(test_data, reconstructed_data):
     plotting.plot(test_data, reconstructed_data)
+
+def model_loader(model_path):
+    return data_processing.load_model(model_path)
+
+def model_saver(model,model_path):
+    return data_processing.save_model(model,model_path)
