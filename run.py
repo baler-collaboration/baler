@@ -10,7 +10,7 @@ def main():
 
     if mode == "train":
         train_set, test_set, number_of_columns = helper.process(input_path, config)
-        model = models.george_SAE(n_features=number_of_columns, z_dim=4)
+        model = models.george_SAE(n_features=number_of_columns, z_dim=config["latent_space_size"])
         test_data, reconstructed_data, encoded_data = helper.train(model,number_of_columns,train_set,test_set,output_path,config)
 
         print("Un-normalzing...")
