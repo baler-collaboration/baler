@@ -5,6 +5,7 @@ import modules.data_processing as data_processing
 import argparse
 import json
 import pickle
+import torch
 
 def get_arguments():
     parser = argparse.ArgumentParser(
@@ -53,3 +54,25 @@ def model_loader(model_path):
 
 def model_saver(model,model_path):
     return data_processing.save_model(model,model_path)
+
+def process_model(config):
+    import modules.models as model_path
+    model_name = config["model_name"]
+    class_attribute = getattr(model_path, model_name)
+    #model = class_attribute()
+    return class_attribute
+
+def detach(tensor):
+    return tensor.detach().numpy()
+
+def compress(model,number_of_columns,train_set,test_set,output_path,config):
+    data_as_tensor, pred_as_tensor = training.train(model,number_of_columns,train_set,test_set,output_path,config)
+
+    compressed_data = model.encode(data_as_tensor)
+    compressed_recon = model.encode(pred_as_tensor)
+
+    compressed_data = detach(compressed_data)
+    compressed_recon = detach(compressed_recon)
+
+    
+    return compressed_data,compressed_recon

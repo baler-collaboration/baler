@@ -1,8 +1,10 @@
 from argparse import Namespace
+from mimetypes import init
 from matplotlib.pyplot import sca
 from matplotlib.style import library
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
+from collections import OrderedDict
 import json
 import pandas as pd
 import uproot 
@@ -20,15 +22,12 @@ def save_model(model,model_path):
 
     return torch.save(model,model_path)
 
+def save_trained_model(model,model_path):
+    return torch.save(model.state_dict(),model_path)
+
 def load_model(model_path):
-    model = torch.load(model_path)
-
-    # Add functionality to check if state_dict has been saved or not.
-
+    model = model_path.model_name 
     #if isinstance(model,OrderedDict) == True:
-    #        model.load_state_dict(model)
-    #        return model
-    #else:
     return model 
 
 def Type_clearing(TTree):

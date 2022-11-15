@@ -10,8 +10,13 @@ def main():
 
     if mode == "train":
         train_set, test_set, number_of_columns = helper.process(input_path, config)
-        model = models.george_SAE(n_features=number_of_columns, z_dim=config["latent_space_size"])
-        test_data, reconstructed_data, encoded_data = helper.train(model,number_of_columns,train_set,test_set,output_path,config)
+        class_attribute = helper.process_model(config)
+        model = class_attribute(n_features=number_of_columns, z_dim=config["latent_space_size"])
+        test_data_tensor, reconstructed_data_tensor = helper.train(model,number_of_columns,train_set,test_set,output_path,config)
+        test_data = helper.detach(test_data_tensor)
+        reconstructed_data = helper.detach(reconstructed_data_tensor)
+
+        encoded_data = model.encode(reconstructed_data_tensor)
 
         print("Un-normalzing...")
         start = time.time()
@@ -28,16 +33,23 @@ def main():
     elif mode == "plot":
         helper.plot(input_path, output_path)
 
-    elif model == True and mode == "compress":
+    elif mode == "compress":
         # We need to process the data first
         train_set, test_set, number_of_columns = helper.process(input_path, config)
 
-        # Load the model
-        model = helper.model_loader(model)
-    
-        # Find a way to use the encoder with the given model. Currently the encoder is a model
+        # We need to process the model
+        class_attribute = helper.process_model(config)
+        model = class_attribute(n_features=number_of_columns, z_dim=config["latent_space_size"])
+        compressed_data, compressed_recon = helper.compress(model,number_of_columns,train_set,test_set,output_path,config)
+        helper.to_pickle(compressed_data, output_path+'compressed_data.pickle')
 
     elif mode == "info":# and model == True):
+        import modules.models as model_path
+        class1 = config["class_name"]
+        class_name = getattr(model_path, class1)
+        result = class_name()
+        print(type(result))
+        exit()
         print("\n Loading the model and printing some information \n")
         print("================================================ \n ")
         model = helper.model_loader(model)

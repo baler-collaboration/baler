@@ -1,5 +1,6 @@
 {
-    "epochs" : 2,
+    "epochs" : 1,
+    "model_name" : "george_SAE",
     "custom_norm" : false,
     "l1" : true,
     "reg_param" : 0.001,
