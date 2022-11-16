@@ -6,6 +6,13 @@ from matplotlib.backends.backend_pdf import PdfPages
 import matplotlib as mpl
 import sys
 
+def test_plot(df):
+    mass = df["recoGenJets_slimmedGenJets__PAT.obj.m_state.p4Polar_.fCoordinates.fM"]
+    invis_energy = df["recoGenJets_slimmedGenJets__PAT.obj.m_specific.m_InvisibleEnergy"]
+    plt.figure()
+    plt.hist(invis_energy,bins=500,density=True,histtype='step')
+    plt.show()
+
 def to_percent(y, position):
     # Ignore the passed in position. This has the effect of scaling the default
     # tick locations.

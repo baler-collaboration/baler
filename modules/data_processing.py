@@ -1,10 +1,8 @@
 from argparse import Namespace
-from mimetypes import init
 from matplotlib.pyplot import sca
 from matplotlib.style import library
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
-from collections import OrderedDict
 import json
 import pandas as pd
 import uproot 
@@ -18,7 +16,7 @@ def import_config(config_path):
 
 def save_model(model,model_path):
 
-    # Add functionality to save full model or just state_dict. 
+    #WIP: Add functionality to save full model or just state_dict. 
 
     return torch.save(model,model_path)
 
@@ -57,6 +55,8 @@ def load_data(data_path,config):
         global Names
         Names = Type_clearing(tree)
         df = tree.arrays(Names, library="pd")
+    elif ".pickle" in data_path[-8:]:
+        df = pd.read_pickle(data_path)
     return df
 
 def clean_data(df,config):
@@ -64,8 +64,6 @@ def clean_data(df,config):
     df = df.dropna()
     global cleared_column_names
     cleared_column_names = list(df)
-    #df.to_csv(config.pre_processed_csv_path)
-    #columns = list(df.columns)
     return df
 
 def normalize_data(df,config):
@@ -108,9 +106,10 @@ def undo_normalization(data,test_set,train_set,config):
         # This loop is very slow. Needs to be faster.
         for index in sorted(train_set_list, reverse=True):
             del scaling_list[index]
-        
+
         # We now take the trained data as input, make it a dataframe with the indices of the test_set.
         # The data will be a np.array when outputed from the training. 
         data = pd.DataFrame(data,index=test_set_list,columns=cleared_column_names)
         data = (data.T / np.array(scaling_list)).T
+        
     return data

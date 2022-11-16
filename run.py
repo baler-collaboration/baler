@@ -41,15 +41,12 @@ def main():
         class_attribute = helper.process_model(config)
         model = class_attribute(n_features=number_of_columns, z_dim=config["latent_space_size"])
         compressed_data, compressed_recon = helper.compress(model,number_of_columns,train_set,test_set,output_path,config)
+        compressed_data = helper.detach(compressed_data)
+        compressed_recon = helper.detach(compressed_recon)
         helper.to_pickle(compressed_data, output_path+'compressed_data.pickle')
 
     elif mode == "info":# and model == True):
-        import modules.models as model_path
-        class1 = config["class_name"]
-        class_name = getattr(model_path, class1)
-        result = class_name()
-        print(type(result))
-        exit()
+        print(" ========================== \n This is a mode for testing \n ========================== ")
         print("\n Loading the model and printing some information \n")
         print("================================================ \n ")
         model = helper.model_loader(model)

@@ -34,6 +34,11 @@ def to_pickle(data, path):
 def process(data_path, config):
     df = data_processing.load_data(data_path,config)
     df = data_processing.clean_data(df,config)
+    '''
+        #plotting.test_plot(df) #Uncomment to see the bug. Compare the histogram from this plot to the one 
+        #                                                                       created by "--mode = plot"
+
+    '''
     df = data_processing.normalize_data(df,config)
     train_set, test_set = data_processing.split(df, test_size=config["test_size"], random_state=1)
     number_of_columns = len(data_processing.get_columns(df))
@@ -59,7 +64,7 @@ def process_model(config):
     import modules.models as model_path
     model_name = config["model_name"]
     class_attribute = getattr(model_path, model_name)
-    #model = class_attribute()
+
     return class_attribute
 
 def detach(tensor):
@@ -70,9 +75,8 @@ def compress(model,number_of_columns,train_set,test_set,output_path,config):
 
     compressed_data = model.encode(data_as_tensor)
     compressed_recon = model.encode(pred_as_tensor)
-
-    compressed_data = detach(compressed_data)
-    compressed_recon = detach(compressed_recon)
-
-    
     return compressed_data,compressed_recon
+
+def decompress(model, number_of_columns, data, output_path, config):
+    tensor_input, = training.train(model,model, number_of_columns, data, output_path, config)
+    return 
