@@ -6,6 +6,8 @@ import argparse
 import json
 import pickle
 import torch
+import pandas
+import numpy
 
 def get_arguments():
     parser = argparse.ArgumentParser(
@@ -31,14 +33,32 @@ def to_pickle(data, path):
     with open(path, 'wb') as handle:
         pickle.dump(data, handle)
 
-def process(data_path, config):
+def model_init(config):
+    # This is used when we don't have saved model parameters.
+    ModelObject = data_processing.initialise_model(config=config)
+    return ModelObject
+
+def data_loader(data_path,config):
+    return data_processing.load_data(data_path,config)
+
+def numpy_to_tensor(data):
+    if isinstance(data, pandas.DataFrame):
+        data = data.to_numpy()
+    
+    return torch.from_numpy(data)
+
+def process_for_compression(data_path,config):
     df = data_processing.load_data(data_path,config)
     df = data_processing.clean_data(df,config)
-    '''
-        #plotting.test_plot(df) #Uncomment to see the bug. Compare the histogram from this plot to the one 
-        #                                                                       created by "--mode = plot"
 
-    '''
+    train_set, test_set = data_processing.split(df, test_size=config["test_size"], random_state=1)
+
+
+    return train_set, test_set
+
+def process(data_path, config):
+    df = data_processing.load_data(data_path,config)
+    df = data_processing.clean_data(df,config)    
     df = data_processing.normalize_data(df,config)
     train_set, test_set = data_processing.split(df, test_size=config["test_size"], random_state=1)
     number_of_columns = len(data_processing.get_columns(df))
@@ -60,23 +80,36 @@ def model_loader(model_path):
 def model_saver(model,model_path):
     return data_processing.save_model(model,model_path)
 
-def process_model(config):
-    import modules.models as model_path
-    model_name = config["model_name"]
-    class_attribute = getattr(model_path, model_name)
-
-    return class_attribute
-
 def detach(tensor):
     return tensor.detach().numpy()
 
-def compress(model,number_of_columns,train_set,test_set,output_path,config):
-    data_as_tensor, pred_as_tensor = training.train(model,number_of_columns,train_set,test_set,output_path,config)
+def compress(number_of_columns,model_path,input_path,config):
+    # Initialise and load the model correctly.
+    ModelObject = data_processing.initialise_model(config=config)
+    model = data_processing.load_model(ModelObject, model_path = model_path, n_features=number_of_columns, z_dim = config["latent_space_size"])
 
-    compressed_data = model.encode(data_as_tensor)
-    compressed_recon = model.encode(pred_as_tensor)
-    return compressed_data,compressed_recon
+    # Give the encoding function the correct input as tensor
+    data = data_loader(input_path, config)
+    data = data_processing.clean_data(data,config)
+    data_before = numpy.array(data)
 
-def decompress(model, number_of_columns, data, output_path, config):
-    tensor_input, = training.train(model,model, number_of_columns, data, output_path, config)
-    return 
+    # Saving the raw_data before compression. This is what we want to plot against the decompressed data. 
+    to_pickle(data_before, "projects/cms/output/cleandata_pre_comp.pickle")
+
+
+    data_tensor = numpy_to_tensor(data)
+
+    compressed = model.encode(data_tensor)
+    return compressed
+
+def decompress(number_of_columns,model_path, input_path, config):
+    # Initialise and load the model correctly.
+    ModelObject = data_processing.initialise_model(config=config)
+    model = data_processing.load_model(ModelObject, model_path = model_path, n_features=number_of_columns, z_dim = config["latent_space_size"])
+
+    # Load the data & convert to tensor
+    data = data_loader(input_path, config)
+    data_tensor = numpy_to_tensor(data)
+
+    decompressed = model.decode(data_tensor)
+    return decompressed 

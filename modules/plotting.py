@@ -5,13 +5,7 @@ import modules.data_processing as data_processing
 from matplotlib.backends.backend_pdf import PdfPages
 import matplotlib as mpl
 import sys
-
-def test_plot(df):
-    mass = df["recoGenJets_slimmedGenJets__PAT.obj.m_state.p4Polar_.fCoordinates.fM"]
-    invis_energy = df["recoGenJets_slimmedGenJets__PAT.obj.m_specific.m_InvisibleEnergy"]
-    plt.figure()
-    plt.hist(invis_energy,bins=500,density=True,histtype='step')
-    plt.show()
+import pandas as pd
 
 def to_percent(y, position):
     # Ignore the passed in position. This has the effect of scaling the default
@@ -29,6 +23,14 @@ def plot(before_path,after_path):
         before = pickle.load(handle)
     with open(after_path, 'rb') as handle:
         after = pickle.load(handle)
+    
+    # Added because plotting is not supported for non-DataFrame objects yet. 
+    if isinstance(before, pd.DataFrame) == False:
+        names = ["pt","eta","phi","mass","EmEnergy","HadEnergy","InvisEnergy","AuxiliaryEnergy"]
+        before = pd.DataFrame(before,columns=names)
+        after = pd.DataFrame(after,columns=names)
+    else: 
+        pass 
 
     response = (after-before)/before
 

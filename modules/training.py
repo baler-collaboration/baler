@@ -49,10 +49,10 @@ def train(model,variables, train_data, test_data, parent_path, config):
     model_children = list(model.children())
 
     # Constructs a tensor object of the data and wraps them in a TensorDataset object.
-    train_ds = TensorDataset(torch.tensor(train_data.values, dtype=torch.float),
-                             torch.tensor(train_data.values, dtype=torch.float))
-    valid_ds = TensorDataset(torch.tensor(test_data.values, dtype=torch.float),
-                             torch.tensor(test_data.values, dtype=torch.float))
+    train_ds = TensorDataset(torch.tensor(train_data.values, dtype=torch.float64),
+                             torch.tensor(train_data.values, dtype=torch.float64))
+    valid_ds = TensorDataset(torch.tensor(test_data.values, dtype=torch.float64),
+                             torch.tensor(test_data.values, dtype=torch.float64))
 
     # Converts the TensorDataset into a DataLoader object and combines into one DataLoaders object (a basic wrapper
     # around several DataLoader objects).
@@ -78,7 +78,7 @@ def train(model,variables, train_data, test_data, parent_path, config):
     pd.DataFrame(train_loss).to_csv(parent_path+"loss_train_data.csv")
     pd.DataFrame(val_loss).to_csv(parent_path+"loss_val_data.csv")
 
-    data_as_tensor = torch.tensor(test_data.values, dtype=torch.float)
+    data_as_tensor = torch.tensor(test_data.values, dtype=torch.float64)
     pred_as_tensor = model(data_as_tensor)
 
     return data_as_tensor, pred_as_tensor
