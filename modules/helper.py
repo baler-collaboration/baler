@@ -48,6 +48,9 @@ def undo_normalization(data,test_set,train_set,config):
 def plot(test_data, reconstructed_data):
     plotting.plot(test_data, reconstructed_data)
 
+def loss_plotter(path_to_val_loss,path_to_train_loss,output_path):
+    return plotting.loss_plot(path_to_val_loss,path_to_train_loss,output_path)
+
 def model_loader(model_path):
     return data_processing.load_model(model_path)
 
