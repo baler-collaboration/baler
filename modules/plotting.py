@@ -29,7 +29,7 @@ def loss_plot(path_to_val_loss,path_to_train_loss,output_path):
     plt.figure(figsize=(10,7))
     plt.title('Loss plot')
     plt.plot(train_loss,color='orange',label="Train Loss")
-    plt.plot(val_loss,color='red',label="Val Loss")
+    plt.plot(val_loss,color='red',label="Validation Loss")
     plt.xlabel('Epochs')
     plt.ylabel('Loss')
     plt.legend(loc='best')

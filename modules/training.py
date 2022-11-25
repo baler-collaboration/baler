@@ -1,6 +1,5 @@
 import torch
 from torch.utils.data import DataLoader, TensorDataset
-from modules.models import loss as loss_fcn
 from tqdm import tqdm
 import time
 import pandas as pd

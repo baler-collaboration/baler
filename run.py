@@ -26,7 +26,7 @@ def main():
         helper.model_saver(model,output_path+'model_george.pt')
 
     elif mode == "plot":
-        #helper.plot(input_path, output_path)
+        helper.plot(input_path, output_path)
         helper.loss_plotter("projects/cms/output/loss_val_data.csv","projects/cms/output/loss_train_data.csv",output_path)
 
     elif model == True and mode == "compress":
