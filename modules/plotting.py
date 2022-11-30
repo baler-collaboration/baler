@@ -42,6 +42,14 @@ def plot(before_path,after_path):
         before = pickle.load(handle)
     with open(after_path, 'rb') as handle:
         after = pickle.load(handle)
+    
+    # Added because plotting is not supported for non-DataFrame objects yet. 
+    if isinstance(before, pd.DataFrame) == False:
+        names = ["pt","eta","phi","mass","EmEnergy","HadEnergy","InvisEnergy","AuxiliaryEnergy"]
+        before = pd.DataFrame(before,columns=names)
+        after = pd.DataFrame(after,columns=names)
+    else: 
+        pass 
 
     response = (after-before)/before
 

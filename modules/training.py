@@ -18,10 +18,6 @@ def fit(model, train_dl, train_ds, model_children, regular_param, optimizer, RHO
         loss.backward()
         optimizer.step()
         running_loss += loss.item()
-    epoch_loss = running_loss / counter
-    print(f" Train Loss: {loss:.6f}")
-
-    return epoch_loss
 
 def validate(model, test_dl, test_ds, model_children,reg_param):
     print('Validating')
@@ -38,7 +34,7 @@ def validate(model, test_dl, test_ds, model_children,reg_param):
 
     epoch_loss = running_loss / counter
     print(f" Val Loss: {loss:.6f}")
-
+    # save the reconstructed images every 5 epochs
     return epoch_loss
 
 def train(model,variables, train_data, test_data, parent_path, config):
@@ -53,10 +49,10 @@ def train(model,variables, train_data, test_data, parent_path, config):
     model_children = list(model.children())
 
     # Constructs a tensor object of the data and wraps them in a TensorDataset object.
-    train_ds = TensorDataset(torch.tensor(train_data.values, dtype=torch.float),
-                             torch.tensor(train_data.values, dtype=torch.float))
-    valid_ds = TensorDataset(torch.tensor(test_data.values, dtype=torch.float),
-                             torch.tensor(test_data.values, dtype=torch.float))
+    train_ds = TensorDataset(torch.tensor(train_data.values, dtype=torch.float64),
+                             torch.tensor(train_data.values, dtype=torch.float64))
+    valid_ds = TensorDataset(torch.tensor(test_data.values, dtype=torch.float64),
+                             torch.tensor(test_data.values, dtype=torch.float64))
 
     # Converts the TensorDataset into a DataLoader object and combines into one DataLoaders object (a basic wrapper
     # around several DataLoader objects).
@@ -81,12 +77,8 @@ def train(model,variables, train_data, test_data, parent_path, config):
     print(f"{(end - start) / 60:.3} minutes")
     pd.DataFrame(train_loss).to_csv(parent_path+"loss_train_data.csv")
     pd.DataFrame(val_loss).to_csv(parent_path+"loss_val_data.csv")
-    data = torch.tensor(test_data.values, dtype=torch.float)
-    encoded_data = model.encode(data)
-    
-    pred = model(data)
-    pred = pred.detach().numpy()
-    data = data.detach().numpy()
-    encoded_data = encoded_data.detach().numpy()
 
-    return data, pred, encoded_data
+    data_as_tensor = torch.tensor(test_data.values, dtype=torch.float64)
+    pred_as_tensor = model(data_as_tensor)
+
+    return data_as_tensor, pred_as_tensor

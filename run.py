@@ -4,50 +4,78 @@ import modules.models as models
 import torch 
 import torch.optim as optim
 import time
+import os
 
 def main():
-    input_path, output_path, model, config, mode = helper.get_arguments()
-
+    input_path, output_path, model_path, config, mode = helper.get_arguments()
     if mode == "train":
         train_set, test_set, number_of_columns = helper.process(input_path, config)
-        model = models.george_SAE(n_features=number_of_columns, z_dim=config["latent_space_size"])
-        test_data, reconstructed_data, encoded_data = helper.train(model,number_of_columns,train_set,test_set,output_path,config)
+
+        ModelObject= helper.model_init(config=config)
+        model = ModelObject(n_features=number_of_columns, z_dim=config["latent_space_size"])
+        test_data_tensor, reconstructed_data_tensor = helper.train(model,number_of_columns,train_set,test_set,output_path,config)
+        test_data = helper.detach(test_data_tensor)
+        reconstructed_data = helper.detach(reconstructed_data_tensor)
 
         print("Un-normalzing...")
         start = time.time()
         test_data_renorm = helper.undo_normalization(test_data,test_set,train_set,config)
         reconstructed_data_renorm = helper.undo_normalization(reconstructed_data,test_set,train_set,config)
         end = time.time()
-        print("Un-normalization took: ",f"{(end - start) / 60:.3} minutes")
-
-        helper.to_pickle(encoded_data, output_path+'encoded_data.pickle')
+        print("Un-normalization took:",f"{(end - start) / 60:.3} minutes")
+    
         helper.to_pickle(test_data_renorm, output_path+'before.pickle')
         helper.to_pickle(reconstructed_data_renorm, output_path+'after.pickle')
-        helper.model_saver(model,output_path+'model_george.pt')
+        helper.model_saver(model,output_path+'current_model.pt')
 
     elif mode == "plot":
         helper.plot(input_path, output_path)
         helper.loss_plotter("projects/cms/output/loss_val_data.csv","projects/cms/output/loss_train_data.csv",output_path)
 
-    elif model == True and mode == "compress":
-        # We need to process the data first
-        train_set, test_set, number_of_columns = helper.process(input_path, config)
+    elif mode == "compress":
+        print("Compressing...")
+        start = time.time()
+        compressed = helper.compress(model_path=model_path, number_of_columns=config["number_of_columns"], input_path=input_path, config=config)
+        
+        # Converting back to numpyarray
+        compressed = helper.detach(compressed)
+        end = time.time()
 
-        # Load the model
-        model = helper.model_loader(model)
+        print("Compression took:",f"{(end - start) / 60:.3} minutes")
+
+        helper.to_pickle(compressed, output_path+'compressed.pickle')
     
-        # Find a way to use the encoder with the given model. Currently the encoder is a model
+    elif mode == "decompress":
+        print("Decompressing...")
+        start = time.time()        
+        decompressed = helper.decompress(model_path=model_path, number_of_columns=config["number_of_columns"], input_path=input_path, config=config)
 
-    elif mode == "info":# and model == True):
-        print("\n Loading the model and printing some information \n")
-        print("================================================ \n ")
-        model = helper.model_loader(model)
+        # Converting back to numpyarray
+        decompressed = helper.detach(decompressed)
 
-        print("Model name and structure: \n",model.eval())
-        params = list(model.parameters())
-        print("Length of parameter list:",len(params))
-        print("Size of each element in params:",params[0].size())        
+        end = time.time()
+        print("Decompression took:",f"{(end - start) / 60:.3} minutes")
 
+        helper.to_pickle(decompressed, output_path+'decompressed.pickle')
+
+    elif mode == "info":
+        print(" ========================== \n This is a mode for testing \n ========================== ")
+        
+        pre_compression = "projects/cms/output/cleandata_pre_comp.pickle"
+        compressed = "projects/cms/output/compressed.pickle"
+        decompressed = "projects/cms/output/decompressed.pickle"
+
+        files = [pre_compression,compressed,decompressed]
+        q = []
+        for i in range(len(files)):
+            q.append(os.stat(files[i]).st_size / (1024*1024))
+        
+    
+        print("File size before compression: ",round(q[0],2),"MB")
+        print("Compressed file size: ",round(q[1],2),"MB")
+        print("De-compressed file size: ",round(q[2],2),"MB")
+        print("Compression ratio:",round(q[0]/q[1],2))
+        print(f"Compressed file is {round(q[1]/q[0],2)*100}% the size of the original")
 
 
 

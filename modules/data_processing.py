@@ -7,7 +7,7 @@ import json
 import pandas as pd
 import uproot 
 import numpy as np
-import torch 
+import torch
 
 def import_config(config_path):
     with open (config_path) as json_config:
@@ -15,20 +15,20 @@ def import_config(config_path):
     return config
 
 def save_model(model,model_path):
+    return torch.save(model.state_dict(),model_path)
 
-    # Add functionality to save full model or just state_dict. 
+def initialise_model(config):
+    import modules.models as model_path
+    model_name = config["model_name"]
+    ModelObject = getattr(model_path, model_name)
+    return ModelObject
 
-    return torch.save(model,model_path)
+def load_model(ModelObject,model_path,n_features,z_dim):
+    model = ModelObject(n_features,z_dim)
 
-def load_model(model_path):
-    model = torch.load(model_path)
 
-    # Add functionality to check if state_dict has been saved or not.
-
-    #if isinstance(model,OrderedDict) == True:
-    #        model.load_state_dict(model)
-    #        return model
-    #else:
+    #Loading the state_dict into the model
+    model.load_state_dict(torch.load(str(model_path)),strict=False)
     return model 
 
 def Type_clearing(TTree):
@@ -53,11 +53,16 @@ def Type_clearing(TTree):
 def load_data(data_path,config):
     if ".csv" in data_path[-4:]:
         df = pd.read_csv(data_path,low_memory=False)
+
     elif ".root" in data_path[-5:]:
         tree = uproot.open(data_path)[config["Branch"]][config["Collection"]][config["Objects"]]
         global Names
         Names = Type_clearing(tree)
         df = tree.arrays(Names, library="pd")
+
+    elif ".pickle" in data_path[-8:]:
+        df = pd.read_pickle(data_path)
+
     return df
 
 def clean_data(df,config):
@@ -65,8 +70,6 @@ def clean_data(df,config):
     df = df.dropna()
     global cleared_column_names
     cleared_column_names = list(df)
-    #df.to_csv(config.pre_processed_csv_path)
-    #columns = list(df.columns)
     return df
 
 def normalize_data(df,config):
@@ -109,9 +112,10 @@ def undo_normalization(data,test_set,train_set,config):
         # This loop is very slow. Needs to be faster.
         for index in sorted(train_set_list, reverse=True):
             del scaling_list[index]
-        
+
         # We now take the trained data as input, make it a dataframe with the indices of the test_set.
         # The data will be a np.array when outputed from the training. 
         data = pd.DataFrame(data,index=test_set_list,columns=cleared_column_names)
         data = (data.T / np.array(scaling_list)).T
+        
     return data
