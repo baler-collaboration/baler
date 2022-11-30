@@ -18,6 +18,10 @@ def fit(model, train_dl, train_ds, model_children, regular_param, optimizer, RHO
         loss.backward()
         optimizer.step()
         running_loss += loss.item()
+    epoch_loss = running_loss / counter
+    print(f" Train Loss: {loss:.6f}")
+
+    return epoch_loss
 
 def validate(model, test_dl, test_ds, model_children,reg_param):
     print('Validating')
@@ -34,7 +38,7 @@ def validate(model, test_dl, test_ds, model_children,reg_param):
 
     epoch_loss = running_loss / counter
     print(f" Val Loss: {loss:.6f}")
-    # save the reconstructed images every 5 epochs
+
     return epoch_loss
 
 def train(model,variables, train_data, test_data, parent_path, config):
@@ -77,7 +81,6 @@ def train(model,variables, train_data, test_data, parent_path, config):
     print(f"{(end - start) / 60:.3} minutes")
     pd.DataFrame(train_loss).to_csv(parent_path+"loss_train_data.csv")
     pd.DataFrame(val_loss).to_csv(parent_path+"loss_val_data.csv")
-
     data = torch.tensor(test_data.values, dtype=torch.float)
     encoded_data = model.encode(data)
     

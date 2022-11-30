@@ -5,6 +5,7 @@ import modules.data_processing as data_processing
 from matplotlib.backends.backend_pdf import PdfPages
 import matplotlib as mpl
 import sys
+import pandas as pd
 
 def to_percent(y, position):
     # Ignore the passed in position. This has the effect of scaling the default
@@ -16,6 +17,25 @@ def to_percent(y, position):
         return s + r'$\%$'
     else:
         return s + '%'
+
+def loss_plot(path_to_val_loss,path_to_train_loss,output_path):
+    val_loss = pd.read_csv(path_to_val_loss)
+    train_loss = pd.read_csv(path_to_train_loss)
+
+    val_loss = val_loss[val_loss.columns[1]]
+    train_loss = train_loss[train_loss.columns[1]]
+    
+
+    plt.figure(figsize=(10,7))
+    plt.title('Loss plot')
+    plt.plot(train_loss,color='orange',label="Train Loss")
+    plt.plot(val_loss,color='red',label="Validation Loss")
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.legend(loc='best')
+    plt.savefig(output_path + '_Loss_plot.pdf')
+    #plt.show()
+
 
 def plot(before_path,after_path):
     with open(before_path, 'rb') as handle:
