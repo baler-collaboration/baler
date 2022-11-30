@@ -74,7 +74,8 @@ def main():
         print("File size before compression: ",round(q[0],2),"MB")
         print("Compressed file size: ",round(q[1],2),"MB")
         print("De-compressed file size: ",round(q[2],2),"MB")
-        print("Ratio between before compression and after compression: ",(100*q[0])/q[2],'%')
+        print("Compression ratio:",round(q[0]/q[1],2))
+        print(f"Compressed file is {round(q[1]/q[0],2)*100}% the size of the original")
 
 
 
