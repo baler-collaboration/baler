@@ -4,7 +4,6 @@ import pickle
 import modules.data_processing as data_processing
 from matplotlib.backends.backend_pdf import PdfPages
 import matplotlib as mpl
-import sys
 import pandas as pd
 
 def to_percent(y, position):
@@ -18,13 +17,11 @@ def to_percent(y, position):
     else:
         return s + '%'
 
-def loss_plot(path_to_val_loss,path_to_train_loss,output_path):
-    val_loss = pd.read_csv(path_to_val_loss)
-    train_loss = pd.read_csv(path_to_train_loss)
+def loss_plot(path_to_loss_data,output_path):
+    loss_data = pd.read_csv(path_to_loss_data)
 
-    val_loss = val_loss[val_loss.columns[1]]
-    train_loss = train_loss[train_loss.columns[1]]
-    
+    val_loss = loss_data["Val Loss"]
+    train_loss = loss_data["Train Loss"]
 
     plt.figure(figsize=(10,7))
     plt.title('Loss plot')
