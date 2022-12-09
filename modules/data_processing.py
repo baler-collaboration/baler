@@ -26,7 +26,6 @@ def initialise_model(config):
 def load_model(ModelObject,model_path,n_features,z_dim):
     model = ModelObject(n_features,z_dim)
 
-
     #Loading the state_dict into the model
     model.load_state_dict(torch.load(str(model_path)),strict=False)
     return model 
@@ -50,6 +49,10 @@ def Type_clearing(TTree):
     # Returns list of column names to use in load_data function
     return Column_names
 
+def numpy_to_df(array,config):
+    df = pd.DataFrame(array,columns=cleared_column_names)
+    return df
+
 def load_data(data_path,config):
     if ".csv" in data_path[-4:]:
         df = pd.read_csv(data_path,low_memory=False)
@@ -72,50 +75,46 @@ def clean_data(df,config):
     cleared_column_names = list(df)
     return df
 
-def normalize_data(df,config):
+def find_minmax(data):
+    data = np.array(data)
+    data = list(data)
+    true_max_list = np.apply_along_axis(np.max, axis=0, arr=data)
+    true_min_list = np.apply_along_axis(np.min, axis=0, arr=data)
+
+    feature_range_list = true_max_list - true_min_list
+
+    normalization_features = pd.DataFrame({'True min':true_min_list,
+                                            'Feature Range': feature_range_list})
+    return normalization_features
+
+def normalize(data,config):
+    data = np.array(data)
     if  config["custom_norm"] == True:
         pass
     elif config["custom_norm"] == False:
-        global min_max_scaler
-        min_max_scaler = MinMaxScaler()
-        
-        df = np.transpose(np.array(df))
-
-        scaled_df = min_max_scaler.fit_transform(df)
-
-        global scaling_array 
-        scaling_array = min_max_scaler.scale_
-
-        df = pd.DataFrame(scaled_df.T,columns=cleared_column_names)
-    return df
-    epoch_loss = running_loss / counter
-    print(f" Train Loss: {loss:.6f}")
-    return epoch_loss
+        true_min = np.min(data)
+        true_max = np.max(data)
+        feature_range = true_max - true_min
+        data = [((i - true_min)/feature_range) for i in data]
+        data = np.array(data)
+    return data
 
 def split(df, test_size,random_state):
     return train_test_split(df, test_size=test_size, random_state=random_state)
 
+def renormalize_std(data,true_min,feature_range):
+    data = list(data)
+    data = [((i * feature_range) + true_min) for i in data]
+    data = np.array(data)
+    return data
+
+def renormalize_func(norm_data,min_list,range_list,config):
+    norm_data = np.array(norm_data)
+    renormalized = [renormalize_std(norm_data,min_list[i],range_list[i]) for i in range(len(min_list))]
+    renormalizedFull = [(renormalized[i][:,i]) for i in range(len(renormalized))]
+    renormalizedFull = np.array(renormalizedFull).T
+    #renormalizedFull = pd.DataFrame(renormalizedFull,columns=config["cleared_column_names"])
+    return renormalizedFull
+
 def get_columns(df):
     return list(df.columns)
-
-def undo_normalization(data,test_set,train_set,config):
-    if  config["custom_norm"] == True:
-        pass
-    elif config["custom_norm"] == False:
-
-        # To find out which indices have been selected for training/testing, we check:
-        scaling_list = scaling_array.tolist()
-        train_set_list = train_set.index.tolist()
-        test_set_list = test_set.index.tolist()
-
-        #Get the scaling values we're interested in
-        # This loop is very slow. Needs to be faster.
-        for index in sorted(train_set_list, reverse=True):
-            del scaling_list[index]
-
-        # We now take the trained data as input, make it a dataframe with the indices of the test_set.
-        # The data will be a np.array when outputed from the training. 
-        data = pd.DataFrame(data,index=test_set_list,columns=cleared_column_names)
-        data = (data.T / np.array(scaling_list)).T
-        
-    return data
