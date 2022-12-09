@@ -23,10 +23,10 @@ After phase 1, baler will be a collection of python modules and a run script, wh
 ## System user
 The large demand for this kind of compression has been expressed form multiple researchers outside of particle physics, and baler therefore  aims to make baler compatible with multiple different types of data, and easy to use. In its first phase, baler is aimed towards other researchers, and some deeper understanding of data science and python is assumed.
 
-## System Use Case Diagram
+# System Use Case Diagram
 ![](./images/SUCD.png "Baler System Use Case Diagram")
 
-## Success Metrics
+# Success Metrics
 This section outlines the goals and associated metrics of Baler
 
 ### Support compression of different scientific data
