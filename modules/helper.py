@@ -2,6 +2,7 @@ import modules.models as models
 import modules.training as training
 import modules.plotting as plotting
 import modules.data_processing as data_processing
+from sklearn.decomposition import PCA 
 import argparse
 import json
 import pickle
@@ -110,3 +111,18 @@ def decompress(number_of_columns,model_path, input_path, config):
 
     decompressed = model.decode(data_tensor)
     return decompressed 
+
+
+def PCA_compression(train_set,data,config):
+    principal = PCA(n_components=config["latent_space_size"])
+
+    # Train
+    principal.fit(train_set)
+
+    # Compress
+    compressed_data = principal.transform(data)
+    compressed_data_to_save = compressed_data
+
+    # Decompress
+    decompressed_data = principal.inverse_transform(compressed_data)
+    return decompressed_data, compressed_data_to_save

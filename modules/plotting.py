@@ -88,12 +88,12 @@ def plot(before_path,after_path):
 #                continue
 #            step = diff/100
             #counts_response, bins_response = np.histogram(response[column],bins=np.arange(minimum,maximum,step))
-            counts_response, bins_response = np.histogram(response[column],bins=np.arange(-10,10,0.1))
+            counts_response, bins_response = np.histogram(response[column],bins=np.arange(-2,2,0.1))
             ax2.hist(bins_response[:-1], bins_response, weights=counts_response, label='Response')
 
             #To have percent on the x-axis
-            formatter = mpl.ticker.FuncFormatter(to_percent)
-            ax2.xaxis.set_major_formatter(formatter)   
+            #formatter = mpl.ticker.FuncFormatter(to_percent)
+            #ax2.xaxis.set_major_formatter(formatter)   
             ax2.set_title(f"{column} Response")
             ax2.set_xlabel(f'{column} Response', ha='right', x=1.0)
             ax2.set_ylabel("Counts", ha='right', y=1.0)
