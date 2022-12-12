@@ -6,8 +6,12 @@ from sklearn.preprocessing import MinMaxScaler
 import json
 import pandas as pd
 import uproot 
+import uproot3
 import numpy as np
 import torch
+import pickle
+
+
 
 def import_config(config_path):
     with open (config_path) as json_config:
@@ -50,7 +54,10 @@ def Type_clearing(TTree):
     return Column_names
 
 def numpy_to_df(array,config):
-    df = pd.DataFrame(array,columns=cleared_column_names)
+    if np.shape(array)[1] == 4:
+        col_names = ["comp1","comp2","comp3","comp4"]
+    else: col_names = config["cleared_col_names"]
+    df = pd.DataFrame(array,columns=col_names)
     return df
 
 def load_data(data_path,config):
@@ -118,3 +125,17 @@ def renormalize_func(norm_data,min_list,range_list,config):
 
 def get_columns(df):
     return list(df.columns)
+
+def pickle_to_df(file_path,config):
+    load_data(file_path,config)
+    # From pickle to df:
+    with open(file_path, 'rb') as handle:
+        data = pickle.load(handle)
+        df = pd.DataFrame(data,columns=Names)
+        return df, Names
+
+def df_to_root(df,config,col_names, save_path):
+    with uproot3.recreate(save_path) as tree:
+        for i in range(len(col_names)):
+            tree[col_names[i]] = uproot3.newtree({col_names[i]:"float64"})
+            tree[col_names[i]].extend({col_names[i]:df[col_names[i]].to_numpy()})

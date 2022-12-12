@@ -110,3 +110,15 @@ def decompress(number_of_columns,model_path, input_path, config):
 
     decompressed = model.decode(data_tensor)
     return decompressed 
+
+def to_root(data_path,config,save_path):
+    #if ".pickle" in data_path[-8:]:
+    if isinstance(data_path, pickle.Pickler):
+        df, Names = data_processing.pickle_to_df(file_path=data_path,config=config)
+        return data_processing.df_to_root(df,config,Names,save_path)
+    elif isinstance(data_path, pandas.DataFrame):
+        return data_processing.df_to_root(data_path, config, col_names=data_path.columns(),save_path=save_path)
+    elif isinstance(data_path, numpy.ndarray):
+        df = data_processing.numpy_to_df(data_path,config)
+        df_names = df.columns
+        return data_processing.df_to_root(df, config, col_names=df_names,save_path=save_path)
