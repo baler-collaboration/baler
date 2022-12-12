@@ -3,7 +3,8 @@
 This is a really rough readme.
 
 What --mode=train now does is that it trains a given model (where the model name is currently defined in the config file). The training is the same as before, and the model parameters (officially called the state dictionary) is now saved together. Can be ran via:
-´python3 run.py --config=projects/cms/configs/cms.json --input=projects/cms/data/cms_data.root --output=projects/cms/output/ --mode=train´
+
+`python3 run.py --config=projects/cms/configs/cms.json --input=projects/cms/data/cms_data.root --output=projects/cms/output/ --mode=train`
 
 which will, most importantly, output: current_model.pt . This contains all necessary model parameters.
 
