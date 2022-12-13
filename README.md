@@ -27,3 +27,34 @@ which will print the file sizes of the data we’re compressing, the compressed 
 Plotting works as before, with a minor caveat. This caveat is that the column names are currently manually implemented because I couldn’t find a simple way to store the column names (there is a good explanation for this), so it will not run immediately on the UN dataset without modifications to the config file. Plotting would look something like this however:
 
 `python baler --config=projects/cms/configs/cms.json --input=projects/cms/output/cleandata_pre_comp.pickle --output=projects/cms/output/decompressed.pickle --mode=plot`
+
+# Running with Docker #
+
+Running with Docker requires slight modifications to the above commands. The base command becomes:
+
+```console
+foo@bar $ docker run --mount type=bind,source=${PWD}/projects/,target=/projects ghcr.io/uomresearchit/baler:latest 
+```
+
+Where:
+  * `docker run` invokes docker and specifies the running of a container
+  * `--mount type=bind,source=${PWD}/projects/,target=/projects` mounts the local (host) directory `./projects` to the container at `/projects`
+  * `ghcr.io/uomresearchit/baler:latest` specifies the container to run
+  
+Therefore the three commands detailed above become:
+
+### Train: ###
+
+```console
+foo@bar $ docker run --mount type=bind,source=${PWD}/projects/,target=/projects ghcr.io/uomresearchit/baler:latest --config=projects/cms/configs/cms.json --input=projects/cms/data/cms_data.root --output=projects/cms/output/ --model=projects/cms/output/current_model.pt --mode=compress
+```
+
+### Compress: ### 
+```console
+foo@bar $ docker run --mount type=bind,source=${PWD}/projects/,target=/projects ghcr.io/uomresearchit/baler:latest --config=projects/cms/configs/cms.json --input=projects/cms/output/compressed.pickle --output=projects/cms/output/ --model=projects/cms/output/current_model.pt --mode=decompress
+```
+
+### Decompress: ###
+```console
+foo@bar $ docker run --mount type=bind,source=${PWD}/projects/,target=/projects ghcr.io/uomresearchit/baler:latest --config=projects/cms/configs/cms.json --input=projects/cms/output/cleandata_pre_comp.pickle --output=projects/cms/output/decompressed.pickle --mode=plot`
+```
