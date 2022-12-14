@@ -17,15 +17,15 @@ def fit(model, train_dl, train_ds, model_children, regular_param, optimizer, RHO
         optimizer.zero_grad()
         reconstructions = model(x)
         loss, mse_loss1, l1_loss1 = model.loss(model_children=model_children, true_data=x, reconstructed_data=reconstructions,reg_param=regular_param)
-        loss.backward()
+        loss.backward() # Computes the Gradient of the loss tensor
         optimizer.step()
         mse_loss_fit += mse_loss1.item()
         regularizer_loss_fit += l1_loss1.item()
-        running_loss += loss.item()
+        running_loss += loss.item() ## Running loss is not epoch loss.
     epoch_loss = running_loss / len(train_ds)
-    print(f" Train Loss: {loss:.6f}")
+    print(f" Train Loss: {epoch_loss:.6f}")
     # save the reconstructed images every 5 epochs
-    return epoch_loss, model
+    return epoch_loss,mse_loss_fit,regularizer_loss_fit, model
 
 def validate(model, test_dl, test_ds, model_children,reg_param):
     print('Validating')
@@ -44,9 +44,9 @@ def validate(model, test_dl, test_ds, model_children,reg_param):
             mse_loss_val += mse_loss1.item()
             regularizer_loss_val += l1_loss1.item()
     epoch_loss = running_loss / len(test_ds)
-    print(f" Val Loss: {loss:.6f}")
+    print(f" Val Loss: {epoch_loss:.6f}")
     # save the reconstructed images every 5 epochs
-    return epoch_loss
+    return epoch_loss, mse_loss_val, regularizer_loss_val
 
 def train(model,variables, train_data, test_data, parent_path, config):
     learning_rate = config["lr"]
@@ -84,8 +84,9 @@ def train(model,variables, train_data, test_data, parent_path, config):
     for epoch in range(epochs):
         print(f"Epoch {epoch + 1} of {epochs}")
         train_epoch_loss,mse_loss_fit1, regularizer_loss_fit1, model_from_fit = fit(model=model, train_dl=train_dl, train_ds=train_ds, model_children=model_children,
-                                optimizer=optimizer, RHO=RHO, regular_param=reg_param, l1=l1,config=config)
-        val_epoch_loss, mse_loss_val1, regularizer_loss_val1 = validate(model=model_from_fit, test_dl=valid_dl, test_ds=valid_ds, model_children=model_children,reg_param=reg_param, RHO=RHO,config=config)
+                                optimizer=optimizer, RHO=RHO, regular_param=reg_param, l1=l1)
+        val_epoch_loss, mse_loss_val1, regularizer_loss_val1 = validate(model=model_from_fit, test_dl=valid_dl, test_ds=valid_ds, model_children=model_children,
+                                reg_param=reg_param)
         train_loss.append(train_epoch_loss)
         val_loss.append(val_epoch_loss)
         mse_loss_val.append(mse_loss_val1)
@@ -93,9 +94,7 @@ def train(model,variables, train_data, test_data, parent_path, config):
         regularizer_loss_val.append(regularizer_loss_val1)
         regularizer_loss_fit.append(regularizer_loss_fit1)
     end = time.time()
-
     regularizer_string = 'l1'
-    
 
     print(f"{(end - start) / 60:.3} minutes")
     pd.DataFrame({'Train Loss': train_loss,
@@ -103,11 +102,11 @@ def train(model,variables, train_data, test_data, parent_path, config):
                   'mse_loss_val':mse_loss_val,
                   'mse_loss_fit':mse_loss_fit,
                   regularizer_string+'_loss_val':regularizer_loss_val,
-                  regularizer_string+'_loss_fit':regularizer_loss_fit}).to_csv(parent_path+'loss_data.csv')
+                  regularizer_string+'_loss_fit':regularizer_loss_fit}).to_csv(parent_path+'loss_data_100_new.csv')
     #pd.DataFrame({'Values_val':values_val}).to_csv(parent_path + 'values_val.csv')
     #pd.DataFrame({'Values_fit':values_fit}).to_csv(parent_path + 'values_fit.csv')
 
     data_as_tensor = torch.tensor(test_data.values, dtype=torch.float64)
     pred_as_tensor = model(data_as_tensor)
 
-    return data_as_tensor, pred_as_tensor
+    return data_as_tensor, pred_as_tensor, model_from_fit

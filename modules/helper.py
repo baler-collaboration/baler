@@ -58,10 +58,11 @@ def process(data_path, config):
     df = data_processing.clean_data(df,config)
     normalization_features = data_processing.find_minmax(df)
     df = normalize(df,config)
+    full_data = df
     train_set, test_set = data_processing.split(df, test_size=config["test_size"], random_state=1)
     number_of_columns = len(data_processing.get_columns(df))
     assert number_of_columns == config["number_of_columns"], f"The number of columns of dataframe is {number_of_columns}, config states {config['number_of_columns']}."
-    return train_set, test_set, number_of_columns, normalization_features
+    return train_set, test_set, number_of_columns, normalization_features, full_data
 
 def renormalize(data,true_min_list,feature_range_list,config):
     return data_processing.renormalize_func(data,true_min_list,feature_range_list,config)
