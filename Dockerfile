@@ -1,6 +1,5 @@
 # Based on https://github.com/michaeloliverx/python-poetry-docker-example/blob/master/docker/Dockerfile
 
-
 ## -----------------------------------------------------------------------------
 ## Base image with VENV
 
@@ -17,8 +16,8 @@ ENV PYTHONUNBUFFERED=1 \
     POETRY_HOME="/opt/poetry" \
     POETRY_VIRTUALENVS_IN_PROJECT=true \
     POETRY_NO_INTERACTION=1 \
-    PYSETUP_PATH="/opt/pysetup" \
-    VENV_PATH="/opt/pysetup/.venv"
+    PYSETUP_PATH="/baler-root/baler" \
+    VENV_PATH="/baler-root/baler/.venv"
 
 ENV PATH="$POETRY_HOME/bin:$VENV_PATH/bin:$PATH"
 
@@ -33,7 +32,10 @@ COPY ./poetry.lock ./pyproject.toml ./
 RUN poetry install --no-interaction --no-ansi
 
 # Creating folders, and files for a project:
-COPY ./baler /baler-root/baler
+COPY ./baler/ __init__.py README.md ./tests/ ./
+
+# Creating python wheel
+RUN poetry build
 
 ## -----------------------------------------------------------------------------
 ## Baler layer
@@ -41,7 +43,12 @@ COPY ./baler /baler-root/baler
 FROM python:3.8-slim
 
 # Copy Venv
-COPY --from=python-base $VENV_PATH $VENV_PATH
-COPY --from=python-base /baler-root/baler /baler-root/baler
+WORKDIR /baler-root/baler
+COPY --from=python-base /baler-root/baler/modules/ ./modules
+COPY --from=python-base /baler-root/baler/*.py /baler-root/baler/README.md ./
+COPY --from=python-base /baler-root/baler/dist/*.whl ./
 
+RUN pip install *.whl
+
+WORKDIR /baler-root/
 ENTRYPOINT ["python", "baler"]
