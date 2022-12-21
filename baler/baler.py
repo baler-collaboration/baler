@@ -49,8 +49,8 @@ def main():
 
         print("Compression took:",f"{(end - start) / 60:.3} minutes")
 
-        helper.to_pickle(compressed, output_path+'compressed_15.pickle')
-        helper.to_pickle(data_before, output_path+"data_pre_comp.pickle")
+        helper.to_pickle(compressed, output_path+'compressed.pickle')
+        helper.to_pickle(data_before, output_path+"cleandata_pre_comp.pickle")
     
     elif mode == "decompress":
         print("Decompressing...")
@@ -65,7 +65,13 @@ def main():
         end = time.time()
         print("Decompression took:",f"{(end - start) / 60:.3} minutes")
 
-        helper.to_pickle(decompressed, output_path+'decompressed_15.pickle')
+        if config["save_as_root"] == True: ## False by default
+            helper.to_root(decompressed,config,output_path+'decompressed.root')
+            helper.to_pickle(decompressed, output_path+'decompressed.pickle')
+        else:
+            helper.to_pickle(decompressed, output_path+'decompressed.pickle')
+
+>>>>>>> b0c7bf5 (Output names and files are now compatible with readme commands.):run.py
 
     elif mode == "info":
         print(" ========================== \n This is a mode for testing \n ========================== ")
