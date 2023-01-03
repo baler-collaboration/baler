@@ -8,6 +8,8 @@ import pickle
 import torch
 import pandas
 import numpy
+import os
+import shutil
 
 def get_arguments():
     parser = argparse.ArgumentParser(
@@ -20,14 +22,27 @@ def get_arguments():
                     epilog = 'Enjoy!')
     parser.add_argument('--config', type=str, required=False, help='Path to config file')
     parser.add_argument('--model', type=str, required=False, help='Path to previously derived machinelearning model')
-    parser.add_argument('--input', type=str, required=True, help='Path to input data set for compression')
-    parser.add_argument('--output', type=str, required=True, help='Path of output data')
-    parser.add_argument('--mode', type=str, required=True, help='train, compress, decompress, plot, info ')
+    parser.add_argument('--input', type=str, required=False, help='Path to input data set for compression')
+    parser.add_argument('--output', type=str, required=False, help='Path of output data')
+    parser.add_argument('--mode', type=str, required=False, help='train, compress, decompress, plot, info ')
+    parser.add_argument('--projectName', type=str, required=False, help='Name of new project')
 
     args = parser.parse_args()
     if args.config: config = data_processing.import_config(args.config)
     else: config = args.config
-    return args.input, args.output, args.model, config, args.mode
+    return args.input, args.output, args.model, config, args.mode, args.projectName
+
+def createNewProject(projectName):
+    project_path = f"projects/{projectName}"
+    # FIXME: do not aotu delete existing paths
+    if os.path.exists(project_path):
+        shutil.rmtree(project_path)
+    os.makedirs(project_path)
+    shutil.copyfile("modules/nominal_config.json", f"{project_path}/config.json")
+    os.makedirs(f"{project_path}/compressed_output/")
+    os.makedirs(f"{project_path}/decompressed_output/")
+    os.makedirs(f"{project_path}/plotting/")
+
 
 def to_pickle(data, path):
     with open(path, 'wb') as handle:
