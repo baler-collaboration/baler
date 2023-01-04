@@ -20,17 +20,18 @@ def get_arguments():
                                     \t2. Compression: Using a previously derived model and a large input dataset, Baler compresses your data and outputs a smaller compressed file.\n
                                     \t3. Decompression: Using a previously compressed file as input and a model, Baler decompresses your data into a larger file.''',
                     epilog = 'Enjoy!')
-    parser.add_argument('--config', type=str, required=False, help='Path to config file')
-    parser.add_argument('--model', type=str, required=False, help='Path to previously derived machinelearning model')
-    parser.add_argument('--input', type=str, required=False, help='Path to input data set for compression')
-    parser.add_argument('--output', type=str, required=False, help='Path of output data')
+    #parser.add_argument('--config', type=str, required=False, help='Path to config file')
+    #parser.add_argument('--model', type=str, required=False, help='Path to previously derived machinelearning model')
+    #parser.add_argument('--input', type=str, required=False, help='Path to input data set for compression')
+    #parser.add_argument('--output', type=str, required=False, help='Path of output data')
     parser.add_argument('--mode', type=str, required=False, help='train, compress, decompress, plot, info ')
-    parser.add_argument('--projectName', type=str, required=False, help='Name of new project')
+    parser.add_argument('--project', type=str, required=False, help='Name of new project')
 
     args = parser.parse_args()
-    if args.config: config = data_processing.import_config(args.config)
-    else: config = args.config
-    return args.input, args.output, args.model, config, args.mode, args.projectName
+    config_path = f"./projects/{args.project}/config.json"
+    args.config= data_processing.import_config(config_path)
+
+    return args.config, args.mode, args.project
 
 def createNewProject(projectName):
     project_path = f"projects/{projectName}"
@@ -42,6 +43,8 @@ def createNewProject(projectName):
     os.makedirs(f"{project_path}/compressed_output/")
     os.makedirs(f"{project_path}/decompressed_output/")
     os.makedirs(f"{project_path}/plotting/")
+    os.makedirs(f"{project_path}/training/")
+    os.makedirs(f"{project_path}/model/")
 
 
 def to_pickle(data, path):
@@ -83,8 +86,8 @@ def renormalize(data,true_min_list,feature_range_list,config):
 def train(model,number_of_columns,train_set,test_set,project_path,config):
     return training.train(model, number_of_columns, train_set, test_set, project_path, config)
 
-def plot(test_data, reconstructed_data):
-    plotting.plot(test_data, reconstructed_data)
+def plot(output_path,before,after):
+    plotting.plot(output_path,before,after)
 
 def loss_plotter(path_to_loss_data,output_path):
     return plotting.loss_plot(path_to_loss_data,output_path)
