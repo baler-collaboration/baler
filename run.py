@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 def main():
     config, mode, project = helper.get_arguments()
     project_path = f"projects/{project}/"
-
+    print(config)
     if mode == "newProject":
         helper.createNewProject(project)
     elif mode == "train":
