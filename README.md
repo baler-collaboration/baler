@@ -46,15 +46,15 @@ Therefore the three commands detailed above become:
 ### Train: ###
 
 ```console
-foo@bar $ docker run --mount type=bind,source=${PWD}/projects/,target=/projects ghcr.io/uomresearchit/baler:latest --config=projects/cms/configs/cms.json --input=projects/cms/data/cms_data.root --output=projects/cms/output/ --model=projects/cms/output/current_model.pt --mode=compress
+foo@bar $ docker run --mount type=bind,source=${PWD}/projects/,target=/projects ghcr.io/uomresearchit/baler:latest --config=/projects/cms/configs/cms.json --input=/projects/cms/data/cms_data.root --output=/projects/cms/output/ --mode=train
 ```
 
 ### Compress: ### 
 ```console
-foo@bar $ docker run --mount type=bind,source=${PWD}/projects/,target=/projects ghcr.io/uomresearchit/baler:latest --config=projects/cms/configs/cms.json --input=projects/cms/output/compressed.pickle --output=projects/cms/output/ --model=projects/cms/output/current_model.pt --mode=decompress
+foo@bar $ docker run --mount type=bind,source=${PWD}/projects/,target=/projects ghcr.io/uomresearchit/baler:latest --config=/projects/cms/configs/cms.json --input=/projects/cms/data/cms_data.root --output=/projects/cms/output/ --model=/projects/cms/output/current_model.pt --mode=compress
 ```
 
 ### Decompress: ###
 ```console
-foo@bar $ docker run --mount type=bind,source=${PWD}/projects/,target=/projects ghcr.io/uomresearchit/baler:latest --config=projects/cms/configs/cms.json --input=projects/cms/output/cleandata_pre_comp.pickle --output=projects/cms/output/decompressed.pickle --mode=plot`
+foo@bar $ docker run --mount type=bind,source=${PWD}/projects/,target=/projects ghcr.io/uomresearchit/baler:latest --config=/projects/cms/configs/cms.json --input=/projects/cms/output/compressed.pickle --output=/projects/cms/output/ --model=/projects/cms/output/current_model.pt --mode=decompress
 ```
