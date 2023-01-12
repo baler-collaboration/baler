@@ -42,13 +42,15 @@ COPY ./baler/ __init__.py README.md ./tests/ ./
 
 FROM python:3.8-slim
 
-# Copy Venv
+# Copy virtual environment
 WORKDIR /baler-root/baler
 COPY --from=python-base /baler-root/baler/modules/ ./modules
 COPY --from=python-base /baler-root/baler/*.py /baler-root/baler/README.md ./
 COPY --from=python-base /baler-root/baler/dist/*.whl ./
 
+# Install wheel
 RUN pip install *.whl
 
+# Configure run time
 WORKDIR /baler-root/
 ENTRYPOINT ["python", "baler"]
