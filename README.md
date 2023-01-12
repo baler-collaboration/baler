@@ -58,3 +58,17 @@ foo@bar $ docker run --mount type=bind,source=${PWD}/projects/,target=/projects 
 ```console
 foo@bar $ docker run --mount type=bind,source=${PWD}/projects/,target=/projects ghcr.io/uomresearchit/baler:latest --config=/projects/cms/configs/cms.json --input=/projects/cms/output/compressed.pickle --output=/projects/cms/output/ --model=/projects/cms/output/current_model.pt --mode=decompress
 ```
+
+## Build Docker image: ##
+
+If you would prefer not to use the Docker image produced by the University of Manchester, you may build the image ourself. This is achived with:
+
+```console
+foo@bar $ docker build -t baler:latest .
+```
+
+This image may be run using (e.g.):
+
+```console
+foo@bar $ docker run --mount type=bind,source=${PWD}/projects/,target=/projects baler:latest --config=/projects/cms/configs/cms.json --input=/projects/cms/data/cms_data.root --output=/projects/cms/output/ --mode=train
+```

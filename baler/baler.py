@@ -71,8 +71,6 @@ def main():
         else:
             helper.to_pickle(decompressed, output_path+'decompressed.pickle')
 
->>>>>>> b0c7bf5 (Output names and files are now compatible with readme commands.):run.py
-
     elif mode == "info":
         print(" ========================== \n This is a mode for testing \n ========================== ")
         
