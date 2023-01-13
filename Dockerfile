@@ -31,11 +31,11 @@ COPY ./poetry.lock ./pyproject.toml ./
 # Project initialization:
 RUN poetry install --no-interaction --no-ansi
 
-# Creating python wheel
-RUN poetry build
-
 # Creating folders, and files for the project:
 COPY ./baler/ __init__.py README.md ./tests/ ./
+
+# Creating python wheel
+RUN poetry build
 
 ## -----------------------------------------------------------------------------
 ## Baler layer
