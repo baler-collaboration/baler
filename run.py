@@ -30,11 +30,11 @@ def main():
         #helper.to_pickle(test_data_renorm, output_path+'before.pickle')
         #helper.to_pickle(reconstructed_data_renorm, output_path+'after.pickle')
         #normalization_features.to_csv(output_path+'cms_normalization_features.csv')
-        helper.model_saver(trained_model,output_path+'model_full_data_100_new.pt')
+        helper.model_saver(trained_model,output_path+'model_dropout_different_p_2.pt')
 
     elif mode == "plot":
         helper.plot(input_path, output_path)
-        helper.loss_plotter("projects/cms/output/full_data/loss_data_100.csv",output_path)
+        helper.loss_plotter("projects/cms/output/dropout/loss_data_dropout_different_p_2.csv",output_path)
 
     elif mode == "compress":
         print("Compressing...")
@@ -46,7 +46,7 @@ def main():
 
         print("Compression took:",f"{(end - start) / 60:.3} minutes")
 
-        helper.to_pickle(compressed, output_path+'compressed_100_new.pickle')
+        helper.to_pickle(compressed, output_path+'compressed_dropout_different_p_2.pickle')
         #helper.to_pickle(data_before, output_path+"data_pre_comp.pickle")
 
         if config["PCA"] == True: #False by default
@@ -73,7 +73,7 @@ def main():
         end = time.time()
         print("Decompression took:",f"{(end - start) / 60:.3} minutes")
 
-        helper.to_pickle(decompressed, output_path+'decompressed_100_new.pickle')
+        helper.to_pickle(decompressed, output_path+'decompressed_dropout_different_p_2.pickle')
 
     elif mode == "info":
         print(" ========================== \n This is a mode for testing \n ========================== ")

@@ -102,7 +102,7 @@ def train(model,variables, train_data, test_data, parent_path, config):
                   'mse_loss_val':mse_loss_val,
                   'mse_loss_fit':mse_loss_fit,
                   regularizer_string+'_loss_val':regularizer_loss_val,
-                  regularizer_string+'_loss_fit':regularizer_loss_fit}).to_csv(parent_path+'loss_data_100_new.csv')
+                  regularizer_string+'_loss_fit':regularizer_loss_fit}).to_csv(parent_path+'loss_data_dropout_different_p_2.csv')
     #pd.DataFrame({'Values_val':values_val}).to_csv(parent_path + 'values_val.csv')
     #pd.DataFrame({'Values_fit':values_fit}).to_csv(parent_path + 'values_fit.csv')
 

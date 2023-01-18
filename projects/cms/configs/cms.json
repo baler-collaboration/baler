@@ -1,5 +1,5 @@
 {
-    "epochs" : 100,
+    "epochs" : 20,
     "model_name" : "george_SAE_BN",
     "custom_norm" : false,
     "l1" : true,
