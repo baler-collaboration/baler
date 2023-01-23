@@ -36,17 +36,6 @@ class george_SAE(nn.Module):
         z = self.encode(x)
         return self.decode(z)
 
-    def loss(self, model_children, true_data, reconstructed_data, reg_param):
-        mse = nn.MSELoss()
-        mse_loss = mse(reconstructed_data, true_data)
-        l1_loss = 0
-        values = true_data
-        for i in range(len(model_children)):
-            values = F.relu((model_children[i](values)))
-            l1_loss += torch.mean(torch.abs(values))
-        loss = mse_loss + reg_param * l1_loss
-        return loss, mse_loss, l1_loss
-
 class george_SAE_BN(nn.Module):
     def __init__(self, n_features, z_dim):
         super(george_SAE_BN, self).__init__()
@@ -55,20 +44,24 @@ class george_SAE_BN(nn.Module):
         self.enc_nn = nn.Sequential(
                 nn.Linear(n_features, 200,dtype=torch.float64),        
                 nn.Dropout(p=0.5),
-                nn.BatchNorm1d(200,dtype=torch.float64),
                 nn.LeakyReLU(),
+                nn.BatchNorm1d(200,dtype=torch.float64),
+
                 nn.Linear(200, 100,dtype=torch.float64),        
                 nn.Dropout(p=0.4),
-                nn.BatchNorm1d(100,dtype=torch.float64),
                 nn.LeakyReLU(),
+                nn.BatchNorm1d(100,dtype=torch.float64),
+
                 nn.Linear(100,50,dtype=torch.float64),
                 nn.Dropout(p=0.3),
-                nn.BatchNorm1d(50,dtype=torch.float64),
                 nn.LeakyReLU(),
+                nn.BatchNorm1d(50,dtype=torch.float64),
+
                 nn.Linear(50, z_dim,dtype=torch.float64),        
                 nn.Dropout(p=0.2),
-                nn.BatchNorm1d(z_dim,dtype=torch.float64),
-                nn.LeakyReLU()                
+                nn.LeakyReLU(),
+                nn.BatchNorm1d(z_dim,dtype=torch.float64)
+                
                 )
 
 
@@ -76,19 +69,22 @@ class george_SAE_BN(nn.Module):
         self.dec_nn = nn.Sequential(
                 nn.Linear(z_dim, 50,dtype=torch.float64),        
                 nn.Dropout(p=0.2),
-                nn.BatchNorm1d(50,dtype=torch.float64),
                 nn.LeakyReLU(),
+                #nn.BatchNorm1d(50,dtype=torch.float64),
+
                 nn.Linear(50, 100,dtype=torch.float64),        
                 nn.Dropout(p=0.3),
-                nn.BatchNorm1d(100,dtype=torch.float64),
                 nn.LeakyReLU(),
+                #nn.BatchNorm1d(100,dtype=torch.float64),
+
                 nn.Linear(100,200,dtype=torch.float64),
                 nn.Dropout(p=0.4),
-                nn.BatchNorm1d(200,dtype=torch.float64),
                 nn.LeakyReLU(),
+                #nn.BatchNorm1d(200,dtype=torch.float64),
+
                 nn.Linear(200, n_features,dtype=torch.float64),        
                 nn.Dropout(p=0.5),
-                nn.BatchNorm1d(n_features,dtype=torch.float64),
+                #nn.BatchNorm1d(n_features,dtype=torch.float64),
                 nn.ReLU()                
                 )
 
@@ -106,16 +102,3 @@ class george_SAE_BN(nn.Module):
     def forward(self, x):
         z = self.encode(x)
         return self.decode(z)
-
-    def loss(self, model_children, true_data, reconstructed_data, reg_param):
-        mse = nn.MSELoss()
-        mse_loss = mse(reconstructed_data, true_data)
-        l1_loss = 0
-        values = true_data
-        for i in range(len(model_children)):
-            values = F.relu((model_children[i](values)))
-            l1_loss += torch.mean(torch.abs(values))
-           # print('l1',(l1_loss))
-        # print('mse',(mse_loss))
-        loss = mse_loss + reg_param * l1_loss
-        return loss, mse_loss, l1_loss
