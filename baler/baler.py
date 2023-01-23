@@ -30,10 +30,10 @@ def main():
         end = time.time()
         print("Un-normalization took:",f"{(end - start) / 60:.3} minutes")
     
-        helper.to_pickle(test_data_renorm, output_path+'before_15.pickle')
-        helper.to_pickle(reconstructed_data_renorm, output_path+'after_15.pickle')
+        helper.to_pickle(test_data_renorm, output_path+'before.pickle')
+        helper.to_pickle(reconstructed_data_renorm, output_path+'after.pickle')
         normalization_features.to_csv(output_path+'cms_normalization_features.csv')
-        helper.model_saver(model,output_path+'current_model_15.pt')
+        helper.model_saver(model,output_path+'current_model.pt')
 
     elif mode == "plot":
         helper.plot(input_path, output_path)
@@ -65,11 +65,13 @@ def main():
         end = time.time()
         print("Decompression took:",f"{(end - start) / 60:.3} minutes")
 
+
         if config["save_as_root"] == True: ## False by default
             helper.to_root(decompressed,config,output_path+'decompressed.root')
             helper.to_pickle(decompressed, output_path+'decompressed.pickle')
         else:
             helper.to_pickle(decompressed, output_path+'decompressed.pickle')
+
 
     elif mode == "info":
         print(" ========================== \n This is a mode for testing \n ========================== ")
