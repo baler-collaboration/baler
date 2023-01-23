@@ -83,7 +83,9 @@ poetry run python baler --config=projects/cms/configs/cms.json --input=projects/
 Running with Docker requires slight modifications to the above commands. The base command becomes:
 
 ```console
-docker run --mount type=bind,source=${PWD}/projects/,target=/projects ghcr.io/uomresearchit/baler:latest 
+docker run \
+--mount type=bind,source=${PWD}/projects/,target=/projects \
+ghcr.io/uomresearchit/baler:latest 
 ```
 
 Where:
@@ -96,17 +98,37 @@ Therefore the three commands detailed above become:
 ### Train: ###
 
 ```console
-docker run --mount type=bind,source=${PWD}/projects/,target=/projects ghcr.io/uomresearchit/baler:latest --config=/projects/cms/configs/cms.json --input=/projects/cms/data/cms_data.root --output=/projects/cms/output/ --mode=train
+docker run \
+--mount type=bind,source=${PWD}/projects/,target=/projects \
+ghcr.io/uomresearchit/baler:latest \
+--config=/projects/cms/configs/cms.json \
+--input=/projects/cms/data/cms_data.root \
+--output=/projects/cms/output/ \
+--mode=train
 ```
 
 ### Compress: ### 
 ```console
-docker run --mount type=bind,source=${PWD}/projects/,target=/projects ghcr.io/uomresearchit/baler:latest --config=/projects/cms/configs/cms.json --input=/projects/cms/data/cms_data.root --output=/projects/cms/output/ --model=/projects/cms/output/current_model.pt --mode=compress
+docker run \
+--mount type=bind,source=${PWD}/projects/,target=/projects \
+ghcr.io/uomresearchit/baler:latest \
+--config=/projects/cms/configs/cms.json \
+--input=/projects/cms/data/cms_data.root \
+--output=/projects/cms/output/ \
+--model=/projects/cms/output/current_model.pt \
+--mode=compress
 ```
 
 ### Decompress: ###
 ```console
-docker run --mount type=bind,source=${PWD}/projects/,target=/projects ghcr.io/uomresearchit/baler:latest --config=/projects/cms/configs/cms.json --input=/projects/cms/output/compressed.pickle --output=/projects/cms/output/ --model=/projects/cms/output/current_model.pt --mode=decompress
+docker run \
+--mount type=bind,source=${PWD}/projects/,target=/projects \
+ghcr.io/uomresearchit/baler:latest \
+--config=/projects/cms/configs/cms.json \
+--input=/projects/cms/output/compressed.pickle \
+--output=/projects/cms/output/ \
+--model=/projects/cms/output/current_model.pt \
+--mode=decompress
 ```
 
 ## Build Docker image: ##
@@ -120,5 +142,38 @@ docker build -t baler:latest .
 This image may be run using (e.g.):
 
 ```console
-docker run --mount type=bind,source=${PWD}/projects/,target=/projects baler:latest --config=/projects/cms/configs/cms.json --input=/projects/cms/data/cms_data.root --output=/projects/cms/output/ --mode=train
+docker run \
+--mount type=bind,source=${PWD}/projects/,target=/projects \
+baler:latest \
+--config=/projects/cms/configs/cms.json \
+--input=/projects/cms/data/cms_data.root \
+--output=/projects/cms/output/ \
+--mode=train
 ```
+
+## Developing using Docker image: ##
+
+Docker presents some obstacles to live development, if you wish changes to be made to a Docker container it must be rebuilt. This slows development and can be frustrating.
+
+An alternative is to use Docker volumes (mounts between local and container file systems) to shaddow the source files in the container.
+
+An example command is given here:
+
+```console
+docker run \
+--mount type=bind,source=${PWD}/projects/,target=/projects \
+--mount type=bind,source=${PWD}/baler/modules,target=/baler-root/baler/modules \
+--mount type=bind,source=${PWD}/baler/baler.py,target=/baler-root/baler/baler.py \
+ghcr.io/uomresearchit/baler:latest \
+--config=/projects/cms/configs/cms.json \
+--input=/projects/cms/data/cms_data.root \
+--output=/projects/cms/output/ \
+--mode=train
+```
+
+Where:
+  * `--mount type=bind,source=${PWD}/baler/modules,target=/baler-root/baler/modules` mounts the local source code directory shaddowing the source files built in to the container
+  * `--mount type=bind,source=${PWD}/baler/baler.py,target=/baler-root/baler/baler.py` mounts the main baler source file shadding that in the container
+  
+Please note, this mounting does not permentantly change the behaviour of the container, for this the contatiner must be rebuilt.
+
