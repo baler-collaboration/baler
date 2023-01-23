@@ -80,6 +80,13 @@ poetry run python baler --config=projects/cms/configs/cms.json --input=projects/
 
 # Running with Docker #
 
+## Prerequisites ##
+
+  * You must have Docker installed. See this [guide](https://docs.docker.com/engine/install/ "Docker Install guide")
+  * You must have carried out appropriate post installation steps. For example, for Linux systems, see this [guide](https://docs.docker.com/engine/install/linux-postinstall/ "Docker postinstall guide")
+
+## Running ##
+
 Running with Docker requires slight modifications to the above commands. The base command becomes:
 
 ```console
@@ -131,7 +138,7 @@ ghcr.io/uomresearchit/baler:latest \
 --mode=decompress
 ```
 
-## Build Docker image: ##
+## Build Docker image ##
 
 If you would prefer not to use the Docker image produced by the University of Manchester, you may build the image ourself. This is achived with:
 
@@ -151,7 +158,7 @@ baler:latest \
 --mode=train
 ```
 
-## Developing using Docker image: ##
+## Developing using Docker image ##
 
 Docker presents some obstacles to live development, if you wish changes to be made to a Docker container it must be rebuilt. This slows development and can be frustrating.
 
