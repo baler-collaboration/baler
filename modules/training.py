@@ -18,8 +18,8 @@ def fit(model, train_dl, train_ds, model_children, regular_param, optimizer, RHO
         x, _ = data
         optimizer.zero_grad()
         reconstructions = model(x)
-        #loss, mse_loss1, l1_loss1 = model.loss(model_children=model_children, true_data=x, reconstructed_data=reconstructions,reg_param=regular_param)
-        loss, mse_loss1, l1_loss1 = loss_functions.l1_loss_func(model=model,lr=lr,reconstructed_data=reconstructions,true_data=x)
+        loss, mse_loss1, l1_loss1 = loss_functions.old_loss(model_children=model_children, true_data=x, reconstructed_data=reconstructions,reg_param=regular_param)
+        #loss, mse_loss1, l1_loss1 = loss_functions.l1_loss_func(model=model,lr=lr,reconstructed_data=reconstructions,true_data=x)
         loss.backward() # Computes the Gradient of the loss tensor
         optimizer.step()
         mse_loss_fit += mse_loss1.item()
@@ -42,8 +42,8 @@ def validate(model, test_dl, test_ds, model_children,reg_param,l1,lr):
             counter += 1
             x, _ = data
             reconstructions = model(x)
-            #loss, mse_loss1, l1_loss1 = model.loss(model_children=model_children, true_data=x, reconstructed_data=reconstructions, reg_param=reg_param)
-            loss, mse_loss1, l1_loss1 = loss_functions.l1_loss_func(model=model,lr=lr,reconstructed_data=reconstructions,true_data=x)
+            loss, mse_loss1, l1_loss1 = loss_functions.old_loss(model_children=model_children, true_data=x, reconstructed_data=reconstructions, reg_param=reg_param)
+            #loss, mse_loss1, l1_loss1 = loss_functions.l1_loss_func(model=model,lr=lr,reconstructed_data=reconstructions,true_data=x)
 
             running_loss += loss.item()
             mse_loss_val += mse_loss1.item()
@@ -78,6 +78,8 @@ def train(model,variables, train_data, test_data, parent_path, config):
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
     #optimizer = torch.optim.RMSprop(model.parameters(),lr=learning_rate)
 
+    scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer=optimizer, gamma=0.9)
+
     # train and validate the autoencoder neural network
     train_loss = []
     val_loss = []
@@ -91,8 +93,11 @@ def train(model,variables, train_data, test_data, parent_path, config):
         print(f"Epoch {epoch + 1} of {epochs}")
         train_epoch_loss,mse_loss_fit1, regularizer_loss_fit1, model_from_fit = fit(model=model, train_dl=train_dl, train_ds=train_ds, model_children=model_children,
                                 optimizer=optimizer, RHO=RHO, regular_param=reg_param, l1=l1,lr=learning_rate)
+
         val_epoch_loss, mse_loss_val1, regularizer_loss_val1 = validate(model=model_from_fit, test_dl=valid_dl, test_ds=valid_ds, model_children=model_children,
                                 reg_param=reg_param,l1=l1,lr=learning_rate)
+
+        scheduler.step()
         train_loss.append(train_epoch_loss)
         val_loss.append(val_epoch_loss)
         mse_loss_val.append(mse_loss_val1)
@@ -108,7 +113,7 @@ def train(model,variables, train_data, test_data, parent_path, config):
                   'mse_loss_val':mse_loss_val,
                   'mse_loss_fit':mse_loss_fit,
                   regularizer_string+'_loss_val':regularizer_loss_val,
-                  regularizer_string+'_loss_fit':regularizer_loss_fit}).to_csv(parent_path+'loss_data_2.csv')
+                  regularizer_string+'_loss_fit':regularizer_loss_fit}).to_csv(parent_path+'loss_data_lrdecay.csv')
     #pd.DataFrame({'Values_val':values_val}).to_csv(parent_path + 'values_val.csv')
     #pd.DataFrame({'Values_fit':values_fit}).to_csv(parent_path + 'values_fit.csv')
 

@@ -15,7 +15,7 @@ def l1_loss_func(model,lr,reconstructed_data,true_data):
 
 
 
-def old_loss(self, model_children, true_data, reconstructed_data, reg_param):
+def old_loss(model_children, true_data, reconstructed_data, reg_param):
     mse = nn.MSELoss()
     mse_loss = mse(reconstructed_data, true_data)
     l1_loss = 0
