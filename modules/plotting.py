@@ -40,15 +40,52 @@ def plot(before_path,after_path):
     with open(after_path, 'rb') as handle:
         after = pickle.load(handle)
     
+    before = np.array(before)
     # Added because plotting is not supported for non-DataFrame objects yet. 
     if isinstance(before, pd.DataFrame) == False:
         names = ["pt","eta","phi","mass","EmEnergy","HadEnergy","InvisEnergy","AuxiliaryEnergy"]
         before = pd.DataFrame(before,columns=names)
         after = pd.DataFrame(after,columns=names)
     else: 
-        pass 
+        pass
 
-    response = (after-before)/before
+
+    #print(after['mass'].value_counts())
+    #print(before['mass'].value_counts())
+    print(before.mean())
+    print(after.mean())
+
+    norm = False
+
+    if norm == True:
+
+        names = ["pt","eta","phi","mass","EmEnergy","HadEnergy","InvisEnergy","AuxiliaryEnergy"]
+        before = pd.DataFrame(before,columns=names)
+        after = pd.DataFrame(after,columns=names)  
+
+        before = before.replace(np.inf,np.nan)
+        after = after.replace(np.inf,np.nan)
+        before=before.dropna()
+        after=after.dropna()
+
+        
+
+        response = (after-before)/before
+
+
+        fig, (ax1, ax2) = plt.subplots(1, 2,figsize=(12,7))
+        fig.suptitle('New Loss Function + Adam Optimizer - normalized data')
+        ax1.hist(before['mass'],label='Before',bins=50)
+        ax1.hist(after['mass'],label='After',histtype='step',bins=50)
+        ax1.set_title('Mass distribution')
+        ax1.set_xlabel(r'$m_{jj}$')
+        ax1.set_ylabel('Counts')
+        ax1.legend()
+
+        ax2.hist(response['mass'],bins=50,range=(-2,2))
+        ax2.set_title('Response')
+
+        plt.savefig('Mass_response_dist.pdf')
 
     columns = data_processing.get_columns(before)
     number_of_columns = len(columns)
@@ -58,6 +95,8 @@ def plot(before_path,after_path):
         for index, column in enumerate(columns):
             print(f'{index} of {number_of_columns}')
 
+
+            response = (after-before)/before
 #            minimum = int(min(before[column]+after[column]))
 #            maximum = int(max(before[column]+after[column]))
 #            diff = maximum - minimum
