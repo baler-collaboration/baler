@@ -4,7 +4,7 @@ import modules.models as models
 import torch 
 import torch.optim as optim
 import time
-import os
+import os, psutil
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -13,6 +13,7 @@ def main():
     input_path, output_path, model_path, config, mode = helper.get_arguments()
     if mode == "train":
         train_set_norm, test_set_norm, number_of_columns, normalization_features, full_data = helper.process(input_path, config)
+        #helper.to_pickle(full_data, output_path+'full_data_norm.pickle')
 
         ModelObject= helper.model_init(config=config)
         model = ModelObject(n_features=number_of_columns, z_dim=config["latent_space_size"])
@@ -26,28 +27,35 @@ def main():
         reconstructed_data_renorm = helper.renormalize(reconstructed_data,normalization_features["True min"],normalization_features["Feature Range"],config)
         end = time.time()
         print("Un-normalization took:",f"{(end - start) / 60:.3} minutes")
-    
+  
         #helper.to_pickle(test_data_renorm, output_path+'before.pickle')
         #helper.to_pickle(reconstructed_data_renorm, output_path+'after.pickle')
         #normalization_features.to_csv(output_path+'cms_normalization_features.csv')
-        helper.model_saver(trained_model,output_path+'model_dropout_different_p_2.pt')
+        helper.model_saver(trained_model,output_path+'model_lrdecay.pt')
 
     elif mode == "plot":
         helper.plot(input_path, output_path)
-        helper.loss_plotter("projects/cms/output/dropout/loss_data_dropout_different_p_2.csv",output_path)
+        helper.loss_plotter("projects/cms/output/lrdecay/loss_data_lrdecay.csv",output_path)
 
     elif mode == "compress":
         print("Compressing...")
         start = time.time()
+        process_1 = psutil.Process(os.getpid())
+        print('Memory usage:',process_1.memory_percent(),'%')        
+
         compressed, data_before = helper.compress(model_path=model_path, number_of_columns=config["number_of_columns"], input_path=input_path, config=config)
+        process_2 = psutil.Process(os.getpid())
+        print('Memory usage:',process_2.memory_percent(),'%') 
         # Converting back to numpyarray
         compressed = helper.detach(compressed)
         end = time.time()
 
         print("Compression took:",f"{(end - start) / 60:.3} minutes")
+        process_3 = psutil.Process(os.getpid())
+        print('Memory usage:',process_3.memory_percent(),'%') 
 
-        helper.to_pickle(compressed, output_path+'compressed_dropout_different_p_2.pickle')
-        #helper.to_pickle(data_before, output_path+"data_pre_comp.pickle")
+        helper.to_pickle(compressed, output_path+'compressed_lrdecay.pickle')
+        helper.to_pickle(data_before, output_path+"data_pre_comp.pickle")
 
         if config["PCA"] == True: #False by default
             print('Doing PCA compression & decompression...')
@@ -62,7 +70,8 @@ def main():
     
     elif mode == "decompress":
         print("Decompressing...")
-        start = time.time()        
+        start = time.time()   
+
         decompressed = helper.decompress(model_path=model_path, number_of_columns=config["number_of_columns"], input_path=input_path, config=config)
 
         # Converting back to numpyarray
@@ -73,7 +82,7 @@ def main():
         end = time.time()
         print("Decompression took:",f"{(end - start) / 60:.3} minutes")
 
-        helper.to_pickle(decompressed, output_path+'decompressed_dropout_different_p_2.pickle')
+        helper.to_pickle(decompressed, output_path+'decompressed_lrdecay.pickle')
 
     elif mode == "info":
         print(" ========================== \n This is a mode for testing \n ========================== ")
@@ -87,7 +96,7 @@ def main():
         for i in range(len(files)):
             q.append(os.stat(files[i]).st_size / (1024*1024))
         
-    
+        
         print("File size before compression: ",round(q[0],2),"MB")
         print("Compressed file size: ",round(q[1],2),"MB")
         print("De-compressed file size: ",round(q[2],2),"MB")
@@ -95,6 +104,7 @@ def main():
         print(f"Compressed file is {round(q[1]/q[0],2)*100}% the size of the original")
 
 
-
+        process_3 = psutil.Process(os.getpid())
+        print('Memory usage:',process_3.memory_percent(),'%') 
 if __name__ == "__main__":
     main()
