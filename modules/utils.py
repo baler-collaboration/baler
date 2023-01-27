@@ -4,7 +4,7 @@ import torch.nn.functional as F
 from tqdm import tqdm
 
 ###############################################
-patience = 7
+patience = 10
 min_delta = 0
 factor = 0.5
 min_lr = 1e-6
@@ -76,7 +76,7 @@ def accuracy(model,dataloader):
 class EarlyStopping():
     def __init__(self,patience=patience,min_delta=min_delta):
         self.patience = patience # Nr of times we allow val. loss to not improve before early stopping
-        self.min_delta = min_delta # Min difference between new loss & best loss for new loss to be considered improvement
+        self.min_delta = min_delta # min(new loss - best loss) for new loss to be considered improvement
         self.counter = 0 # counts nr of times val_loss dosent improve
         self.best_loss = None 
         self.early_stop = False 

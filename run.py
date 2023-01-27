@@ -32,10 +32,11 @@ def main():
         #helper.to_pickle(reconstructed_data_renorm, output_path+'after.pickle')
         #normalization_features.to_csv(output_path+'cms_normalization_features.csv')
         helper.model_saver(trained_model,output_path+'model.pt')
+        helper.loss_plotter("projects/cms/output/early_stopping/loss_data.csv",output_path,config)
 
     elif mode == "plot":
         helper.plot(input_path, output_path)
-        helper.loss_plotter("projects/cms/output/loss_data.csv",output_path,config)
+        #helper.loss_plotter("projects/cms/output/loss_data.csv",output_path,config)
 
     elif mode == "compress":
         print("Compressing...")
