@@ -73,8 +73,8 @@ def train(model,number_of_columns,train_set,test_set,project_path,config):
 def plot(test_data, reconstructed_data):
     plotting.plot(test_data, reconstructed_data)
 
-def loss_plotter(path_to_loss_data,output_path):
-    return plotting.loss_plot(path_to_loss_data,output_path)
+def loss_plotter(path_to_loss_data,output_path,config):
+    return plotting.loss_plot(path_to_loss_data,output_path,config)
 
 def model_loader(model_path):
     return data_processing.load_model(model_path)
