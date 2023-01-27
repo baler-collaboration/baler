@@ -31,11 +31,11 @@ def main():
         #helper.to_pickle(test_data_renorm, output_path+'before.pickle')
         #helper.to_pickle(reconstructed_data_renorm, output_path+'after.pickle')
         #normalization_features.to_csv(output_path+'cms_normalization_features.csv')
-        helper.model_saver(trained_model,output_path+'model_lrdecay.pt')
+        helper.model_saver(trained_model,output_path+'model.pt')
 
     elif mode == "plot":
         helper.plot(input_path, output_path)
-        helper.loss_plotter("projects/cms/output/lrdecay/loss_data_lrdecay.csv",output_path)
+        helper.loss_plotter("projects/cms/output/loss_data.csv",output_path,config)
 
     elif mode == "compress":
         print("Compressing...")
@@ -54,7 +54,7 @@ def main():
         process_3 = psutil.Process(os.getpid())
         print('Memory usage:',process_3.memory_percent(),'%') 
 
-        helper.to_pickle(compressed, output_path+'compressed_lrdecay.pickle')
+        helper.to_pickle(compressed, output_path+'compressed.pickle')
         helper.to_pickle(data_before, output_path+"data_pre_comp.pickle")
 
         if config["PCA"] == True: #False by default
@@ -82,7 +82,7 @@ def main():
         end = time.time()
         print("Decompression took:",f"{(end - start) / 60:.3} minutes")
 
-        helper.to_pickle(decompressed, output_path+'decompressed_lrdecay.pickle')
+        helper.to_pickle(decompressed, output_path+'decompressed.pickle')
 
     elif mode == "info":
         print(" ========================== \n This is a mode for testing \n ========================== ")
