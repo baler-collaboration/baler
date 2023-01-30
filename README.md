@@ -25,15 +25,10 @@ Additionally, a Docker container is available which allows the use of Baler with
 If you wish to use this README as a tutorial, you can use the following command to aquire example data, compabible with Baler and the configuration provided in this repository.
 
 ```console
-wget http://opendata.cern.ch/record/21856/files/assets/cms/mc/RunIIFall15MiniAODv2/ZprimeToTT_M-3000_W-30_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/10000/DAA238E5-29D6-E511-AE59-001E67DBE3EF.root -O projects/data/cms_data.root
+mkdir data/firstProject; wget http://opendata.cern.ch/record/21856/files/assets/cms/mc/RunIIFall15MiniAODv2/ZprimeToTT_M-3000_W-30_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/10000/DAA238E5-29D6-E511-AE59-001E67DBE3EF.root -P ./data/firstProject/
 ```
 
 ## Running locally  ##
-Start by creating a new project directory. This will create the standardised directory structure needed, and create a blank config file for you under `./projects/firstProject/config.json`.\
-`python3 run.py --mode=newProject --project=firstProject`
-
-Add a dataset to the `./data/` directory. if you are just trying things out, you can download a sample dataset using:\
-`wget http://opendata.cern.ch/record/6010/files/assets/cms/Run2012B/JetHT/AOD/22Jan2013-v1/20000/CACF9904-3473-E211-AE0B-002618943857.root -P ./data/firstProject/`
 
 ### Installing Baler dependancies using Poetry ###
 
@@ -52,8 +47,13 @@ poetry install
 ```
 
 ### Running Baler ###
-
 Baler can be run locally using a virtual environment created by Poetry. This is achived using the `poetry run` command.
+
+#### Create New Project ####
+Start by creating a new project directory. This will create the standardised directory structure needed, and create a blank config and output directories. `./projects/firstProject/config.json`.\
+```console
+poetry run python baler --mode=newProject --project=firstProject
+```
 
 #### Training ####
 ```console
@@ -126,9 +126,7 @@ Therefore the three commands detailed above become:
 docker run \
 --mount type=bind,source=${PWD}/projects/,target=/projects \
 ghcr.io/uomresearchit/baler:latest \
---config=/projects/cms/configs/cms.json \
---input=/projects/cms/data/cms_data.root \
---output=/projects/cms/output/ \
+--project=firstProject \
 --mode=train
 ```
 
