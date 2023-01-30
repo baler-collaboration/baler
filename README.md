@@ -1,3 +1,19 @@
+# Introcution
+Baler is a tool used to test the feasibility of compressing different types of scientific data using autoencoders.
+
+The main object the user has produce before using baler is a configuration file. The configuration primarily contains:
+* The path to the data which is going to be compressed
+* The name of the autoencoder to be used
+  - Either use a pre-made one or write your own, specific to your dataset, in `./modules/models.py`
+* Pruning of the dataset, for example the dropping certain variables
+* The number of epochs, batch size, learning rate etc.
+
+When provided a configuration file, Baler has 4 main running modes:
+* Train: Baler will train a machine learning model to compress and decompress your dataset, and then save the model, model weights, and normalization factors
+* Plot: Baler will show the performance of the a trained network by plotting the difference between the original dataset and the compressed+decompressed dataset
+* Compress: Baler will compress the dataset using the model derived in during the training mode
+* Decompress: Baler will decompress the dataset using the model derived during the training mode
+
 # Getting started #
 
 Baler is currently packaged using [Poetry](https://python-poetry.org/ "Poetry"), a package manager for Python which helps with dependancy management. Installing and running using Poetry requires slight modifications to the usual Python commands, detailed [below](#installing-baler-dependancies-using-poetry).
@@ -13,6 +29,11 @@ wget http://opendata.cern.ch/record/21856/files/assets/cms/mc/RunIIFall15MiniAOD
 ```
 
 ## Running locally  ##
+Start by creating a new project directory. This will create the standardised directory structure needed, and create a blank config file for you under `./projects/firstProject/config.json`.\
+`python3 run.py --mode=newProject --project=firstProject`
+
+Add a dataset to the `./data/` directory. if you are just trying things out, you can download a sample dataset using:\
+`wget http://opendata.cern.ch/record/6010/files/assets/cms/Run2012B/JetHT/AOD/22Jan2013-v1/20000/CACF9904-3473-E211-AE0B-002618943857.root -P ./data/firstProject/`
 
 ### Installing Baler dependancies using Poetry ###
 
@@ -35,21 +56,18 @@ poetry install
 Baler can be run locally using a virtual environment created by Poetry. This is achived using the `poetry run` command.
 
 #### Training ####
-
-What --mode=train now does is that it trains a given model (where the model name is currently defined in the config file). The training is the same as before, and the model parameters (officially called the state dictionary) is now saved together. Can be ran via:
-
 ```console
-poetry run python baler --config=projects/cms/configs/cms.json --input=projects/cms/data/cms_data.root --output=projects/cms/output/ --mode=train
+poetry run python baler --project=firstProject --mode=train
 ```
 
-which will, most importantly, output: current_model.pt . This contains all necessary model parameters.
+This will most importantly, output: current_model.pt. This contains all necessary model parameters.
 
 #### Compressing ####
 
 To do something with this model, you can now choose --mode=compress, which can be ran as
 
 ```console
-poetry run python baler --config=projects/cms/configs/cms.json --input=projects/cms/data/cms_data.root --output=projects/cms/output/ --model=projects/cms/output/current_model.pt --mode=compress
+poetry run python baler --project=firstProject --mode=compress
 ```
 
 This will output a compressed file called compressed.pickle, and this is the latent space representation of the input dataset. It will also output cleandata_pre_comp.pickle which is just the exact data being compressed.
@@ -59,13 +77,13 @@ This will output a compressed file called compressed.pickle, and this is the lat
 To decompress the compressed file, we choose --mode=decompress and run:
 
 ```console
-poetry run python baler --config=projects/cms/configs/cms.json --input=projects/cms/output/compressed.pickle --output=projects/cms/output/ --model=projects/cms/output/current_model.pt --mode=decompress
+poetry run python baler --project=firstProject --mode=decompress
 ```
 
 which outputs decompressed.pickle . To double check the file sizes, we can run
 
 ```console
-poetry run python baler --config=projects/cms/configs/cms.json --input=projects/cms/output/ --output=projects/cms/output/ --mode=info
+poetry run python baler --project=firstProject --mode=info
 ```
 
 which will print the file sizes of the data we’re compressing, the compressed dataset & the decompressed dataset.
@@ -75,7 +93,7 @@ which will print the file sizes of the data we’re compressing, the compressed 
 Plotting works as before, with a minor caveat. This caveat is that the column names are currently manually implemented because I couldn’t find a simple way to store the column names (there is a good explanation for this), so it will not run immediately on the UN dataset without modifications to the config file. Plotting would look something like this however:
 
 ```console
-poetry run python baler --config=projects/cms/configs/cms.json --input=projects/cms/output/cleandata_pre_comp.pickle --output=projects/cms/output/decompressed.pickle --mode=plot
+poetry run python baler --project=firstProject --mode=plot
 ```
 
 # Running with Docker #
