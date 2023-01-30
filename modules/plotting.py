@@ -20,10 +20,10 @@ def to_percent(y, position):
 def loss_plot(path_to_loss_data,output_path, config):
     loss_data = pd.read_csv(path_to_loss_data)
     str_list = ['Epochs:', 'Model Name:', 'Reg. Param:', 'lr:', 'BS:']
-    conf_list = [config['epochs'],config['model_name'],config['reg_param'],config['lr'],config['batch_size']]
 
     val_loss = loss_data["Val Loss"]
     train_loss = loss_data["Train Loss"]
+    conf_list = [len(train_loss),config['model_name'],config['reg_param'],config['lr'],config['batch_size']]
 
     plt.figure(figsize=(10,7))
     plt.title('Loss plot')
@@ -47,20 +47,16 @@ def plot(before_path,after_path):
     before = np.array(before)
     # Added because plotting is not supported for non-DataFrame objects yet. 
     if isinstance(before, pd.DataFrame) == False:
-        names = ["pt","eta","phi","mass","EmEnergy","HadEnergy","InvisEnergy","AuxiliaryEnergy"]
+        names = ["pt","eta","phi","m","EmEnergy","HadEnergy","InvisEnergy","AuxilEnergy"]
         before = pd.DataFrame(before,columns=names)
         after = pd.DataFrame(after,columns=names)
     else: 
         pass
 
 
-    #print(after['mass'].value_counts())
-    #print(before['mass'].value_counts())
-    print(before.mean())
-    print(after.mean())
-
+    ## Added for normalization testing
+    ## Can be ignored.
     norm = False
-
     if norm == True:
 
         names = ["pt","eta","phi","mass","EmEnergy","HadEnergy","InvisEnergy","AuxiliaryEnergy"]
@@ -94,7 +90,7 @@ def plot(before_path,after_path):
     columns = data_processing.get_columns(before)
     number_of_columns = len(columns)
 
-    with PdfPages(after_path.split("after.pickle")[0]+"comparison.pdf") as pdf:
+    with PdfPages(after_path.split("after.pickle")[0]+"comparison_50ep.pdf") as pdf:
         figure1, (ax1,ax2) = plt.subplots(1,2,figsize=(18.3*(1/2.54)*1.7, 13.875*(1/2.54)*1.32))
         for index, column in enumerate(columns):
             print(f'{index} of {number_of_columns}')
@@ -133,13 +129,15 @@ def plot(before_path,after_path):
             #counts_response, bins_response = np.histogram(response[column],bins=np.arange(minimum,maximum,step))
             counts_response, bins_response = np.histogram(response[column],bins=np.arange(-2,2,0.1))
             ax2.hist(bins_response[:-1], bins_response, weights=counts_response, label='Response')
-
+            ax2.axvline(bins_response.mean(), color='k', linestyle='dashed', linewidth=1,label=f'Mean {round(bins_response.mean(),8)}')
+            
             #To have percent on the x-axis
             #formatter = mpl.ticker.FuncFormatter(to_percent)
             #ax2.xaxis.set_major_formatter(formatter)   
             ax2.set_title(f"{column} Response")
             ax2.set_xlabel(f'{column} Response', ha='right', x=1.0)
             ax2.set_ylabel("Counts", ha='right', y=1.0)
+            ax2.legend(loc='best')
 
             pdf.savefig()
             ax2.clear()
