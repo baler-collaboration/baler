@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "baler"
+version = "0.1.0"
+description = "Baler aims to be a tool which will use lossy machine learning based compression methods to compress multi-dimensional data and evaluate the accuracy of the compressed data. The compression “algorithm” is derived by training an auto-encoder to compress and decompress multidimensional data."
+authors = ["Your Name <you@example.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+torch = "^1.13.0"
+tqdm = "^4.64.1"
+pandas = "^1.5.2"
+matplotlib = "^3.6.2"
+scikit-learn = "^1.2.0"
+uproot = "4.2.2"
+awkward-pandas = "^2022.12a1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
