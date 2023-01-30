@@ -17,7 +17,9 @@ def main():
 
         ModelObject= helper.model_init(config=config)
         model = ModelObject(n_features=number_of_columns, z_dim=config["latent_space_size"])
-        test_data_tensor, reconstructed_data_tensor,trained_model = helper.train(model,number_of_columns,full_data,test_set_norm,output_path,config)
+
+        ## Pay attention to what dataset is being passed as training data
+        test_data_tensor, reconstructed_data_tensor,trained_model = helper.train(model,number_of_columns,train_set_norm,test_set_norm,output_path,config)
         test_data = helper.detach(test_data_tensor)
         reconstructed_data = helper.detach(reconstructed_data_tensor)
 
@@ -30,30 +32,24 @@ def main():
   
         #helper.to_pickle(test_data_renorm, output_path+'before.pickle')
         #helper.to_pickle(reconstructed_data_renorm, output_path+'after.pickle')
-        #normalization_features.to_csv(output_path+'cms_normalization_features.csv')
+        normalization_features.to_csv(output_path+'cms_normalization_features.csv')
         helper.model_saver(trained_model,output_path+'model.pt')
-        helper.loss_plotter("projects/cms/output/early_stopping/loss_data.csv",output_path,config)
 
     elif mode == "plot":
         helper.plot(input_path, output_path)
-        #helper.loss_plotter("projects/cms/output/loss_data.csv",output_path,config)
+        helper.loss_plotter("projects/cms/output/loss_data.csv",output_path,config)
 
     elif mode == "compress":
         print("Compressing...")
         start = time.time()
-        process_1 = psutil.Process(os.getpid())
-        print('Memory usage:',process_1.memory_percent(),'%')        
 
         compressed, data_before = helper.compress(model_path=model_path, number_of_columns=config["number_of_columns"], input_path=input_path, config=config)
-        process_2 = psutil.Process(os.getpid())
-        print('Memory usage:',process_2.memory_percent(),'%') 
+
         # Converting back to numpyarray
         compressed = helper.detach(compressed)
         end = time.time()
 
         print("Compression took:",f"{(end - start) / 60:.3} minutes")
-        process_3 = psutil.Process(os.getpid())
-        print('Memory usage:',process_3.memory_percent(),'%') 
 
         helper.to_pickle(compressed, output_path+'compressed.pickle')
         helper.to_pickle(data_before, output_path+"data_pre_comp.pickle")
