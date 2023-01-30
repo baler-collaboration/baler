@@ -1,47 +1,186 @@
-# Baler
-## Introduction
-Baler is a tool used to test the feasibility of compressing different types of scientific data using autoencoders.
+# Getting started #
 
-The main object the user has produce before using baler is a configuration file. The configuration primarily contains:
-* The path to the data which is going to be compressed
-* The name of the autoencoder to be used
-  - Either use a pre-made one or write your own, specific to your dataset, in `./modules/models.py`
-* Pruning of the dataset, for example the dropping certain variables
-* The number of epochs, batch size, learning rate etc.
+Baler is currently packaged using [Poetry](https://python-poetry.org/ "Poetry"), a package manager for Python which helps with dependancy management. Installing and running using Poetry requires slight modifications to the usual Python commands, detailed [below](#installing-baler-dependancies-using-poetry).
 
-When provided a configuration file, Baler has 4 main running modes:
-* Train: Baler will train a machine learning model to compress and decompress your dataset, and then save the model, model weights, and normalization factors
-* Plot: Baler will show the performance of the a trained network by plotting the difference between the original dataset and the compressed+decompressed dataset
-* Compress: Baler will compress the dataset using the model derived in during the training mode
-* Decompress: Baler will decompress the dataset using the model derived during the training mode
+Additionally, a Docker container is available which allows the use of Baler without worrying about dependancies or environment. Instructions for this usage are given [later in this README](#running-with-docker "Running with Docker").
 
-## How to Run
-Start by creating a new project directory. This will create the standardised directory structure needed, and create a blank config file for you under `./projects/firstProject/config.json`.\
-`python3 run.py --mode=newProject --project=firstProject`
+## Example data ##
 
-Add a dataset to the `./data/` directory. if you are just trying things out, you can download a sample dataset using:\
-`wget http://opendata.cern.ch/record/6010/files/assets/cms/Run2012B/JetHT/AOD/22Jan2013-v1/20000/CACF9904-3473-E211-AE0B-002618943857.root -P ./data/firstProject/`
+If you wish to use this README as a tutorial, you can use the following command to aquire example data, compabible with Baler and the configuration provided in this repository.
 
-Open your config file under `./projects/firstProject/config.json`, and edit the follwoing lines:
-* `"input_path":"./data/firstProject/CACF9904-3473-E211-AE0B-002618943857.root",`
-* `"cleared_col_names":["pt","eta","phi","m","EmEnergy","HadEnergy","InvisEnergy","AuxilEnergy"],`
-* `"Branch" : "Events",`
-* `"Collection": "recoGenJets_slimmedGenJets__PAT.",`
-* `"Objects": "recoGenJets_slimmedGenJets__PAT.obj",`
-* `"number_of_columns" : 8,`
-* `"latent_space_size" : 4,`
-* `"dropped_variables":["recoGenJets_slimmedGenJets__PAT.obj.m_state.vertex_.fCoordinates.fX","recoGenJets_slimmedGenJets__PAT.obj.m_state.vertex_.fCoordinates.fY","recoGenJets_slimmedGenJets__PAT.obj.m_state.vertex_.fCoordinates.fZ","recoGenJets_slimmedGenJets__PAT.obj.m_state.qx3_","recoGenJets_slimmedGenJets__PAT.obj.m_state.pdgId_","recoGenJets_slimmedGenJets__PAT.obj.m_state.status_","recoGenJets_slimmedGenJets__PAT.obj.mJetArea","recoGenJets_slimmedGenJets__PAT.obj.mPileupEnergy","recoGenJets_slimmedGenJets__PAT.obj.mPassNumber"]`
+```console
+wget http://opendata.cern.ch/record/21856/files/assets/cms/mc/RunIIFall15MiniAODv2/ZprimeToTT_M-3000_W-30_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/10000/DAA238E5-29D6-E511-AE59-001E67DBE3EF.root -O projects/data/cms_data.root
+```
 
-Train the network of "firstProject" by giving baler the project path and training mode as arguments:\
-`python3 run.py --project=firstProject --mode=train`
+## Running locally  ##
 
-Then plot the performance using:\
-`python3 run.py --project=firstProject --mode=plot`
+### Installing Baler dependancies using Poetry ###
 
-After training and plotting you can evaluate the perforamnce of the network using the plots in `./projects/firstProject/plotting/comparison.pdf`. To improve the performance you can either change some simple parameters like the number of epocs in the config, or you can edit the model used in `./modules/models.py/`. Just make sure to reference to the correct model in your config. For example: `"model_name" : "new_SAE"`.
+First, if you do not already have Poetry installed on your system, aquire it in a manner appropriate for your system. For example, using pip:
 
-Once you are happy with the performance of your model you are ready to compress the data. The compressed data will show up in `./projects/firstProject/compressed_output/`. To do this, use:\
-`python3 run.py --project=firstProject --mode=compress`
+```console
+pip install poetry
+```
 
-Later, when the time comes to use your data, you can simply decompress the data. The decompressed data will show up in `./projects/firstProject/decompressed_output/`:\
-`python3 run.py --project=firstProject --mode=decompress`
+Now, Poetry can be used to install the project dependancies. 
+
+In the directory in which you have cloned this repository:
+
+```console
+poetry install
+```
+
+### Running Baler ###
+
+Baler can be run locally using a virtual environment created by Poetry. This is achived using the `poetry run` command.
+
+#### Training ####
+
+What --mode=train now does is that it trains a given model (where the model name is currently defined in the config file). The training is the same as before, and the model parameters (officially called the state dictionary) is now saved together. Can be ran via:
+
+```console
+poetry run python baler --config=projects/cms/configs/cms.json --input=projects/cms/data/cms_data.root --output=projects/cms/output/ --mode=train
+```
+
+which will, most importantly, output: current_model.pt . This contains all necessary model parameters.
+
+#### Compressing ####
+
+To do something with this model, you can now choose --mode=compress, which can be ran as
+
+```console
+poetry run python baler --config=projects/cms/configs/cms.json --input=projects/cms/data/cms_data.root --output=projects/cms/output/ --model=projects/cms/output/current_model.pt --mode=compress
+```
+
+This will output a compressed file called compressed.pickle, and this is the latent space representation of the input dataset. It will also output cleandata_pre_comp.pickle which is just the exact data being compressed.
+
+#### Decompressing ####
+
+To decompress the compressed file, we choose --mode=decompress and run:
+
+```console
+poetry run python baler --config=projects/cms/configs/cms.json --input=projects/cms/output/compressed.pickle --output=projects/cms/output/ --model=projects/cms/output/current_model.pt --mode=decompress
+```
+
+which outputs decompressed.pickle . To double check the file sizes, we can run
+
+```console
+poetry run python baler --config=projects/cms/configs/cms.json --input=projects/cms/output/ --output=projects/cms/output/ --mode=info
+```
+
+which will print the file sizes of the data we’re compressing, the compressed dataset & the decompressed dataset.
+
+#### Plotting ####
+
+Plotting works as before, with a minor caveat. This caveat is that the column names are currently manually implemented because I couldn’t find a simple way to store the column names (there is a good explanation for this), so it will not run immediately on the UN dataset without modifications to the config file. Plotting would look something like this however:
+
+```console
+poetry run python baler --config=projects/cms/configs/cms.json --input=projects/cms/output/cleandata_pre_comp.pickle --output=projects/cms/output/decompressed.pickle --mode=plot
+```
+
+# Running with Docker #
+
+## Prerequisites ##
+
+  * You must have Docker installed. See this [guide](https://docs.docker.com/engine/install/ "Docker Install guide")
+  * You must have carried out appropriate post installation steps. For example, for Linux systems, see this [guide](https://docs.docker.com/engine/install/linux-postinstall/ "Docker postinstall guide")
+
+## Running ##
+
+Running with Docker requires slight modifications to the above commands. The base command becomes:
+
+```console
+docker run \
+--mount type=bind,source=${PWD}/projects/,target=/projects \
+ghcr.io/uomresearchit/baler:latest 
+```
+
+Where:
+  * `docker run` invokes docker and specifies the running of a container
+  * `--mount type=bind,source=${PWD}/projects/,target=/projects` mounts the local (host) directory `./projects` to the container at `/projects`
+  * `ghcr.io/uomresearchit/baler:latest` specifies the container to run
+  
+Therefore the three commands detailed above become:
+
+### Train: ###
+
+```console
+docker run \
+--mount type=bind,source=${PWD}/projects/,target=/projects \
+ghcr.io/uomresearchit/baler:latest \
+--config=/projects/cms/configs/cms.json \
+--input=/projects/cms/data/cms_data.root \
+--output=/projects/cms/output/ \
+--mode=train
+```
+
+### Compress: ### 
+```console
+docker run \
+--mount type=bind,source=${PWD}/projects/,target=/projects \
+ghcr.io/uomresearchit/baler:latest \
+--config=/projects/cms/configs/cms.json \
+--input=/projects/cms/data/cms_data.root \
+--output=/projects/cms/output/ \
+--model=/projects/cms/output/current_model.pt \
+--mode=compress
+```
+
+### Decompress: ###
+```console
+docker run \
+--mount type=bind,source=${PWD}/projects/,target=/projects \
+ghcr.io/uomresearchit/baler:latest \
+--config=/projects/cms/configs/cms.json \
+--input=/projects/cms/output/compressed.pickle \
+--output=/projects/cms/output/ \
+--model=/projects/cms/output/current_model.pt \
+--mode=decompress
+```
+
+## Build Docker image ##
+
+If you would prefer not to use the Docker image produced by the University of Manchester, you may build the image ourself. This is achived with:
+
+```console
+docker build -t baler:latest .
+```
+
+This image may be run using (e.g.):
+
+```console
+docker run \
+--mount type=bind,source=${PWD}/projects/,target=/projects \
+baler:latest \
+--config=/projects/cms/configs/cms.json \
+--input=/projects/cms/data/cms_data.root \
+--output=/projects/cms/output/ \
+--mode=train
+```
+
+## Developing using Docker image ##
+
+Docker presents some obstacles to live development, if you wish changes to be made to a Docker container it must be rebuilt. This slows development and can be frustrating.
+
+An alternative is to use Docker volumes (mounts between local and container file systems) to shaddow the source files in the container.
+
+An example command is given here:
+
+```console
+docker run \
+--mount type=bind,source=${PWD}/projects/,target=/projects \
+--mount type=bind,source=${PWD}/baler/modules,target=/baler-root/baler/modules \
+--mount type=bind,source=${PWD}/baler/baler.py,target=/baler-root/baler/baler.py \
+ghcr.io/uomresearchit/baler:latest \
+--config=/projects/cms/configs/cms.json \
+--input=/projects/cms/data/cms_data.root \
+--output=/projects/cms/output/ \
+--mode=train
+```
+
+Where:
+  * `--mount type=bind,source=${PWD}/baler/modules,target=/baler-root/baler/modules` mounts the local source code directory shaddowing the source files built in to the container
+  * `--mount type=bind,source=${PWD}/baler/baler.py,target=/baler-root/baler/baler.py` mounts the main baler source file shadding that in the container
+  
+Please note, this mounting does not permentantly change the behaviour of the container, for this the contatiner must be rebuilt.
+

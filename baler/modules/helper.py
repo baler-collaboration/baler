@@ -42,7 +42,7 @@ def createNewProject(projectName):
     if os.path.exists(project_path):
         shutil.rmtree(project_path)
     os.makedirs(project_path)
-    shutil.copyfile("modules/nominal_config.json", f"{project_path}/config.json")
+    shutil.copyfile("baler/modules/nominal_config.json", f"{project_path}/config.json")
     os.makedirs(f"{project_path}/compressed_output/")
     os.makedirs(f"{project_path}/decompressed_output/")
     os.makedirs(f"{project_path}/plotting/")
