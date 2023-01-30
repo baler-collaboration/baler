@@ -10,7 +10,9 @@ factor = 0.5
 min_lr = 1e-6
 ###############################################
 
+
 def new_loss_func(model,reconstructed_data,true_data,reg_param,val):
+    ## Still WIP. Other loss function is completely fine!
     mse = nn.MSELoss()
     mse_loss = mse(reconstructed_data, true_data)
     l1_loss = 0
@@ -40,7 +42,7 @@ def sparse_loss_function_L1(model_children, true_data, reconstructed_data, reg_p
     if validate == False:
         for i in range(len(model_children)):
             values = F.relu((model_children[i](values)))
-            l1_loss += torch.sum(torch.abs(values))
+            l1_loss += torch.mean(torch.abs(values))
 
         loss = mse_loss + reg_param * l1_loss
         return loss, mse_loss, l1_loss
@@ -48,7 +50,10 @@ def sparse_loss_function_L1(model_children, true_data, reconstructed_data, reg_p
         return mse_loss
 
 
-def accuracy(model,dataloader):
+## Accuracy function still WIP. Not working properly.
+## Probably has to do with total_correct counter.
+
+def accuracy(model,dataloader): 
     print('Accuracy')
     model.eval()
 

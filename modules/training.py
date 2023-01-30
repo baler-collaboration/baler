@@ -24,6 +24,9 @@ def fit(model, train_dl, train_ds, regular_param, optimizer, RHO, l1=True):
         if l1 == True:
             loss, mse_loss, l1_loss = utils.sparse_loss_function_L1(model_children=model_children, true_data=x,reg_param=regular_param,
                                                                     reconstructed_data=reconstructions, validate=False)
+        else:
+            # Implement KL here
+            break
         loss.backward()
         optimizer.step()
 
@@ -37,7 +40,7 @@ def fit(model, train_dl, train_ds, regular_param, optimizer, RHO, l1=True):
     print(f" Train Loss: {epoch_loss:.1E}")
     return epoch_loss,mse_loss_fit,regularizer_loss_fit, model
 
-def validate(model, test_dl, test_ds,regular_param,l1=True):#,reg_param,l1,lr, device, loss_fn):
+def validate(model, test_dl, test_ds,regular_param,l1=True):
     print('Validating')
     model.eval()
     running_loss = 0.0
@@ -51,13 +54,12 @@ def validate(model, test_dl, test_ds,regular_param,l1=True):#,reg_param,l1,lr, d
             x, _ = data
             reconstructions = model(x)
             if l1 == True:
-                loss= utils.sparse_loss_function_L1(model_children=model_children, true_data=x,reg_param=regular_param,
-                                                    reconstructed_data=reconstructions, validate=True)
+                loss, mse, l1_loss = utils.sparse_loss_function_L1(model_children=model_children, true_data=x,reg_param=regular_param,
+                                                    reconstructed_data=reconstructions, validate=False)
                 running_loss += loss.item()
 
-                #loss, mse_loss, l1_loss = utils.new_loss_func(model=model, true_data=x,
-                #                                                reconstructed_data=reconstructions, reg_param=regular_param, val=False)
 
+            ## WIP
             else:
                 # Implement KL Here also. Should however just return mse loss I think
                 break
@@ -90,10 +92,12 @@ def train(model,number_of_columns, train_data, test_data, parent_path, config):
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
     ## Activate early stopping
-    early_stopping = utils.EarlyStopping()
+    if config['early_stopping'] == True:
+        early_stopping = utils.EarlyStopping() # Changes to patience & min_delta can be made in configs
 
     ## Activate LR Scheduler
-    lr_scheduler = utils.LRScheduler(optimizer=optimizer)
+    if config['lr_scheduler'] == True:
+        lr_scheduler = utils.LRScheduler(optimizer=optimizer)
 
     # train and validate the autoencoder neural network
     train_acc = []
@@ -123,8 +127,9 @@ def train(model,number_of_columns, train_data, test_data, parent_path, config):
         regularizer_loss_fit.append(regularizer_loss_fit1)
         lr_scheduler(val_epoch_loss)
         early_stopping(val_epoch_loss)
-        if early_stopping.early_stop:
-            break
+        if config['early_stopping'] == True:
+            if early_stopping.early_stop:
+                break
 
     end = time.time()
     regularizer_string = 'l1'
