@@ -135,10 +135,7 @@ ghcr.io/uomresearchit/baler:latest \
 docker run \
 --mount type=bind,source=${PWD}/projects/,target=/projects \
 ghcr.io/uomresearchit/baler:latest \
---config=/projects/cms/configs/cms.json \
---input=/projects/cms/data/cms_data.root \
---output=/projects/cms/output/ \
---model=/projects/cms/output/current_model.pt \
+--project=firstProject \
 --mode=compress
 ```
 
@@ -147,10 +144,7 @@ ghcr.io/uomresearchit/baler:latest \
 docker run \
 --mount type=bind,source=${PWD}/projects/,target=/projects \
 ghcr.io/uomresearchit/baler:latest \
---config=/projects/cms/configs/cms.json \
---input=/projects/cms/output/compressed.pickle \
---output=/projects/cms/output/ \
---model=/projects/cms/output/current_model.pt \
+--project=firstProject \
 --mode=decompress
 ```
 
@@ -168,9 +162,7 @@ This image may be run using (e.g.):
 docker run \
 --mount type=bind,source=${PWD}/projects/,target=/projects \
 baler:latest \
---config=/projects/cms/configs/cms.json \
---input=/projects/cms/data/cms_data.root \
---output=/projects/cms/output/ \
+--project=firstProject \
 --mode=train
 ```
 
@@ -188,9 +180,7 @@ docker run \
 --mount type=bind,source=${PWD}/baler/modules,target=/baler-root/baler/modules \
 --mount type=bind,source=${PWD}/baler/baler.py,target=/baler-root/baler/baler.py \
 ghcr.io/uomresearchit/baler:latest \
---config=/projects/cms/configs/cms.json \
---input=/projects/cms/data/cms_data.root \
---output=/projects/cms/output/ \
+--project=firstProject \
 --mode=train
 ```
 
