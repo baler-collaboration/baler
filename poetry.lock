@@ -97,6 +97,33 @@ complete = ["pyarrow", "pytest (>=6.0)", "pytest-cov (>=3.0.0)"]
 docs = ["furo", "ipython", "nbsphinx", "sphinx"]
 
 [[package]]
+name = "awkward0"
+version = "0.15.5"
+description = "Manipulate arrays of complex data structures as easily as Numpy."
+category = "main"
+optional = false
+python-versions = "*"
+files = [
+    {file = "awkward0-0.15.5-py3-none-any.whl", hash = "sha256:5fdaa3b29ea2426665215478b9b9199e991da5ab1f1f2996dcbfe848e08a40a1"},
+    {file = "awkward0-0.15.5.tar.gz", hash = "sha256:156e6e338c56d857a7bb53c4fcc8b0b2592a3470eff0d854e6d68777986359ad"},
+]
+
+[package.dependencies]
+numpy = ">=1.13.1"
+
+[[package]]
+name = "cachetools"
+version = "5.3.0"
+description = "Extensible memoizing collections and decorators"
+category = "main"
+optional = false
+python-versions = "~=3.7"
+files = [
+    {file = "cachetools-5.3.0-py3-none-any.whl", hash = "sha256:429e1a1e845c008ea6c85aa35d4b98b65d6a9763eeef3e37e92728a12d1de9d4"},
+    {file = "cachetools-5.3.0.tar.gz", hash = "sha256:13dfddc7b8df938c21a940dfa6557ce6e94a2f1cdfa58eb90c805721d58f2c14"},
+]
+
+[[package]]
 name = "colorama"
 version = "0.4.6"
 description = "Cross-platform colored terminal text."
@@ -906,6 +933,44 @@ dev = ["awkward (>=1.0.0,<2)", "boost-histogram (>=0.13)", "hist (>=1.2)", "pand
 test = ["flake8", "flake8-print", "lz4", "pytest (>=4.6)", "requests", "scikit-hep-testdata", "xxhash"]
 
 [[package]]
+name = "uproot3"
+version = "3.14.4"
+description = "ROOT I/O in pure Python and Numpy."
+category = "main"
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
+files = [
+    {file = "uproot3-3.14.4-py3-none-any.whl", hash = "sha256:d0b513aed4af17278d582a4879eff7037efe0752c7e2154683ac4c4f083c30c0"},
+    {file = "uproot3-3.14.4.tar.gz", hash = "sha256:4396746ba5ef9071bb0a9da53294e4613a7f4548218940f86496e79d682d20eb"},
+]
+
+[package.dependencies]
+awkward0 = "*"
+cachetools = "*"
+numpy = ">=1.13.1"
+uproot3-methods = "*"
+
+[package.extras]
+compress = ["backports.lzma", "lz4", "xxhash", "zstandard"]
+testing = ["backports.lzma", "lz4", "mock", "pkgconfig", "pytest (>=3.9)", "requests", "xxhash", "zstandard"]
+
+[[package]]
+name = "uproot3-methods"
+version = "0.10.1"
+description = "Pythonic mix-ins for ROOT classes."
+category = "main"
+optional = false
+python-versions = "*"
+files = [
+    {file = "uproot3-methods-0.10.1.tar.gz", hash = "sha256:dd68f90be1ea276360b96369836849df29045f7fe4e534f9ac21ea00798ee358"},
+    {file = "uproot3_methods-0.10.1-py3-none-any.whl", hash = "sha256:10e4be8dbcabdf3efb5cce185b0b8ede2ed8390e875750649c6f1c277c26d28c"},
+]
+
+[package.dependencies]
+awkward0 = "*"
+numpy = ">=1.13.1"
+
+[[package]]
 name = "wheel"
 version = "0.38.4"
 description = "A built-package format for Python"
@@ -939,4 +1004,4 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "e6af61b96bc42350928247f9f42ff84c488b082acded959c70905fcbff466474"
+content-hash = "19a366970c8a48dd913987e4d0dd2c64a2b44b395ccf04a21a926dec2e7e1603"
