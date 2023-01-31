@@ -44,12 +44,14 @@ FROM python:3.8-slim
 
 # Copy virtual environment
 WORKDIR /baler-root/baler
-COPY --from=python-base /baler-root/baler/modules/ ./modules
-COPY --from=python-base /baler-root/baler/*.py /baler-root/baler/README.md ./
 COPY --from=python-base /baler-root/baler/dist/*.whl ./
 
 # Install wheel
 RUN pip install *.whl
+
+# Copy source 
+COPY --from=python-base /baler-root/baler/modules/ ./modules
+COPY --from=python-base /baler-root/baler/*.py /baler-root/baler/README.md ./
 
 # Configure run time
 WORKDIR /baler-root/
