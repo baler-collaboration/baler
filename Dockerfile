@@ -54,5 +54,6 @@ COPY --from=python-base /baler-root/baler/modules/ ./modules
 COPY --from=python-base /baler-root/baler/*.py /baler-root/baler/README.md ./
 
 # Configure run time
+ENV PYTHONUNBUFFERED=1
 WORKDIR /baler-root/
 ENTRYPOINT ["python", "baler"]
