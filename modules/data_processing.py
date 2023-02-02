@@ -50,7 +50,7 @@ def Type_clearing(TTree):
     return Column_names
 
 def numpy_to_df(array,config):
-    df = pd.DataFrame(array,columns=cleared_column_names)
+    df = pd.DataFrame(array,columns=config["cleared_column_names"])
     return df
 
 def load_data(data_path,config):
