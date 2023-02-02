@@ -33,7 +33,7 @@ def main():
         #helper.to_pickle(test_data_renorm, output_path+'before.pickle')
         #helper.to_pickle(reconstructed_data_renorm, output_path+'after.pickle')
         normalization_features.to_csv(output_path+'cms_normalization_features.csv')
-        helper.model_saver(trained_model,output_path+'model.pt')
+        helper.model_saver(trained_model,output_path+'current_model.pt')
 
     elif mode == "plot":
         helper.plot(input_path, output_path)
@@ -52,7 +52,7 @@ def main():
         print("Compression took:",f"{(end - start) / 60:.3} minutes")
 
         helper.to_pickle(compressed, output_path+'compressed.pickle')
-        helper.to_pickle(data_before, output_path+"data_pre_comp.pickle")
+        helper.to_pickle(data_before, output_path+"cleandata_pre_comp.pickle")
 
         if config["PCA"] == True: #False by default
             print('Doing PCA compression & decompression...')

@@ -27,8 +27,8 @@ def loss_plot(path_to_loss_data,output_path, config):
 
     plt.figure(figsize=(10,7))
     plt.title('Loss plot')
-    plt.plot(train_loss[3:],color='orange',label="Train Loss")
-    plt.plot(val_loss[3:],color='red',label="Validation Loss")
+    plt.plot(train_loss,color='orange',label="Train Loss")
+    plt.plot(val_loss,color='red',label="Validation Loss")
     for i in range(len(conf_list)):
         plt.plot([],[], ' ',label=str_list[i] + ' ' + str(conf_list[i]))
     plt.xlabel('Epochs')
