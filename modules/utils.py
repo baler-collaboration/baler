@@ -4,8 +4,6 @@ import torch.nn.functional as F
 from tqdm import tqdm
 
 ###############################################
-patience = 10
-min_delta = 0
 factor = 0.5
 min_lr = 1e-6
 ###############################################
@@ -41,7 +39,7 @@ def sparse_loss_function_L1(model_children, true_data, reconstructed_data, reg_p
     values = true_data
     if validate == False:
         for i in range(len(model_children)):
-            values = F.relu((model_children[i](values)))
+            values = ((model_children[i](values)))
             l1_loss += torch.mean(torch.abs(values))
 
         loss = mse_loss + reg_param * l1_loss
@@ -79,7 +77,7 @@ def accuracy(model,dataloader):
 
 
 class EarlyStopping():
-    def __init__(self,patience=patience,min_delta=min_delta):
+    def __init__(self,patience,min_delta):
         self.patience = patience # Nr of times we allow val. loss to not improve before early stopping
         self.min_delta = min_delta # min(new loss - best loss) for new loss to be considered improvement
         self.counter = 0 # counts nr of times val_loss dosent improve
@@ -104,7 +102,7 @@ class EarlyStopping():
 
 
 class LRScheduler():
-    def __init__(self, optimizer, patience=patience, min_lr=min_lr, factor=factor):
+    def __init__(self, optimizer, patience, min_lr=min_lr, factor=factor):
 
         self.optimizer = optimizer
         self.patience = patience 

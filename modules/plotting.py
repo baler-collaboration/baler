@@ -53,44 +53,10 @@ def plot(before_path,after_path):
     else: 
         pass
 
-
-    ## Added for normalization testing
-    ## Can be ignored.
-    norm = False
-    if norm == True:
-
-        names = ["pt","eta","phi","mass","EmEnergy","HadEnergy","InvisEnergy","AuxiliaryEnergy"]
-        before = pd.DataFrame(before,columns=names)
-        after = pd.DataFrame(after,columns=names)  
-
-        before = before.replace(np.inf,np.nan)
-        after = after.replace(np.inf,np.nan)
-        before=before.dropna()
-        after=after.dropna()
-
-        
-
-        response = (after-before)/before
-
-
-        fig, (ax1, ax2) = plt.subplots(1, 2,figsize=(12,7))
-        fig.suptitle('New Loss Function + Adam Optimizer - normalized data')
-        ax1.hist(before['mass'],label='Before',bins=50)
-        ax1.hist(after['mass'],label='After',histtype='step',bins=50)
-        ax1.set_title('Mass distribution')
-        ax1.set_xlabel(r'$m_{jj}$')
-        ax1.set_ylabel('Counts')
-        ax1.legend()
-
-        ax2.hist(response['mass'],bins=50,range=(-2,2))
-        ax2.set_title('Response')
-
-        plt.savefig('Mass_response_dist.pdf')
-
     columns = data_processing.get_columns(before)
     number_of_columns = len(columns)
 
-    with PdfPages(after_path.split("after.pickle")[0]+"comparison_50ep.pdf") as pdf:
+    with PdfPages(after_path.split("after.pickle")[0]+"comparison.pdf") as pdf:
         figure1, (ax1,ax2) = plt.subplots(1,2,figsize=(18.3*(1/2.54)*1.7, 13.875*(1/2.54)*1.32))
         for index, column in enumerate(columns):
             print(f'{index} of {number_of_columns}')
@@ -129,7 +95,7 @@ def plot(before_path,after_path):
             #counts_response, bins_response = np.histogram(response[column],bins=np.arange(minimum,maximum,step))
             counts_response, bins_response = np.histogram(response[column],bins=np.arange(-2,2,0.1))
             ax2.hist(bins_response[:-1], bins_response, weights=counts_response, label='Response')
-            ax2.axvline(bins_response.mean(), color='k', linestyle='dashed', linewidth=1,label=f'Mean {round(bins_response.mean(),8)}')
+            ax2.axvline(np.mean(list(filter(lambda p : -2<=p<=2, response[column]))), color='k', linestyle='dashed', linewidth=1,label=f'Mean {round(np.mean(list(filter(lambda p : -2<=p<=2, response[column]))),8)}')
             
             #To have percent on the x-axis
             #formatter = mpl.ticker.FuncFormatter(to_percent)
