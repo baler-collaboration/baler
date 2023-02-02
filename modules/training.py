@@ -37,7 +37,7 @@ def fit(model, train_dl, train_ds, regular_param, optimizer, RHO, l1=True):
 
 
     epoch_loss = running_loss/len(train_ds)
-    print(f" Train Loss: {epoch_loss:.1E}")
+    print(f" Train Loss: {epoch_loss:.5E}")
     return epoch_loss,mse_loss_fit,regularizer_loss_fit, model
 
 def validate(model, test_dl, test_ds,regular_param,l1=True):
@@ -65,7 +65,7 @@ def validate(model, test_dl, test_ds,regular_param,l1=True):
                 break
 
     epoch_loss = running_loss/len(test_ds)
-    print(f" Val Loss: {epoch_loss:.1E}")
+    print(f" Val Loss: {epoch_loss:.5E}")
     return epoch_loss
 
 def train(model,number_of_columns, train_data, test_data, parent_path, config):
@@ -93,11 +93,11 @@ def train(model,number_of_columns, train_data, test_data, parent_path, config):
 
     ## Activate early stopping
     if config['early_stopping'] == True:
-        early_stopping = utils.EarlyStopping() # Changes to patience & min_delta can be made in configs
+        early_stopping = utils.EarlyStopping(patience=config['patience'],min_delta=config['min_delta']) # Changes to patience & min_delta can be made in configs
 
     ## Activate LR Scheduler
     if config['lr_scheduler'] == True:
-        lr_scheduler = utils.LRScheduler(optimizer=optimizer)
+        lr_scheduler = utils.LRScheduler(optimizer=optimizer,patience=config['patience'])
 
     # train and validate the autoencoder neural network
     train_acc = []
@@ -125,9 +125,10 @@ def train(model,number_of_columns, train_data, test_data, parent_path, config):
         val_loss.append(val_epoch_loss)
         mse_loss_fit.append(mse_loss_fit1)
         regularizer_loss_fit.append(regularizer_loss_fit1)
-        lr_scheduler(val_epoch_loss)
-        early_stopping(val_epoch_loss)
+        if config['lr_scheduler'] == True:
+            lr_scheduler(val_epoch_loss)
         if config['early_stopping'] == True:
+            early_stopping(val_epoch_loss)
             if early_stopping.early_stop:
                 break
 
