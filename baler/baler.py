@@ -4,7 +4,7 @@ import modules.models as models
 import torch 
 import torch.optim as optim
 import time
-import os, psutil
+import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -101,7 +101,6 @@ def main():
         print(f"Compressed file is {round(q[1]/q[0],2)*100}% the size of the original")
 
 
-        process_3 = psutil.Process(os.getpid())
-        print('Memory usage:',process_3.memory_percent(),'%') 
+
 if __name__ == "__main__":
     main()
