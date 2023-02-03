@@ -2,6 +2,7 @@ import modules.models as models
 import modules.training as training
 import modules.plotting as plotting
 import modules.data_processing as data_processing
+from sklearn.decomposition import PCA 
 import argparse
 import json
 import pickle
@@ -57,10 +58,11 @@ def process(data_path, config):
     df = data_processing.clean_data(df,config)
     normalization_features = data_processing.find_minmax(df)
     df = normalize(df,config)
+    full_data = df
     train_set, test_set = data_processing.split(df, test_size=config["test_size"], random_state=1)
     number_of_columns = len(data_processing.get_columns(df))
     assert number_of_columns == config["number_of_columns"], f"The number of columns of dataframe is {number_of_columns}, config states {config['number_of_columns']}."
-    return train_set, test_set, number_of_columns, normalization_features
+    return train_set, test_set, number_of_columns, normalization_features, full_data
 
 def renormalize(data,true_min_list,feature_range_list,config):
     return data_processing.renormalize_func(data,true_min_list,feature_range_list,config)
@@ -71,8 +73,8 @@ def train(model,number_of_columns,train_set,test_set,project_path,config):
 def plot(test_data, reconstructed_data):
     plotting.plot(test_data, reconstructed_data)
 
-def loss_plotter(path_to_loss_data,output_path):
-    return plotting.loss_plot(path_to_loss_data,output_path)
+def loss_plotter(path_to_loss_data,output_path,config):
+    return plotting.loss_plot(path_to_loss_data,output_path,config)
 
 def model_loader(model_path):
     return data_processing.load_model(model_path)
@@ -122,3 +124,18 @@ def to_root(data_path,config,save_path):
         df = data_processing.numpy_to_df(data_path,config)
         df_names = df.columns
         return data_processing.df_to_root(df, config, col_names=df_names,save_path=save_path)
+
+
+def PCA_compression(train_set,data,config):
+    principal = PCA(n_components=config["latent_space_size"])
+
+    # Train
+    principal.fit(train_set)
+
+    # Compress
+    compressed_data = principal.transform(data)
+    compressed_data_to_save = compressed_data
+
+    # Decompress
+    decompressed_data = principal.inverse_transform(compressed_data)
+    return decompressed_data, compressed_data_to_save
