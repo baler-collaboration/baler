@@ -27,9 +27,13 @@ def perform_training(config, project_path):
     train_set_norm = helper.normalize(train_set, config)
     test_set_norm = helper.normalize(test_set, config)
 
+    device = helper.get_device()
+
     ModelObject = helper.model_init(config=config)
-    model = ModelObject(n_features=number_of_columns,
-                        z_dim=config['latent_space_size'])
+    model = ModelObject(
+        device=device,
+        n_features=number_of_columns,
+        z_dim=config['latent_space_size'])
 
     output_path = project_path+'training/'
     test_data_tensor, reconstructed_data_tensor = helper.train(model,

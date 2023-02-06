@@ -121,7 +121,7 @@ def model_saver(model, model_path):
 
 
 def detach(tensor):
-    return tensor.detach().numpy()
+    return tensor.cpu().detach().numpy()
 
 
 def compress(number_of_columns, model_path, input_path, config):
@@ -138,7 +138,7 @@ def compress(number_of_columns, model_path, input_path, config):
     data_before = numpy.array(data)
 
     data = normalize(data, config)
-    data_tensor = numpy_to_tensor(data)
+    data_tensor = numpy_to_tensor(data).to(model.device)
 
     compressed = model.encode(data_tensor)
     return compressed, data_before
@@ -154,7 +154,7 @@ def decompress(number_of_columns,model_path, input_path, config):
 
     # Load the data & convert to tensor
     data = data_loader(input_path, config)
-    data_tensor = numpy_to_tensor(data)
+    data_tensor = numpy_to_tensor(data).to(model.device)
 
     decompressed = model.decode(data_tensor)
     return decompressed
@@ -182,3 +182,13 @@ def to_root(data_path, config, save_path):
                                           col_names=df_names,
                                           save_path=save_path)
 
+
+def get_device():
+    device = None
+    if torch.cuda.is_available():
+        dev = "cuda:0"
+        device = torch.device(dev)
+    else:
+        dev = "cpu"
+        device = torch.device(dev)
+    return device

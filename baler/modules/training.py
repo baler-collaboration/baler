@@ -13,12 +13,15 @@ def fit(model, train_dl, train_ds, model_children, regular_param, optimizer, RHO
 
     running_loss = 0.0
     n_data = int(len(train_ds) / train_dl.batch_size)
-    for data in tqdm(train_dl, total=n_data, desc='# Training', file=sys.stdout):
-        x, _ = data
+    for inputs, labels in tqdm(train_dl,
+                               total=n_data,
+                               desc='# Training',
+                               file=sys.stdout):
+        inputs = inputs.to(model.device)
         optimizer.zero_grad()
-        reconstructions = model(x)
+        reconstructions = model(inputs)
         loss = model.loss(model_children=model_children,
-                          true_data=x,
+                          true_data=inputs,
                           reconstructed_data=reconstructions,
                           reg_param=regular_param)
         loss.backward()
@@ -39,11 +42,11 @@ def validate(model, test_dl, test_ds, model_children, reg_param):
     running_loss = 0.0
     n_data = int(len(test_ds) / test_dl.batch_size)
     with torch.no_grad():
-        for data in tqdm(test_dl, total=n_data, desc='# Validating', file=sys.stdout):
-            x, _ = data
-            reconstructions = model(x)
+        for inputs, labels in tqdm(test_dl, total=n_data, desc='# Validating', file=sys.stdout):
+            inputs = inputs.to(model.device)
+            reconstructions = model(inputs)
             loss = model.loss(model_children=model_children,
-                              true_data=x,
+                              true_data=inputs,
                               reconstructed_data=reconstructions,
                               reg_param=reg_param)
             running_loss += loss.item()
@@ -112,6 +115,7 @@ def train(model, variables, train_data, test_data, parent_path, config):
                   'Val Loss': val_loss}).to_csv(parent_path+'loss_data.csv')
 
     data_as_tensor = torch.tensor(test_data.values, dtype=torch.float64)
+    data_as_tensor = data_as_tensor.to(model.device)
     pred_as_tensor = model(data_as_tensor)
 
     return data_as_tensor, pred_as_tensor

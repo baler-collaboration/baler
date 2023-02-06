@@ -8,6 +8,7 @@ import numpy as np
 import torch
 
 from modules import models
+from modules import helper as h
 
 
 def import_config(config_path):
@@ -27,7 +28,8 @@ def initialise_model(config):
 
 
 def load_model(ModelObject, model_path, n_features, z_dim):
-    model = ModelObject(n_features, z_dim)
+    device = h.get_device()
+    model = ModelObject(device, n_features, z_dim)
 
     # Loading the state_dict into the model
     model.load_state_dict(torch.load(str(model_path)), strict=False)
