@@ -1,6 +1,7 @@
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
+from torch import nn
+from torch.nn import functional as F
+
 
 class george_SAE(nn.Module):
     def __init__(self, n_features, z_dim):

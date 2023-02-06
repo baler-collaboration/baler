@@ -52,7 +52,7 @@ def perform_training(config, project_path):
                                                    normalization_features['Feature Range'],
                                                    config)
     end = time.time()
-    print('Un-normalization took:',f'{(end - start) / 60:.3} minutes')
+    print('Un-normalization took:', f'{(end - start) / 60:.3} minutes')
 
     helper.to_pickle(test_data_renorm, output_path+'before.pickle')
     helper.to_pickle(reconstructed_data_renorm, output_path+'after.pickle')

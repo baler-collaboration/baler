@@ -1,9 +1,9 @@
-import torch
 from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
-import time
 import pandas as pd
 import sys
+import time
+import torch
 
 
 def fit(model, train_dl, train_ds, model_children, regular_param, optimizer, RHO, l1):
@@ -65,13 +65,15 @@ def train(model, variables, train_data, test_data, parent_path, config):
 
     model_children = list(model.children())
 
-    print(f'OWDB: {torch.cuda.is_available()}')
-
     # Constructs a tensor object of the data and wraps them in a TensorDataset object.
-    train_ds = TensorDataset(torch.tensor(train_data.values, dtype=torch.float64),
-                             torch.tensor(train_data.values, dtype=torch.float64))
-    valid_ds = TensorDataset(torch.tensor(test_data.values, dtype=torch.float64),
-                             torch.tensor(test_data.values, dtype=torch.float64))
+    train_ds = TensorDataset(
+        torch.tensor(train_data.values, dtype=torch.float64),
+        torch.tensor(train_data.values, dtype=torch.float64)
+    )
+    valid_ds = TensorDataset(
+        torch.tensor(test_data.values, dtype=torch.float64),
+        torch.tensor(test_data.values, dtype=torch.float64)
+    )
 
     # Converts the TensorDataset into a DataLoader object and combines into one DataLoaders object (a basic wrapper
     # around several DataLoader objects).
@@ -86,10 +88,22 @@ def train(model, variables, train_data, test_data, parent_path, config):
     start = time.time()
     for epoch in range(epochs):
         print(f'Epoch {epoch + 1} of {epochs}')
-        train_epoch_loss = fit(model=model, train_dl=train_dl, train_ds=train_ds, model_children=model_children,
-                               optimizer=optimizer, RHO=RHO, regular_param=reg_param, l1=l1)
-        val_epoch_loss = validate(model=model, test_dl=valid_dl, test_ds=valid_ds, model_children=model_children,reg_param=reg_param)
+        
+        train_epoch_loss = fit(model=model,
+                               train_dl=train_dl,
+                               train_ds=train_ds,
+                               model_children=model_children,
+                               optimizer=optimizer,
+                               RHO=RHO,
+                               regular_param=reg_param,
+                               l1=l1)
         train_loss.append(train_epoch_loss)
+
+        val_epoch_loss = validate(model=model,
+                                  test_dl=valid_dl,
+                                  test_ds=valid_ds,
+                                  model_children=model_children,
+                                  reg_param=reg_param)        
         val_loss.append(val_epoch_loss)
     end = time.time()
 

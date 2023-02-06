@@ -11,7 +11,7 @@ from modules import models
 
 
 def import_config(config_path):
-    with open(config_path, encoding="utf-8") as json_config:
+    with open(config_path, encoding='utf-8') as json_config:
         config = json.load(json_config)
     return config
 
@@ -21,7 +21,7 @@ def save_model(model, model_path):
 
 
 def initialise_model(config):
-    model_name = config["model_name"]
+    model_name = config['model_name']
     ModelObject = getattr(models, model_name)
     return ModelObject
 
@@ -49,8 +49,8 @@ def Type_clearing(TTree):
     # float, and then removes it
     for i in range(len(Column_Type)):
         if Column_Type[i] != 'float[]' and Column_Type[i] != 'int32_t[]':
-            # print("Index ",i," was of type ",Typename_list_values[i],"\
-            # and was deleted from the file")
+            # print('Index ',i,' was of type ',Typename_list_values[i],'\
+            # and was deleted from the file')
             del Column_names[i]
 
     # Returns list of column names to use in load_data function
@@ -59,29 +59,29 @@ def Type_clearing(TTree):
 
 def numpy_to_df(array, config):
     if np.shape(array)[1] == 4:
-        col_names = ["comp1", "comp2", "comp3", "comp4"]
+        col_names = ['comp1', 'comp2', 'comp3', 'comp4']
     else:
-        col_names = config["cleared_col_names"]
+        col_names = config['cleared_col_names']
     df = pd.DataFrame(array, columns=col_names)
     return df
 
 
 def load_data(data_path, config):
-    if ".csv" in data_path[-4:]:
+    if '.csv' in data_path[-4:]:
         df = pd.read_csv(data_path, low_memory=False)
-    elif ".root" in data_path[-5:]:
-        tree = uproot.open(data_path)[config["Branch"]][config["Collection"]][config["Objects"]]
+    elif '.root' in data_path[-5:]:
+        tree = uproot.open(data_path)[config['Branch']][config['Collection']][config['Objects']]
         global Names
         Names = Type_clearing(tree)
-        df = tree.arrays(Names, library="pd")
-    elif ".pickle" in data_path[-8:]:
+        df = tree.arrays(Names, library='pd')
+    elif '.pickle' in data_path[-8:]:
         df = pd.read_pickle(data_path)
 
     return df
 
 
 def clean_data(df, config):
-    df = df.drop(columns=config["dropped_variables"])
+    df = df.drop(columns=config['dropped_variables'])
     df = df.dropna()
     global cleared_column_names
     cleared_column_names = list(df)
@@ -103,9 +103,9 @@ def find_minmax(data):
 
 def normalize(data, config):
     data = np.array(data)
-    if config["custom_norm"] is True:
+    if config['custom_norm'] is True:
         pass
-    elif config["custom_norm"] is False:
+    elif config['custom_norm'] is False:
         true_min = np.min(data)
         true_max = np.max(data)
         feature_range = true_max - true_min
@@ -150,5 +150,5 @@ def pickle_to_df(file_path,config):
 def df_to_root(df, config, col_names, save_path):
     with uproot3.recreate(save_path) as tree:
         for i in range(len(col_names)):
-            tree[col_names[i]] = uproot3.newtree({col_names[i]: "float64"})
+            tree[col_names[i]] = uproot3.newtree({col_names[i]: 'float64'})
             tree[col_names[i]].extend({col_names[i]: df[col_names[i]].to_numpy()})
