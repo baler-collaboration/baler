@@ -6,6 +6,7 @@ import pandas as pd
 import pytest
 import torch
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import MinMaxScaler
 
 from baler.modules import data_processing
 
@@ -125,25 +126,20 @@ def test_renormalize_std():
 
 def test_renormalize_func():
     # Test data
-    norm_data = np.array([[0.1, 0.2], [0.3, 0.4], [0.5, 0.6]])
-    min_list = [1, 2]
-    range_list = [2, 3]
-    config = {"cleared_column_names": ["col1", "col2"]}
+    scaler = MinMaxScaler()
+    data = [[-1, 2], [-0.5, 6], [0, 10], [1, 18]]
+    scaler.fit(data)
+    norm_data = scaler.transform(data)
+    true_min = [-1, 2]
+    feature_range = [2, 16]
 
-    # Renormalize the data using the renormalize_func function
+    # Renormalize the data using the renormalize_std function
     renormalized_data = data_processing.renormalize_func(
-        norm_data, min_list, range_list, config
+        norm_data, true_min, feature_range, ""
     )
 
     # Check that the renormalized data is correct
-    expected_renormalized_data = np.array([[1.2, 2.4], [1.6, 3.2], [2.0, 4.0]])
-    # renormalized = [
-    #     data_processing.renormalize_std(norm_data, min_list[i], range_list[i])
-    #     for i in range(len(min_list))
-    # ]
-    # renormalizedFull = [(renormalized[i][:, i]) for i in range(len(renormalized))]
-    # expected_renormalized_data = np.array(renormalizedFull).T
-
+    expected_renormalized_data = np.array([[-1, 2], [-0.5, 6], [0, 10], [1, 18]])
     np.testing.assert_array_equal(renormalized_data, expected_renormalized_data)
 
 
