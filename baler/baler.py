@@ -10,7 +10,7 @@ def main():
     config, mode, project = helper.get_arguments()
     project_path = f"projects/{project}/"
     if mode == "newProject":
-        helper.createNewProject(config, project_path)
+        helper.createNewProject(project)
     elif mode == "train":
         perform_training(config, project_path)
     elif mode == "plot":
