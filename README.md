@@ -16,7 +16,27 @@ When provided a configuration file, Baler has 4 main running modes:
 
 # Getting started #
 
-Baler is currently packaged using [Poetry](https://python-poetry.org/ "Poetry"), a package manager for Python which helps with dependency management. Installing and running using Poetry requires slight modifications to the usual Python commands, detailed [below](#installing-baler-dependancies-using-poetry).
+## Windows
+* First download and install the linux kernel update package for windows: https://learn.microsoft.com/en-us/windows/wsl/install-manual#step-4---download-the-linux-kernel-update-package
+* Install docker from docker.com
+* Restart your computer and open docker Desktop
+* Download this repository: https://github.com/baler-compressor/baler/archive/refs/heads/gpu_training.zip
+* Open the downloaded file and extract it to your Desktop
+* Press the windows key + r to open "run"
+* Type in "cmd" in the window and hit enter to open the "terminal"
+* Copy this command and paste it into the terminal, then hit enter
+```console
+cd Desktop\baler-main
+```
+* Paste this command into the terminal adn hit enter:
+```console
+docker run --mount type=bind,source=C:\Users\pekman\Desktop\baler-main\projects\,target=\projects ghcr.io/uomresearchit/baler:latest
+```
+
+## Poetry
+
+Baler is currently packaged using [Poetry](https://python-poetry.org/ "Poetry"), a package manager for Python which helps with dependancy management. Installing and running using Poetry requires slight modifications to the usual Python commands, detailed [below](#installing-baler-dependancies-using-poetry).
+
 
 Additionally, a Docker container is available which allows the use of Baler without worrying about dependencies or environment. Instructions for this usage are given [later in this README](#running-with-docker "Running with Docker").
 

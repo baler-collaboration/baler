@@ -17,16 +17,20 @@ def to_percent(y, position):
     else:
         return s + '%'
 
-def loss_plot(path_to_loss_data,output_path):
+def loss_plot(path_to_loss_data,output_path, config):
     loss_data = pd.read_csv(path_to_loss_data)
+    str_list = ['Epochs:', 'Model Name:', 'Reg. Param:', 'lr:', 'BS:']
 
     val_loss = loss_data["Val Loss"]
     train_loss = loss_data["Train Loss"]
+    conf_list = [len(train_loss),config['model_name'],config['reg_param'],config['lr'],config['batch_size']]
 
     plt.figure(figsize=(10,7))
     plt.title('Loss plot')
     plt.plot(train_loss,color='orange',label="Train Loss")
     plt.plot(val_loss,color='red',label="Validation Loss")
+    for i in range(len(conf_list)):
+        plt.plot([],[], ' ',label=str_list[i] + ' ' + str(conf_list[i]))
     plt.xlabel('Epochs')
     plt.ylabel('Loss')
     plt.legend(loc='best')
@@ -40,15 +44,14 @@ def plot(output_path,before_path,after_path):
     with open(after_path, 'rb') as handle:
         after = pickle.load(handle)
     
+    before = np.array(before)
     # Added because plotting is not supported for non-DataFrame objects yet. 
     if isinstance(before, pd.DataFrame) == False:
-        names = ["pt","eta","phi","mass","EmEnergy","HadEnergy","InvisEnergy","AuxiliaryEnergy"]
+        names = ["pt","eta","phi","m","EmEnergy","HadEnergy","InvisEnergy","AuxilEnergy"]
         before = pd.DataFrame(before,columns=names)
         after = pd.DataFrame(after,columns=names)
     else: 
-        pass 
-
-    response = (after-before)/before
+        pass
 
     columns = data_processing.get_columns(before)
     number_of_columns = len(columns)
@@ -58,6 +61,8 @@ def plot(output_path,before_path,after_path):
         for index, column in enumerate(columns):
             print(f'{index} of {number_of_columns}')
 
+
+            response = (after-before)/before
 #            minimum = int(min(before[column]+after[column]))
 #            maximum = int(max(before[column]+after[column]))
 #            diff = maximum - minimum
@@ -88,15 +93,17 @@ def plot(output_path,before_path,after_path):
 #                continue
 #            step = diff/100
             #counts_response, bins_response = np.histogram(response[column],bins=np.arange(minimum,maximum,step))
-            counts_response, bins_response = np.histogram(response[column],bins=np.arange(-10,10,0.1))
+            counts_response, bins_response = np.histogram(response[column],bins=np.arange(-2,2,0.1))
             ax2.hist(bins_response[:-1], bins_response, weights=counts_response, label='Response')
-
+            ax2.axvline(np.mean(list(filter(lambda p : -2<=p<=2, response[column]))), color='k', linestyle='dashed', linewidth=1,label=f'Mean {round(np.mean(list(filter(lambda p : -2<=p<=2, response[column]))),8)}')
+            
             #To have percent on the x-axis
-            formatter = mpl.ticker.FuncFormatter(to_percent)
-            ax2.xaxis.set_major_formatter(formatter)   
+            #formatter = mpl.ticker.FuncFormatter(to_percent)
+            #ax2.xaxis.set_major_formatter(formatter)   
             ax2.set_title(f"{column} Response")
             ax2.set_xlabel(f'{column} Response', ha='right', x=1.0)
             ax2.set_ylabel("Counts", ha='right', y=1.0)
+            ax2.legend(loc='best')
 
             pdf.savefig()
             ax2.clear()

@@ -65,6 +65,7 @@ def numpy_to_df(array, config):
     else:
         col_names = config['cleared_col_names']
     df = pd.DataFrame(array, columns=col_names)
+
     return df
 
 

@@ -92,6 +92,7 @@ def process(data_path, config):
     return train_set, test_set, number_of_columns, normalization_features
 
 
+
 def renormalize(data, true_min_list, feature_range_list, config):
     return data_processing.renormalize_func(data,
                                             true_min_list,
@@ -110,6 +111,7 @@ def plot(output_path, before, after):
 
 def loss_plotter(path_to_loss_data, output_path):
     return plotting.loss_plot(path_to_loss_data, output_path)
+
 
 
 def model_loader(model_path):
@@ -192,3 +194,5 @@ def get_device():
         dev = "cpu"
         device = torch.device(dev)
     return device
+        return data_processing.df_to_root(df, config, col_names=df_names,save_path=save_path)
+
