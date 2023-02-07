@@ -48,6 +48,13 @@ If you wish to use this README as a tutorial, you can use the following command 
 mkdir data/firstProject; wget http://opendata.cern.ch/record/21856/files/assets/cms/mc/RunIIFall15MiniAODv2/ZprimeToTT_M-3000_W-30_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/10000/DAA238E5-29D6-E511-AE59-001E67DBE3EF.root -P ./data/firstProject/cms_data.root
 ```
 
+When you have downloaded the example data, check the file is correct by computing the md5sum:
+
+```console 
+md5sum data/firstProject/cms_data.root 
+> 28910642bf94e0fa9442bc804830f88b  data/firstProject/cms_data.root
+```
+
 ## Running locally  ##
 
 ### Installing Baler dependencies using Poetry ###
