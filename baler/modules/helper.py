@@ -115,8 +115,8 @@ def plot(output_path, before, after):
     plotting.plot(output_path, before, after)
 
 
-def loss_plotter(path_to_loss_data, output_path):
-    return plotting.loss_plot(path_to_loss_data, output_path)
+def loss_plotter(path_to_loss_data, output_path, config):
+    return plotting.loss_plot(path_to_loss_data, output_path, config)
 
 
 def model_loader(model_path):
