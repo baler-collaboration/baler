@@ -1,11 +1,11 @@
 # Introcution
-Baler is a tool used to test the feasibility of compressing different types of scientific data using machine learning based autoencoders.
+Baler is a tool used to test the feasibility of compressing different types of scientific data using machine learning-based autoencoders.
 
-The main object the user has to produce before using baler is a configuration file. The configuration primarily contains:
+The main object the user has to produce before using Baler is a configuration file. The configuration primarily contains:
 * The path to the data which is going to be compressed
 * The name of the autoencoder to be used. Either pre-defined or homemade 
-* Pre-processing of the dataset, for example the dropping certain variables
-* The number of epochs, batch size, learning rate etc.
+* Pre-processing of the dataset, for example, the dropping of certain variables
+* The number of epochs, batch size, learning rate, etc.
 
 When provided a configuration file, Baler has 4 main running modes:
 * Train: Baler will train a model to compress/decompress your data and save the model.
@@ -18,18 +18,18 @@ When provided a configuration file, Baler has 4 main running modes:
 ## Windows Setup
 * Install "git for windows": https://github.com/git-for-windows/git/releases/tag/v2.39.1.windows.1
 * Open powershell by pressing win+r and enter "powershell"
-* Enable linux subsystem by entering this into the powershell: ``Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux``
-* Got to the windows store and download Ubuntu 22.04.1 LTS. Once downloaded, you can move on to input the following commands.
+* Enable Linux subsystem by entering this into the PowerShell: ``Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux``
+* Go to the windows store and download Ubuntu 22.04.1 LTS. Once downloaded, you can move on to input the following commands.
 
 Start by updating the Windows Subsystem for Linux
 ```console
 wsl.exe --update
 ```
-Update your linux packages
+Update your Linux packages
 ```console
 sudo apt-get update
 ```
-Configure git to use tour windows credentials helper, this is necessary for yout to authenticate yourself on github.
+Configure git to use tour windows credentials helper, this is necessary for you to authenticate yourself on GitHub.
 ```console
 git config --global credential.helper "/mnt/c/Program\ Files/Git/mingw64/bin/git-credential-manager-core.exe"
 ```
@@ -37,10 +37,10 @@ Install pip3 for downloading python packages
 ```console
 sudo apt-get install python3-pip
 ```
-At this point you have a working linux environment and you can follow the next section for the Linux setup
+At this point, you have a working Linux environment and you can follow the next section for the Linux setup
 
 ## Linux Setup
-For some linux users, dissable the KDE keyring
+For some Linux users, disable the KDE keyring
 ```console
 export PYTHON_KEYRING_BACKEND=keyring.backends.null.Keyring
 ```
@@ -64,7 +64,7 @@ Download the tutorial dataset, this will take a while
 ```console
 wget http://opendata.cern.ch/record/21856/files/assets/cms/mc/RunIIFall15MiniAODv2/ZprimeToTT_M-3000_W-30_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/10000/DAA238E5-29D6-E511-AE59-001E67DBE3EF.root -O data/firstProject/cms_data.root
 ```
-Finally verify that the download was successful
+Finally, verify that the download was successful
 ```console 
 md5sum data/firstProject/cms_data.root 
 > 28910642bf94e0fa9442bc804830f88b  data/firstProject/cms_data.root
@@ -73,7 +73,7 @@ md5sum data/firstProject/cms_data.root
 ## Working Example
 
 #### Create New Project ####
-Start by creating a new project directory. This will create the standardised directory structure needed, and create a blank config and output directories. In this example, these will live under `./projects/firstProject/config.json`.\
+Start by creating a new project directory. This will create the standardized directory structure needed, and create a blank config and output directories. In this example, these will live under `./projects/firstProject/config.json`.\
 ```console
 poetry run python baler --mode=newProject --project=firstProject
 ```
@@ -89,21 +89,21 @@ To use the derived model for compression, you can now choose ``--mode=compress``
 ```console
 poetry run python baler --project=firstProject --mode=compress
 ```
-This will output a compressed file called compressed.pickle, and this is the latent space representation of the input dataset. It will also output cleandata_pre_comp.pickle which is just the exact data being compressed.
+This will output a compressed file called "compressed.pickle", and this is the latent space representation of the input dataset. It will also output cleandata_pre_comp.pickle which is just the exact data being compressed.
 
 #### Decompressing ####
 To decompress the compressed file, we choose --mode=decompress and run:
 ```console
 poetry run python baler --project=firstProject --mode=decompress
 ```
-This outputs decompressed.pickle . To double check the file sizes, we can run
+This will output "decompressed.pickle". To double-check the file sizes, we can run
 ```console
 poetry run python baler --project=firstProject --mode=info
 ```
 which will print the file sizes of the data we’re compressing, the compressed dataset & the decompressed dataset.
 
 #### Plotting ####
-To plot the difference of your varables before compression and after decompression, we can use the following command to generate a .pdf document under ``./projects/firstProject/plotting/comparison.pdf``
+To plot the difference of your variables before compression and after decompression, we can use the following command to generate a .pdf document under ``./projects/firstProject/plotting/comparison.pdf``
 
 ```console
 poetry run python baler --project=firstProject --mode=plot
@@ -114,7 +114,7 @@ poetry run python baler --project=firstProject --mode=plot
 ## Prerequisites ##
 
   * You must have Docker installed. See this [guide](https://docs.docker.com/engine/install/ "Docker Install guide")
-  * You must have carried out appropriate post installation steps. For example, for Linux systems, see this [guide](https://docs.docker.com/engine/install/linux-postinstall/ "Docker postinstall guide")
+  * You must have carried out appropriate post-installation steps. For example, for Linux systems, see this [guide](https://docs.docker.com/engine/install/linux-postinstall/ "Docker postinstall guide")
 
 ## Running ##
 
@@ -187,7 +187,7 @@ Where:
 
 ## Build Docker image ##
 
-If you would prefer not to use the Docker image hosted by the University of Manchester, you may build the image yourself. This is achived with:
+If you would prefer not to use the Docker image hosted by the University of Manchester, you may build the image yourself. This is achieved with:
 
 ```console
 docker build -t baler:latest .
@@ -224,15 +224,15 @@ ghcr.io/uomresearchit/baler:latest \
 ```
 
 Where:
-  * `--mount type=bind,source=${PWD}/baler/modules,target=/baler-root/baler/modules` mounts the local source code directory shadowing the source files built in to the container
+  * `--mount type=bind,source=${PWD}/baler/modules,target=/baler-root/baler/modules` mounts the local source code directory shadowing the source files built into the container
   * `--mount type=bind,source=${PWD}/baler/baler.py,target=/baler-root/baler/baler.py` mounts the main baler source file shadowing that in the container
   
-Please note, this mounting does not permanently change the behaviour of the container, for this the container must be rebuilt.
+Please note, this mounting does not permanently change the behavior of the container, for this the container must be rebuilt.
 
 
 ## Running with Apptainer (Singularity) ##
 
-Docker is not available on all platforms, particularly high performance or shared environments prefer not to use Docker due to security concerns. In these enviroments Apptainer (formerly Singularity) is generally preferece and available. 
+Docker is not available on all platforms, particularly high-performance or shared environments prefer not to use Docker due to security concerns. In these environments, Apptainer (formerly Singularity) is generally preferred and available. 
 
 To run Baler using Apptainer, the base command can be modified as follows, e.g. for the training command:
 
