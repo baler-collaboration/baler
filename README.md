@@ -253,7 +253,8 @@ To run Baler using Apptainer, the base command can be modified as follows, e.g. 
 ```console
 apptainer run \
 --nv \
---bind ${PWD}/projects/:/projects \
+--bind ${PWD}/projects/:/baler-root/projects \
+--bind ${PWD}/data/:/baler-root/data \
 docker://ghcr.io/uomresearchit/baler:latest \
 --project=firstProject \
 --mode=train
