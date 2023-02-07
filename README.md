@@ -148,6 +148,25 @@ ghcr.io/uomresearchit/baler:latest \
 --mode=decompress
 ```
 
+## Running  with GPU##
+
+Baler can be run with GPU acceleration, with will happen automatically if a GPU is available on the system.
+
+To allow the Docker image access to the system GPU a modification to the standard command is needed. For example, to run the training command:
+
+
+```console
+docker run \
+--gpus all 
+--mount type=bind,source=${PWD}/projects/,target=/projects \
+ghcr.io/uomresearchit/baler:latest \
+--project=firstProject \
+--mode=train
+```
+
+Where:
+  * `--gpus all` tell Docker to allow the container access to the system GPUs
+
 ## Build Docker image ##
 
 If you would prefer not to use the Docker image hosted by the University of Manchester, you may build the image yourself. This is achived with:

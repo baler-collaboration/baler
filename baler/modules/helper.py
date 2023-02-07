@@ -121,7 +121,7 @@ def model_saver(model, model_path):
 
 
 def detach(tensor):
-    return tensor.detach().numpy()
+    return tensor.cpu().detach().numpy()
 
 
 def compress(number_of_columns, model_path, input_path, config):
@@ -138,7 +138,7 @@ def compress(number_of_columns, model_path, input_path, config):
     data_before = numpy.array(data)
 
     data = normalize(data, config)
-    data_tensor = numpy_to_tensor(data)
+    data_tensor = numpy_to_tensor(data).to(model.device)
 
     compressed = model.encode(data_tensor)
     return compressed, data_before
@@ -154,20 +154,41 @@ def decompress(number_of_columns,model_path, input_path, config):
 
     # Load the data & convert to tensor
     data = data_loader(input_path, config)
-    data_tensor = numpy_to_tensor(data)
+    data_tensor = numpy_to_tensor(data).to(model.device)
 
     decompressed = model.decode(data_tensor)
-    return decompressed 
+    return decompressed
 
 
-def to_root(data_path,config,save_path):
+def to_root(data_path, config, save_path):
     #if '.pickle' in data_path[-8:]:
     if isinstance(data_path, pickle.Pickler):
-        df, Names = data_processing.pickle_to_df(file_path=data_path,config=config)
-        return data_processing.df_to_root(df,config,Names,save_path)
+        df, Names = data_processing.pickle_to_df(file_path=data_path,
+                                                 config=config)
+        return data_processing.df_to_root(df,
+                                          config,
+                                          Names,
+                                          save_path)
     elif isinstance(data_path, pandas.DataFrame):
-        return data_processing.df_to_root(data_path, config, col_names=data_path.columns(),save_path=save_path)
+        return data_processing.df_to_root(data_path,
+                                          config,
+                                          col_names=data_path.columns(),
+                                          save_path=save_path)
     elif isinstance(data_path, numpy.ndarray):
         df = data_processing.numpy_to_df(data_path,config)
         df_names = df.columns
-        return data_processing.df_to_root(df, config, col_names=df_names,save_path=save_path)
+        return data_processing.df_to_root(df,
+                                          config,
+                                          col_names=df_names,
+                                          save_path=save_path)
+
+
+def get_device():
+    device = None
+    if torch.cuda.is_available():
+        dev = "cuda:0"
+        device = torch.device(dev)
+    else:
+        dev = "cpu"
+        device = torch.device(dev)
+    return device

@@ -1,9 +1,9 @@
-import torch
 from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
-import time
 import pandas as pd
 import sys
+import time
+import torch
 
 
 def fit(model, train_dl, train_ds, model_children, regular_param, optimizer, RHO, l1):
@@ -13,12 +13,15 @@ def fit(model, train_dl, train_ds, model_children, regular_param, optimizer, RHO
 
     running_loss = 0.0
     n_data = int(len(train_ds) / train_dl.batch_size)
-    for data in tqdm(train_dl, total=n_data, desc='# Training', file=sys.stdout):
-        x, _ = data
+    for inputs, labels in tqdm(train_dl,
+                               total=n_data,
+                               desc='# Training',
+                               file=sys.stdout):
+        inputs = inputs.to(model.device)
         optimizer.zero_grad()
-        reconstructions = model(x)
+        reconstructions = model(inputs)
         loss = model.loss(model_children=model_children,
-                          true_data=x,
+                          true_data=inputs,
                           reconstructed_data=reconstructions,
                           reg_param=regular_param)
         loss.backward()
@@ -39,11 +42,11 @@ def validate(model, test_dl, test_ds, model_children, reg_param):
     running_loss = 0.0
     n_data = int(len(test_ds) / test_dl.batch_size)
     with torch.no_grad():
-        for data in tqdm(test_dl, total=n_data, desc='# Validating', file=sys.stdout):
-            x, _ = data
-            reconstructions = model(x)
+        for inputs, labels in tqdm(test_dl, total=n_data, desc='# Validating', file=sys.stdout):
+            inputs = inputs.to(model.device)
+            reconstructions = model(inputs)
             loss = model.loss(model_children=model_children,
-                              true_data=x,
+                              true_data=inputs,
                               reconstructed_data=reconstructions,
                               reg_param=reg_param)
             running_loss += loss.item()
@@ -65,13 +68,15 @@ def train(model, variables, train_data, test_data, parent_path, config):
 
     model_children = list(model.children())
 
-    print(f'OWDB: {torch.cuda.is_available()}')
-
     # Constructs a tensor object of the data and wraps them in a TensorDataset object.
-    train_ds = TensorDataset(torch.tensor(train_data.values, dtype=torch.float64),
-                             torch.tensor(train_data.values, dtype=torch.float64))
-    valid_ds = TensorDataset(torch.tensor(test_data.values, dtype=torch.float64),
-                             torch.tensor(test_data.values, dtype=torch.float64))
+    train_ds = TensorDataset(
+        torch.tensor(train_data.values, dtype=torch.float64),
+        torch.tensor(train_data.values, dtype=torch.float64)
+    )
+    valid_ds = TensorDataset(
+        torch.tensor(test_data.values, dtype=torch.float64),
+        torch.tensor(test_data.values, dtype=torch.float64)
+    )
 
     # Converts the TensorDataset into a DataLoader object and combines into one DataLoaders object (a basic wrapper
     # around several DataLoader objects).
@@ -86,10 +91,22 @@ def train(model, variables, train_data, test_data, parent_path, config):
     start = time.time()
     for epoch in range(epochs):
         print(f'Epoch {epoch + 1} of {epochs}')
-        train_epoch_loss = fit(model=model, train_dl=train_dl, train_ds=train_ds, model_children=model_children,
-                               optimizer=optimizer, RHO=RHO, regular_param=reg_param, l1=l1)
-        val_epoch_loss = validate(model=model, test_dl=valid_dl, test_ds=valid_ds, model_children=model_children,reg_param=reg_param)
+        
+        train_epoch_loss = fit(model=model,
+                               train_dl=train_dl,
+                               train_ds=train_ds,
+                               model_children=model_children,
+                               optimizer=optimizer,
+                               RHO=RHO,
+                               regular_param=reg_param,
+                               l1=l1)
         train_loss.append(train_epoch_loss)
+
+        val_epoch_loss = validate(model=model,
+                                  test_dl=valid_dl,
+                                  test_ds=valid_ds,
+                                  model_children=model_children,
+                                  reg_param=reg_param)        
         val_loss.append(val_epoch_loss)
     end = time.time()
 
@@ -98,6 +115,7 @@ def train(model, variables, train_data, test_data, parent_path, config):
                   'Val Loss': val_loss}).to_csv(parent_path+'loss_data.csv')
 
     data_as_tensor = torch.tensor(test_data.values, dtype=torch.float64)
+    data_as_tensor = data_as_tensor.to(model.device)
     pred_as_tensor = model(data_as_tensor)
 
     return data_as_tensor, pred_as_tensor
