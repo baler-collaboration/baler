@@ -188,7 +188,7 @@ To allow the Docker image access to the system GPU a modification to the standar
 
 ```console
 docker run \
---gpus all 
+--gpus all \
 --mount type=bind,source=${PWD}/projects/,target=/baler-root/projects \
 --mount type=bind,source=${PWD}/data/,target=/baler-root/data \
 ghcr.io/uomresearchit/baler:latest \
