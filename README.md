@@ -45,7 +45,7 @@ Additionally, a Docker container is available which allows the use of Baler with
 If you wish to use this README as a tutorial, you can use the following command to acquire example data, compatible with Baler and the configuration provided in this repository.
 
 ```console
-mkdir data/firstProject; wget http://opendata.cern.ch/record/21856/files/assets/cms/mc/RunIIFall15MiniAODv2/ZprimeToTT_M-3000_W-30_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/10000/DAA238E5-29D6-E511-AE59-001E67DBE3EF.root -P ./data/firstProject/
+mkdir data/firstProject; wget http://opendata.cern.ch/record/21856/files/assets/cms/mc/RunIIFall15MiniAODv2/ZprimeToTT_M-3000_W-30_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/10000/DAA238E5-29D6-E511-AE59-001E67DBE3EF.root -P ./data/firstProject/cms_data.root
 ```
 
 ## Running locally  ##
