@@ -129,14 +129,14 @@ Running with Docker requires slight modifications to the above commands. The bas
 
 ```console
 docker run \
---mount type=bind,source=${PWD}/projects/,target=/projects \
---mount type=bind,source=${PWD}/data/,target=/data \
+--mount type=bind,source=${PWD}/projects/,target=/baler-root/projects \
+--mount type=bind,source=${PWD}/data/,target=/baler-root/data \
 ghcr.io/uomresearchit/baler:latest 
 ```
 
 Where:
   * `docker run` invokes docker and specifies the running of a container
-  * `--mount type=bind,source=${PWD}/projects/,target=/projects` mounts the local (host) directory `./projects` to the container at `/projects`
+  * `--mount type=bind,source=${PWD}/projects/,target=/baler-root/projects` mounts the local (host) directory `./projects` to the container at `/projects`
   * `ghcr.io/uomresearchit/baler:latest` specifies the container to run
   
 Therefore the three commands detailed above become:
@@ -145,8 +145,8 @@ Therefore the three commands detailed above become:
 
 ```console
 docker run \
---mount type=bind,source=${PWD}/projects/,target=/projects \
---mount type=bind,source=${PWD}/data/,target=/data \
+--mount type=bind,source=${PWD}/projects/,target=/baler-root/projects \
+--mount type=bind,source=${PWD}/data/,target=/baler-root/data \
 ghcr.io/uomresearchit/baler:latest \
 --project=firstProject \
 --mode=train
@@ -155,8 +155,8 @@ ghcr.io/uomresearchit/baler:latest \
 ### Compress: ### 
 ```console
 docker run \
---mount type=bind,source=${PWD}/projects/,target=/projects \
---mount type=bind,source=${PWD}/data/,target=/data \
+--mount type=bind,source=${PWD}/projects/,target=/baler-root/projects \
+--mount type=bind,source=${PWD}/data/,target=/baler-root/data \
 ghcr.io/uomresearchit/baler:latest \
 --project=firstProject \
 --mode=compress
@@ -165,8 +165,8 @@ ghcr.io/uomresearchit/baler:latest \
 ### Decompress: ###
 ```console
 docker run \
---mount type=bind,source=${PWD}/projects/,target=/projects \
---mount type=bind,source=${PWD}/data/,target=/data \
+--mount type=bind,source=${PWD}/projects/,target=/baler-root/projects \
+--mount type=bind,source=${PWD}/data/,target=/baler-root/data \
 ghcr.io/uomresearchit/baler:latest \
 --project=firstProject \
 --mode=decompress
@@ -182,8 +182,8 @@ To allow the Docker image access to the system GPU a modification to the standar
 ```console
 docker run \
 --gpus all 
---mount type=bind,source=${PWD}/projects/,target=/projects \
---mount type=bind,source=${PWD}/data/,target=/data \
+--mount type=bind,source=${PWD}/projects/,target=/baler-root/projects \
+--mount type=bind,source=${PWD}/data/,target=/baler-root/data \
 ghcr.io/uomresearchit/baler:latest \
 --project=firstProject \
 --mode=train
@@ -204,8 +204,8 @@ This image may be run using (e.g.):
 
 ```console
 docker run \
---mount type=bind,source=${PWD}/projects/,target=/projects \
---mount type=bind,source=${PWD}/data/,target=/data \
+--mount type=bind,source=${PWD}/projects/,target=/baler-root/projects \
+--mount type=bind,source=${PWD}/data/,target=/baler-root/data \
 baler:latest \
 --project=firstProject \
 --mode=train
@@ -221,8 +221,8 @@ An example command is given here:
 
 ```console
 docker run \
---mount type=bind,source=${PWD}/projects/,target=/projects \
---mount type=bind,source=${PWD}/data/,target=/data \
+--mount type=bind,source=${PWD}/projects/,target=/baler-root/projects \
+--mount type=bind,source=${PWD}/data/,target=/baler-root/data \
 --mount type=bind,source=${PWD}/baler/modules,target=/baler-root/baler/modules \
 --mount type=bind,source=${PWD}/baler/baler.py,target=/baler-root/baler/baler.py \
 ghcr.io/uomresearchit/baler:latest \

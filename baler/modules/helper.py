@@ -27,7 +27,7 @@ Baler has three running modes:\n
     if args.mode == 'newProject':
         args.config = ''
     else:
-        config_path = f'./projects/{args.project}/config.json'
+        config_path = f'projects/{args.project}/config.json'
         args.config = data_processing.import_config(config_path)
 
     return args.config, args.mode, args.project

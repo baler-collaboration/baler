@@ -31,5 +31,5 @@
                             "recoGenJets_slimmedGenJets__PAT.obj.mPileupEnergy",
                             "recoGenJets_slimmedGenJets__PAT.obj.mPassNumber"
     ],
-    "input_path":"/data/firstProject/cms_data.root"
+    "input_path":"data/firstProject/cms_data.root"
 }
