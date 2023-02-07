@@ -15,15 +15,21 @@ When provided a configuration file, Baler has 4 main running modes:
 
 # Getting Started #
 
-## Windows Setup
+## Windows 10/11 Setup
 * Install "git for windows": https://github.com/git-for-windows/git/releases/tag/v2.39.1.windows.1
-* Open powershell by pressing win+r and enter "powershell"
-* Enable Linux subsystem by entering this into the PowerShell: ``Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux``
-* Go to the windows store and download Ubuntu 22.04.1 LTS. Once downloaded, you can move on to input the following commands.
+  * For a 64 bit system, probably use this one: https://github.com/git-for-windows/git/releases/download/v2.39.1.windows.1/Git-2.39.1-64-bit.exe
+* Go to your windows search bar and search for "powershell". right-click powerhsell and select "run as administrator"
+* Enable Linux subsystem by entering this into the PowerShell and hitting enter: `Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux`
+* Go to the windows store and download "Ubuntu 22.04.1 LTS"
+* Once downloaded, open it. This will start Ubuntu as a "terminal". After picking a username and password, input the following commands into that terminal. You can copy the comands using ctrl+c or the button to the right of the text. But pasting it into the terminal can only be done by right-clicking anywhere in the terminal window.
 
 Start by updating the Windows Subsystem for Linux
 ```console
 wsl.exe --update
+```
+Then, synch your clock:
+```console
+sudo hwclock --hctosys
 ```
 Update your Linux packages
 ```console
@@ -50,7 +56,7 @@ pip3 install poetry
 ```
 Clone this repository
 ```console
-https://github.com/baler-compressor/baler.git
+git clone https://github.com/baler-compressor/baler.git
 ```
 Move into the Baler directory
 ```console
