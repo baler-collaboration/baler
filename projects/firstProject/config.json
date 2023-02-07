@@ -1,11 +1,16 @@
 {
     "epochs" : 1,
     "model_name" : "george_SAE",
+    "early_stopping": true,
+    "lr_scheduler":false,
     "custom_norm" : false,
     "l1" : true,
+    "PCA": false,
+    "patience": 100,
+    "min_delta": 0,
     "reg_param" : 0.001,
     "RHO" : 0.05,
-    "lr" : 0.001,
+    "lr" : 1e-3,
     "batch_size" : 512,
     "save_as_root" : true,
     "cleared_col_names":["pt","eta","phi","m","EmEnergy","HadEnergy","InvisEnergy","AuxilEnergy"],
@@ -25,7 +30,6 @@
                             "recoGenJets_slimmedGenJets__PAT.obj.mJetArea",
                             "recoGenJets_slimmedGenJets__PAT.obj.mPileupEnergy",
                             "recoGenJets_slimmedGenJets__PAT.obj.mPassNumber"
-                            ],
-    "input_path":"data/firstProject/cms_data.root"
+    ],
+    "input_path":"/data/firstProject/cms_data.root"
 }
-test

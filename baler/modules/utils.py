@@ -51,7 +51,7 @@ def sparse_loss_function_L1(model_children, true_data, reconstructed_data, reg_p
 ## Accuracy function still WIP. Not working properly.
 ## Probably has to do with total_correct counter.
 
-def accuracy(model,dataloader): 
+def accuracy(model, dataloader):
     print('Accuracy')
     model.eval()
 

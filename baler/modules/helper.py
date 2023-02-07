@@ -113,7 +113,6 @@ def loss_plotter(path_to_loss_data, output_path):
     return plotting.loss_plot(path_to_loss_data, output_path)
 
 
-
 def model_loader(model_path):
     return data_processing.load_model(model_path)
 
@@ -194,5 +193,3 @@ def get_device():
         dev = "cpu"
         device = torch.device(dev)
     return device
-        return data_processing.df_to_root(df, config, col_names=df_names,save_path=save_path)
-

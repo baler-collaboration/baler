@@ -10,7 +10,6 @@ import torch
 def fit(model, train_dl, train_ds, model_children, regular_param, optimizer, RHO, l1):
     print('### Beginning Training')
 
-
     model.train()
 
     running_loss = 0.0
@@ -22,10 +21,13 @@ def fit(model, train_dl, train_ds, model_children, regular_param, optimizer, RHO
         inputs = inputs.to(model.device)
         optimizer.zero_grad()
         reconstructions = model(inputs)
-        loss = model.loss(model_children=model_children,
-                          true_data=inputs,
-                          reconstructed_data=reconstructions,
-                          reg_param=regular_param)
+        loss, mse_loss, l1_loss = utils.sparse_loss_function_L1(
+            model_children=model_children,
+            true_data=inputs,
+            reconstructed_data=reconstructions,
+            reg_param=regular_param,
+            validate=False
+        )
 
         loss.backward()
         optimizer.step()
@@ -34,13 +36,11 @@ def fit(model, train_dl, train_ds, model_children, regular_param, optimizer, RHO
 
     epoch_loss = running_loss / len(train_dl)
     print(f'# Finished. Training Loss: {loss:.6f}')
-    # save the reconstructed images every 5 epochs
-    return epoch_loss
+    return epoch_loss, mse_loss, l1_loss
 
 
 def validate(model, test_dl, test_ds, model_children, reg_param):
     print('### Beginning Validating')
-
 
     model.eval()
 
@@ -50,15 +50,17 @@ def validate(model, test_dl, test_ds, model_children, reg_param):
         for inputs, labels in tqdm(test_dl, total=n_data, desc='# Validating', file=sys.stdout):
             inputs = inputs.to(model.device)
             reconstructions = model(inputs)
-            loss = model.loss(model_children=model_children,
-                              true_data=inputs,
-                              reconstructed_data=reconstructions,
-                              reg_param=reg_param)
+            loss = utils.sparse_loss_function_L1(
+                model_children=model_children,
+                true_data=inputs,
+                reconstructed_data=reconstructions,
+                reg_param=reg_param,
+                validate=True
+            )
             running_loss += loss.item()
 
     epoch_loss = running_loss / len(test_dl)
     print(f'# Finished. Validation Loss: {loss:.6f}')
-    # save the reconstructed images every 5 epochs
     return epoch_loss
 
 
@@ -102,25 +104,23 @@ def train(model, variables, train_data, test_data, parent_path, config):
         lr_scheduler = utils.LRScheduler(optimizer=optimizer,patience=config['patience'])
 
     # train and validate the autoencoder neural network
-    train_acc = []
-    val_acc = []
     train_loss = []
     val_loss = []
-    mse_loss_fit = []
-    regularizer_loss_fit = []
     start = time.time()
 
     for epoch in range(epochs):
         print(f'Epoch {epoch + 1} of {epochs}')
-        
-        train_epoch_loss = fit(model=model,
-                               train_dl=train_dl,
-                               train_ds=train_ds,
-                               model_children=model_children,
-                               optimizer=optimizer,
-                               RHO=RHO,
-                               regular_param=reg_param,
-                               l1=l1)
+
+        train_epoch_loss, mse_loss_fit, regularizer_loss_fit = fit(
+            model=model,
+            train_dl=train_dl,
+            train_ds=train_ds,
+            model_children=model_children,
+            optimizer=optimizer,
+            RHO=RHO,
+            regular_param=reg_param,
+            l1=l1
+        )
 
         train_loss.append(train_epoch_loss)
 
@@ -128,32 +128,23 @@ def train(model, variables, train_data, test_data, parent_path, config):
                                   test_dl=valid_dl,
                                   test_ds=valid_ds,
                                   model_children=model_children,
-                                  reg_param=reg_param)        
+                                  reg_param=reg_param)
         val_loss.append(val_epoch_loss)
-        mse_loss_fit.append(mse_loss_fit1)
-        regularizer_loss_fit.append(regularizer_loss_fit1)
-        if config['lr_scheduler'] == True:
+        if config['lr_scheduler'] is True:
             lr_scheduler(val_epoch_loss)
-        if config['early_stopping'] == True:
+        if config['early_stopping'] is True:
             early_stopping(val_epoch_loss)
             if early_stopping.early_stop:
                 break
 
     end = time.time()
-    regularizer_string = 'l1'
 
     print(f'{(end - start) / 60:.3} minutes')
     pd.DataFrame({'Train Loss': train_loss,
-                  'Val Loss': val_loss,
-                  #'Val Acc.': val_acc,
-                  #'Train Acc.': train_acc,
-                  'mse_loss_fit':mse_loss_fit,
-                  regularizer_string+'_loss_fit':regularizer_loss_fit}).to_csv(parent_path+'loss_data.csv')
-    #pd.DataFrame({'Values_val':values_val}).to_csv(parent_path + 'values_val.csv')
-    #pd.DataFrame({'Values_fit':values_fit}).to_csv(parent_path + 'values_fit.csv')
+                  'Val Loss': val_loss}).to_csv(parent_path+'loss_data.csv')
 
     data_as_tensor = torch.tensor(test_data.values, dtype=torch.float64)
     data_as_tensor = data_as_tensor.to(model.device)
     pred_as_tensor = model(data_as_tensor)
 
-    return data_as_tensor, pred_as_tensor, model_from_fit
+    return data_as_tensor, pred_as_tensor
