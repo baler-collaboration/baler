@@ -38,7 +38,7 @@ def loss_plot(path_to_loss_data,output_path, config):
     #plt.show()
 
 
-def plot(before_path,after_path):
+def plot(output_path,before_path,after_path):
     with open(before_path, 'rb') as handle:
         before = pickle.load(handle)
     with open(after_path, 'rb') as handle:
@@ -56,7 +56,7 @@ def plot(before_path,after_path):
     columns = data_processing.get_columns(before)
     number_of_columns = len(columns)
 
-    with PdfPages(after_path.split("after.pickle")[0]+"comparison.pdf") as pdf:
+    with PdfPages(output_path+"comparison.pdf") as pdf:
         figure1, (ax1,ax2) = plt.subplots(1,2,figsize=(18.3*(1/2.54)*1.7, 13.875*(1/2.54)*1.32))
         for index, column in enumerate(columns):
             print(f'{index} of {number_of_columns}')

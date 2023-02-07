@@ -1,20 +1,24 @@
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
+from torch import nn
+from torch.nn import functional as F
+
 
 class george_SAE(nn.Module):
-    def __init__(self, n_features, z_dim):
-        super(george_SAE, self).__init__()
+    def __init__(self, device, n_features, z_dim, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.device = device
+
         # encoder
-        self.en1 = nn.Linear(n_features, 200,dtype=torch.float64)
-        self.en2 = nn.Linear(200, 100,dtype=torch.float64)
-        self.en3 = nn.Linear(100, 50,dtype=torch.float64)
-        self.en4 = nn.Linear(50, z_dim,dtype=torch.float64)
+        self.en1 = nn.Linear(n_features, 200, dtype=torch.float64, device=device)
+        self.en2 = nn.Linear(200, 100, dtype=torch.float64, device=device)
+        self.en3 = nn.Linear(100, 50, dtype=torch.float64, device=device)
+        self.en4 = nn.Linear(50, z_dim, dtype=torch.float64, device=device)
         # decoder
-        self.de1 = nn.Linear(z_dim, 50,dtype=torch.float64)
-        self.de2 = nn.Linear(50, 100,dtype=torch.float64)
-        self.de3 = nn.Linear(100, 200,dtype=torch.float64)
-        self.de4 = nn.Linear(200, n_features,dtype=torch.float64)
+        self.de1 = nn.Linear(z_dim, 50, dtype=torch.float64, device=device)
+        self.de2 = nn.Linear(50, 100, dtype=torch.float64, device=device)
+        self.de3 = nn.Linear(100, 200, dtype=torch.float64, device=device)
+        self.de4 = nn.Linear(200, n_features, dtype=torch.float64, device=device)
 
         self.n_features = n_features
         self.z_dim = z_dim
@@ -226,5 +230,17 @@ class george_SAE_Dropout(nn.Module):
         return out
 
     def forward(self, x):
-        z = self.encode(x)
-        return self.decode(z)
+        # z = x.view(batch_size,a,b,c) ? What is this
+        return self.decode(x)
+
+    def loss(self, model_children, true_data, reconstructed_data, reg_param):
+        mse = nn.MSELoss()
+        mse_loss = mse(reconstructed_data, true_data)
+        l1_loss = 0
+        values = true_data
+        for i in range(len(model_children)):
+            values = F.relu((model_children[i](values)))
+            l1_loss += torch.mean(torch.abs(values))
+        loss = mse_loss + reg_param * l1_loss
+        return loss
+

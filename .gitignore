@@ -1,6 +1,6 @@
-/projects/*/data/
-/projects/*/*.csv
-/projects/*/output/*
+/projects/*/*
+/data/*
+!/projects/*/config.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

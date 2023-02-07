@@ -1,86 +1,88 @@
-import torch
 from torch.utils.data import DataLoader, TensorDataset
 import modules.utils as utils
 from tqdm import tqdm
-import time
 import pandas as pd
+import sys
+import time
+import torch
 
-def fit(model, train_dl, train_ds, regular_param, optimizer, RHO, l1=True):
-    print('Training')
+
+def fit(model, train_dl, train_ds, model_children, regular_param, optimizer, RHO, l1):
+    print('### Beginning Training')
+
+
     model.train()
+
     running_loss = 0.0
-    counter = 0
-    mse_loss_fit = 0.0
-    regularizer_loss_fit = 0.0
-    model_children = list(model.children())
-
-    for data in tqdm(train_dl):
-
-        counter += 1
-        x, _ = data
-        reconstructions = model(x)
+    n_data = int(len(train_ds) / train_dl.batch_size)
+    for inputs, labels in tqdm(train_dl,
+                               total=n_data,
+                               desc='# Training',
+                               file=sys.stdout):
+        inputs = inputs.to(model.device)
         optimizer.zero_grad()
+        reconstructions = model(inputs)
+        loss = model.loss(model_children=model_children,
+                          true_data=inputs,
+                          reconstructed_data=reconstructions,
+                          reg_param=regular_param)
 
-        if l1 == True:
-            loss, mse_loss, l1_loss = utils.sparse_loss_function_L1(model_children=model_children, true_data=x,reg_param=regular_param,
-                                                                    reconstructed_data=reconstructions, validate=False)
-        else:
-            # Implement KL here
-            break
         loss.backward()
         optimizer.step()
 
         running_loss += loss.item()
-        regularizer_loss_fit += l1_loss.item()
-        mse_loss_fit += mse_loss.item()
 
-
-
-    epoch_loss = running_loss/len(train_ds)
-    print(f" Train Loss: {epoch_loss:.5E}")
-    return epoch_loss,mse_loss_fit,regularizer_loss_fit, model
-
-def validate(model, test_dl, test_ds,regular_param,l1=True):
-    print('Validating')
-    model.eval()
-    running_loss = 0.0
-    counter = 0
-    model_children = list(model.children())
-
-    with torch.no_grad():
-        for data in tqdm(test_dl):
-
-            counter += 1
-            x, _ = data
-            reconstructions = model(x)
-            if l1 == True:
-                loss, mse, l1_loss = utils.sparse_loss_function_L1(model_children=model_children, true_data=x,reg_param=regular_param,
-                                                    reconstructed_data=reconstructions, validate=False)
-                running_loss += loss.item()
-
-
-            ## WIP
-            else:
-                # Implement KL Here also. Should however just return mse loss I think
-                break
-
-    epoch_loss = running_loss/len(test_ds)
-    print(f" Val Loss: {epoch_loss:.5E}")
+    epoch_loss = running_loss / len(train_dl)
+    print(f'# Finished. Training Loss: {loss:.6f}')
+    # save the reconstructed images every 5 epochs
     return epoch_loss
 
-def train(model,number_of_columns, train_data, test_data, parent_path, config):
-    learning_rate = config["lr"]
-    bs = config["batch_size"]
-    reg_param = config["reg_param"]
-    RHO = config["RHO"]
-    l1 = config["l1"]
-    epochs = config["epochs"]
-    
+
+def validate(model, test_dl, test_ds, model_children, reg_param):
+    print('### Beginning Validating')
+
+
+    model.eval()
+
+    running_loss = 0.0
+    n_data = int(len(test_ds) / test_dl.batch_size)
+    with torch.no_grad():
+        for inputs, labels in tqdm(test_dl, total=n_data, desc='# Validating', file=sys.stdout):
+            inputs = inputs.to(model.device)
+            reconstructions = model(inputs)
+            loss = model.loss(model_children=model_children,
+                              true_data=inputs,
+                              reconstructed_data=reconstructions,
+                              reg_param=reg_param)
+            running_loss += loss.item()
+
+    epoch_loss = running_loss / len(test_dl)
+    print(f'# Finished. Validation Loss: {loss:.6f}')
+    # save the reconstructed images every 5 epochs
+    return epoch_loss
+
+
+def train(model, variables, train_data, test_data, parent_path, config):
+    learning_rate = config['lr']
+    bs = config['batch_size']
+    reg_param = config['reg_param']
+    RHO = config['RHO']
+    l1 = config['l1']
+    epochs = config['epochs']
+    latent_space_size = config['latent_space_size']
+
+    model_children = list(model.children())
+
+
     # Constructs a tensor object of the data and wraps them in a TensorDataset object.
-    train_ds = TensorDataset(torch.tensor(train_data.values, dtype=torch.float64),
-                             torch.tensor(train_data.values, dtype=torch.float64))
-    valid_ds = TensorDataset(torch.tensor(test_data.values, dtype=torch.float64),
-                             torch.tensor(test_data.values, dtype=torch.float64))
+    train_ds = TensorDataset(
+        torch.tensor(train_data.values, dtype=torch.float64),
+        torch.tensor(train_data.values, dtype=torch.float64)
+    )
+    valid_ds = TensorDataset(
+        torch.tensor(test_data.values, dtype=torch.float64),
+        torch.tensor(test_data.values, dtype=torch.float64)
+    )
 
     # Converts the TensorDataset into a DataLoader object and combines into one DataLoaders object (a basic wrapper
     # around several DataLoader objects).
@@ -109,19 +111,24 @@ def train(model,number_of_columns, train_data, test_data, parent_path, config):
     start = time.time()
 
     for epoch in range(epochs):
-        print(f"Epoch {epoch + 1} of {epochs}")
-        train_epoch_loss,mse_loss_fit1,regularizer_loss_fit1, model_from_fit = fit(model=model, train_dl=train_dl, train_ds=train_ds,
-                                                                                    optimizer=optimizer, RHO=RHO, regular_param=reg_param, l1=l1)
+        print(f'Epoch {epoch + 1} of {epochs}')
+        
+        train_epoch_loss = fit(model=model,
+                               train_dl=train_dl,
+                               train_ds=train_ds,
+                               model_children=model_children,
+                               optimizer=optimizer,
+                               RHO=RHO,
+                               regular_param=reg_param,
+                               l1=l1)
 
-        val_epoch_loss = validate(model=model_from_fit, test_dl=valid_dl,
-                                test_ds=valid_ds, regular_param=reg_param, l1 = l1)
-
-        #accuracy_train = utils.accuracy(model,train_dl)
-        #accuracy_val = utils.accuracy(model,valid_dl)
-
-        #train_acc.append(accuracy_train)
-        #val_acc.append(accuracy_val)
         train_loss.append(train_epoch_loss)
+
+        val_epoch_loss = validate(model=model,
+                                  test_dl=valid_dl,
+                                  test_ds=valid_ds,
+                                  model_children=model_children,
+                                  reg_param=reg_param)        
         val_loss.append(val_epoch_loss)
         mse_loss_fit.append(mse_loss_fit1)
         regularizer_loss_fit.append(regularizer_loss_fit1)
@@ -135,7 +142,7 @@ def train(model,number_of_columns, train_data, test_data, parent_path, config):
     end = time.time()
     regularizer_string = 'l1'
 
-    print(f"{(end - start) / 60:.3} minutes")
+    print(f'{(end - start) / 60:.3} minutes')
     pd.DataFrame({'Train Loss': train_loss,
                   'Val Loss': val_loss,
                   #'Val Acc.': val_acc,
@@ -146,6 +153,7 @@ def train(model,number_of_columns, train_data, test_data, parent_path, config):
     #pd.DataFrame({'Values_fit':values_fit}).to_csv(parent_path + 'values_fit.csv')
 
     data_as_tensor = torch.tensor(test_data.values, dtype=torch.float64)
+    data_as_tensor = data_as_tensor.to(model.device)
     pred_as_tensor = model(data_as_tensor)
 
     return data_as_tensor, pred_as_tensor, model_from_fit

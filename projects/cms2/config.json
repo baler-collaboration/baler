@@ -1,0 +1,30 @@
+{
+    "epochs" : 5,
+    "model_name" : "george_SAE",
+    "input_path":"./data/cms_nominal/cms_nominal.root",
+    "custom_norm" : false,
+    "l1" : true,
+    "reg_param" : 0.001,
+    "RHO" : 0.05,
+    "lr" : 0.001,
+    "batch_size" : 512,
+    "save_as_root" : true,
+    "cleared_col_names":["pt","eta","phi","m","EmEnergy","HadEnergy","InvisEnergy","AuxilEnergy"],
+    "test_size" : 0.15,
+    "Branch" : "Events",
+    "Collection": "recoGenJets_slimmedGenJets__PAT.",
+    "Objects": "recoGenJets_slimmedGenJets__PAT.obj",
+    "number_of_columns" : 8,
+    "latent_space_size" : 4,
+    "dropped_variables":    [
+                            "recoGenJets_slimmedGenJets__PAT.obj.m_state.vertex_.fCoordinates.fX",
+                            "recoGenJets_slimmedGenJets__PAT.obj.m_state.vertex_.fCoordinates.fY",
+                            "recoGenJets_slimmedGenJets__PAT.obj.m_state.vertex_.fCoordinates.fZ",
+                            "recoGenJets_slimmedGenJets__PAT.obj.m_state.qx3_",
+                            "recoGenJets_slimmedGenJets__PAT.obj.m_state.pdgId_",
+                            "recoGenJets_slimmedGenJets__PAT.obj.m_state.status_",
+                            "recoGenJets_slimmedGenJets__PAT.obj.mJetArea",
+                            "recoGenJets_slimmedGenJets__PAT.obj.mPileupEnergy",
+                            "recoGenJets_slimmedGenJets__PAT.obj.mPassNumber"
+                            ]
+}
