@@ -243,3 +243,18 @@ Where:
   
 Please note, this mounting does not permanently change the behaviour of the container, for this the container must be rebuilt.
 
+
+## Running with Apptainer (Singularity) ##
+
+Docker is not available on all platforms, particularly high performance or shared environments prefer not to use Docker due to security concerns. In these enviroments Apptainer (formerly Singularity) is generally preferece and available. 
+
+To run Baler using Apptainer, the base command can be modified as follows, e.g. for the training command:
+
+```console
+apptainer run \
+--nv \
+--bind ${PWD}/projects/:/projects \
+docker://ghcr.io/uomresearchit/baler:latest \
+--project=firstProject \
+--mode=train
+```
