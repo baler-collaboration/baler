@@ -14,7 +14,7 @@ def main():
     elif mode == "train":
         perform_training(config, project_path)
     elif mode == "plot":
-        perform_plotting(project_path)
+        perform_plotting(project_path, config)
     elif mode == "compress":
         perform_compression(config, project_path)
     elif mode == "decompress":
@@ -67,14 +67,14 @@ def perform_training(config, project_path):
     helper.model_saver(model, project_path + "model/model.pt")
 
 
-def perform_plotting(project_path):
+def perform_plotting(project_path,config):
     output_path = project_path + "plotting/"
     helper.plot(
         output_path,
         project_path + "training/before.pickle",
         project_path + "training/after.pickle",
     )
-    helper.loss_plotter(project_path + "training/loss_data.csv", output_path)
+    helper.loss_plotter(project_path + "training/loss_data.csv", output_path, config)
 
 
 def perform_compression(config, project_path):
