@@ -14,12 +14,13 @@ jobs:
     steps:
     - name: "checkout repository"
       uses: actions/checkout@v3
+      
     - name: "install poetry"
       uses: abatilo/actions-poetry@v2
       with:
         poetry-version: 1.3.2
         
-    - name: "install dependencies":
+    - name: "install dependencies"
       run: poetry install
       
     - name: "run tests"
