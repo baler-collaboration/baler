@@ -23,9 +23,6 @@ jobs:
     - name: "install dependencies"
       run: poetry install
       
-    - name: "activate virtual env"
-      run: poetry shell
-      
     - name: "run tests"
       run: poetry run pytest
       
