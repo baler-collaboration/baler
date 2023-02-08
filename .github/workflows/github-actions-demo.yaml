@@ -1,0 +1,15 @@
+name: Docker-CI
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  build-x86:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@3
+    - name: Build the Docker image
+      run: docker build . --file Dockerfile
