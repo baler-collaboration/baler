@@ -2,15 +2,40 @@ name: Code-Quality
 
 on: [pull_request, workflow_dispatch]
 
-jobs:  
-  run-lint:
-    runs-on: ubuntu-latest
+jobs:
+  setup:    
+    strategy:
+        fail-fast: false
+        matrix:
+          python-version: ["3.8", "3.9", "3.10"]
+          poetry-version: ["1.3.2"]
+          os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    
     steps:
-      - name: "☁️ checkout repository"
-        uses: actions/checkout@v3
+    - name: "checkout repository"
+      uses: actions/checkout@v3
       
-      - name: "⬛ black"
+    - name: "install poetry"
+      uses: abatilo/actions-poetry@v2
+      with:
+        poetry-version: ${{ matrix.poetry-version }}
+      
+  run-black:
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - name: "run black"
         uses: psf/black@stable
         with:
-          options: "--check --verbose"
+          options: "--check"
           src: "./baler"
+  
+  run-tests:
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - name: "install dependencies"
+        run: poetry install
+      - name: "run tests"
+        run: pytest
