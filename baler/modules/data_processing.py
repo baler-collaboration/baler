@@ -13,9 +13,14 @@ from modules import models
 
 
 def import_config(config_path: str) -> dict:
-    with open(config_path, encoding="utf-8") as json_config:
-        config = json.load(json_config)
-    return config
+    try:
+        with open(config_path, encoding="utf-8") as json_config:
+            config = json.load(json_config)
+        return config
+    except FileNotFoundError:
+        print(f"Config file not found at path: {config_path}")
+    except json.JSONDecodeError as e:
+        print(f"Failed to parse config file at path {config_path}: {e}")
 
 
 def save_model(model, model_path: str) -> None:
