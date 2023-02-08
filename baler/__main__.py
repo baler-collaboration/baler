@@ -1,2 +1,3 @@
 import baler
+
 baler.main()

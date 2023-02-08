@@ -67,7 +67,7 @@ def perform_training(config, project_path):
     helper.model_saver(model, project_path + "model/model.pt")
 
 
-def perform_plotting(project_path,config):
+def perform_plotting(project_path, config):
     output_path = project_path + "plotting/"
     helper.plot(
         output_path,
