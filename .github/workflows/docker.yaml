@@ -1,12 +1,10 @@
 name: Docker-CI
 on:
-  push:
-    branches: ["main"]
   pull_request:
     branches: ["main"]
 
 jobs:
-  build-x86:
+  build-docker-image:
     runs-on: ubuntu-latest
 
     steps:
