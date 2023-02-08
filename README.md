@@ -54,6 +54,10 @@ Install poetry for managing the python environment
 ```console
 pip3 install poetry
 ```
+Add poetry to path in your current session
+```console
+source ~/.profile
+```
 Clone this repository
 ```console
 git clone https://github.com/baler-compressor/baler.git
