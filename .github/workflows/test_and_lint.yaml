@@ -23,7 +23,7 @@ jobs:
     - name: "install dependencies"
       run: poetry install
       
-    - name: "set pyhton path"
+    - name: "set python path"
       run: echo "PYTHONPATH=.:baler" >> $GITHUB_ENV
     - name: "run tests"
       run: poetry run pytest
