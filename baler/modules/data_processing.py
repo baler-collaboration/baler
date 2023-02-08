@@ -12,13 +12,13 @@ from modules import helper
 from modules import models
 
 
-def import_config(config_path) -> dict:
+def import_config(config_path: str) -> dict:
     with open(config_path, encoding="utf-8") as json_config:
         config = json.load(json_config)
     return config
 
 
-def save_model(model, model_path) -> None:
+def save_model(model, model_path: str) -> None:
     return torch.save(model.state_dict(), model_path)
 
 
@@ -81,7 +81,7 @@ def load_data(data_path: str, config):
         global names
         names = type_clearing(tree)
         df = tree.arrays(names, library="pd")
-    elif file_extension == "pickle":
+    elif file_extension == "pickle" or file_extension == "pkl":
         df = pd.read_pickle(data_path)
     else:
         raise Exception(f"File extension {file_extension} not supported")
@@ -135,7 +135,7 @@ def renormalize_std(data, true_min, feature_range):
     return data
 
 
-def renormalize_func(norm_data, min_list, range_list, config):
+def renormalize_func(norm_data, min_list, range_list):
     norm_data = np.array(norm_data)
     renormalized = [
         renormalize_std(norm_data, min_list[i], range_list[i])
@@ -159,7 +159,7 @@ def pickle_to_df(file_path, config):
         return df, names
 
 
-def df_to_root(df, config, col_names, save_path):
+def df_to_root(df, col_names, save_path):
     with uproot3.recreate(save_path) as tree:
         for i in range(len(col_names)):
             tree[col_names[i]] = uproot3.newtree({col_names[i]: "float64"})

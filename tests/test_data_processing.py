@@ -135,7 +135,7 @@ def test_renormalize_func():
 
     # Renormalize the data using the renormalize_std function
     renormalized_data = data_processing.renormalize_func(
-        norm_data, true_min, feature_range, ""
+        norm_data, true_min, feature_range
     )
 
     # Check that the renormalized data is correct
