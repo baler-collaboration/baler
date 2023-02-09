@@ -176,3 +176,10 @@ def RMS_function(response_norm):
     MS = square.mean()
     RMS = np.sqrt(MS)
     return RMS
+
+
+def compute_E(mass, eta, pt):
+    masspt = pt**2 + mass**2
+    cosh = np.cosh(eta**2)
+    total = np.sqrt(masspt * cosh)
+    return pd.DataFrame({"Energy": total})

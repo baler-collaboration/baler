@@ -133,6 +133,7 @@ def normalize(data, config):
 def process(data_path, config):
     df = data_processing.load_data(data_path, config)
     df = data_processing.clean_data(df, config)
+    # df = Concat_energy(df)
     normalization_features = data_processing.find_minmax(df)
     df = normalize(df, config)
     train_set, test_set = data_processing.split(
@@ -235,3 +236,18 @@ def get_device():
         dev = "cpu"
         device = torch.device(dev)
     return device
+
+
+def Concat_energy(df):
+    Energy = data_processing.compute_E(
+        mass=df["recoGenJets_slimmedGenJets__PAT.obj.m_state.p4Polar_.fCoordinates.fM"],
+        eta=df[
+            "recoGenJets_slimmedGenJets__PAT.obj.m_state.p4Polar_.fCoordinates.fEta"
+        ],
+        pt=df["recoGenJets_slimmedGenJets__PAT.obj.m_state.p4Polar_.fCoordinates.fPt"],
+    )
+    print(type(Energy))
+    print(type(df))
+    concat_df = pandas.concat([df, Energy])
+    print(concat_df)
+    return concat_df
