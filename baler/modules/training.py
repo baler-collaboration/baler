@@ -17,7 +17,7 @@ def fit(model, train_dl, train_ds, model_children, regular_param, optimizer, RHO
 
     running_loss = 0.0
     n_data = int(len(train_ds) / train_dl.batch_size)
-    for inputs, labels in tqdm(
+    for inputs in tqdm(
         train_dl, total=n_data, desc="# Training", file=sys.stdout
     ):
         optimizer.zero_grad()
@@ -48,7 +48,7 @@ def validate(model, test_dl, test_ds, model_children, reg_param):
     running_loss = 0.0
     n_data = int(len(test_ds) / test_dl.batch_size)
     with torch.no_grad():
-        for inputs, labels in tqdm(
+        for inputs in tqdm(
             test_dl, total=n_data, desc="# Validating", file=sys.stdout
         ):
             reconstructions = model(inputs)
@@ -79,12 +79,16 @@ def train(model, variables, train_data, test_data, parent_path, config):
 
     # Initialize model with appropriate device
     device = helper.get_device()
-    model - model.to(device)
+    model = model.to(device)
+
+    # Converting data to tensors
+    train_ds = torch.tensor(train_data.values, dtype=torch.float64, device=device)
+    valid_ds = torch.tensor(train_data.values, dtype=torch.float64, device=device)
 
     # Pushing input data into the torch-DataLoader object and combines into one DataLoaders object (a basic wrapper
     # around several DataLoader objects).
-    train_dl = DataLoader(torch.tensor(train_data.values, dtype=torch.float64, device=device), batch_size=bs, shuffle=True, drop_last=True)
-    valid_dl = DataLoader(torch.tensor(train_data.values, dtype=torch.float64, device=device), batch_size=bs, drop_last=True)
+    train_dl = DataLoader(train_ds, batch_size=bs, shuffle=True, drop_last=True)
+    valid_dl = DataLoader(valid_ds, batch_size=bs, drop_last=True)
 
     ## Select Optimizer
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
