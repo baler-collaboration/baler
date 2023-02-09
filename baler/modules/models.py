@@ -4,21 +4,19 @@ from torch.nn import functional as F
 
 
 class george_SAE(nn.Module):
-    def __init__(self, device, n_features, z_dim, *args, **kwargs):
+    def __init__(self, n_features, z_dim, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.device = device
-
         # encoder
-        self.en1 = nn.Linear(n_features, 200, dtype=torch.float64, device=device)
-        self.en2 = nn.Linear(200, 100, dtype=torch.float64, device=device)
-        self.en3 = nn.Linear(100, 50, dtype=torch.float64, device=device)
-        self.en4 = nn.Linear(50, z_dim, dtype=torch.float64, device=device)
+        self.en1 = nn.Linear(n_features, 200, dtype=torch.float64)
+        self.en2 = nn.Linear(200, 100, dtype=torch.float64)
+        self.en3 = nn.Linear(100, 50, dtype=torch.float64)
+        self.en4 = nn.Linear(50, z_dim, dtype=torch.float64)
         # decoder
-        self.de1 = nn.Linear(z_dim, 50, dtype=torch.float64, device=device)
-        self.de2 = nn.Linear(50, 100, dtype=torch.float64, device=device)
-        self.de3 = nn.Linear(100, 200, dtype=torch.float64, device=device)
-        self.de4 = nn.Linear(200, n_features, dtype=torch.float64, device=device)
+        self.de1 = nn.Linear(z_dim, 50, dtype=torch.float64)
+        self.de2 = nn.Linear(50, 100, dtype=torch.float64)
+        self.de3 = nn.Linear(100, 200, dtype=torch.float64)
+        self.de4 = nn.Linear(200, n_features, dtype=torch.float64)
 
         self.n_features = n_features
         self.z_dim = z_dim

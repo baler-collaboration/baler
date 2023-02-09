@@ -3,7 +3,7 @@
     "early_stopping": true,
     "lr_scheduler" : false,
     "patience" : 100,
-    "min_delta" : 0, 
+    "min_delta" : 0,
     "model_name" : "george_SAE",
     "custom_norm" : false,
     "l1" : true,
