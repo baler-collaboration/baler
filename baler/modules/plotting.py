@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from matplotlib.backends.backend_pdf import PdfPages
-
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 import modules.data_processing as data_processing
 
 
@@ -83,6 +83,8 @@ def plot(output_path, before_path, after_path):
             print(f"{index} of {number_of_columns}")
 
             response = (after - before) / before
+            response_list = list(filter(lambda p : -20<=p<=20, response[column]))
+            response_RMS = data_processing.RMS_function(response_norm=response_list)
             #            minimum = int(min(before[column]+after[column]))
             #            maximum = int(max(before[column]+after[column]))
             #            diff = maximum - minimum
@@ -96,14 +98,14 @@ def plot(output_path, before_path, after_path):
             counts_before, bins_before = np.histogram(
                 before[column], bins=np.arange(-200, 500, 1)
             )
-            ax1.hist(
+            hist_before = ax1.hist(
                 bins_before[:-1], bins_before, weights=counts_before, label="Before"
             )
             # counts_after, bins_after = np.histogram(after[column],bins=np.arange(minimum,maximum,step))
             counts_after, bins_after = np.histogram(
                 after[column], bins=np.arange(-200, 500, 1)
             )
-            ax1.hist(
+            hist_after = ax1.hist(
                 bins_after[:-1],
                 bins_after,
                 weights=counts_after,
@@ -111,9 +113,19 @@ def plot(output_path, before_path, after_path):
                 histtype="step",
             )
             ax1.set_title(f"{column} Distribution")
-            ax1.set_xlabel(column, ha="right", x=1.0)
+            ax1.set_xlabel("column", ha="right", x=1.0)
+            ax1.set_xticks([])
             ax1.set_ylabel("Counts", ha="right", y=1.0)
             ax1.legend(loc="best")
+
+            # Residual subplot in comparison
+            divider = make_axes_locatable(ax1)
+            ax3 = divider.append_axes("bottom", size="20%", pad=0.25)
+            ax1.figure.add_axes(ax3)
+            ax3.bar(bins_after[:-1],height=(hist_after[0] - hist_before[0]))
+            ax3.axhline(y=0,linewidth=0.2, color='black')
+            ax3.set_ylim(-50,50)
+            ax3.set_ylabel('after - before')
 
             #            minimum = min(response[column])
             #            maximum = max(response[column])
@@ -135,12 +147,13 @@ def plot(output_path, before_path, after_path):
                 label="Response",
             )
             ax2.axvline(
-                np.mean(list(filter(lambda p: -2 <= p <= 2, response[column]))),
+                np.mean(response_list),
                 color="k",
                 linestyle="dashed",
                 linewidth=1,
-                label=f"Mean {round(np.mean(list(filter(lambda p : -2<=p<=2, response[column]))),8)}",
+                label=f"Mean {round(np.mean(response_list),8)}",
             )
+            ax2.plot([], [], " ", label=f"RMS: {round(response_RMS,8)}")
 
             # To have percent on the x-axis
             # formatter = mpl.ticker.FuncFormatter(to_percent)

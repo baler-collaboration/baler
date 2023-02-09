@@ -161,3 +161,10 @@ def df_to_root(df, config, col_names, save_path):
         for i in range(len(col_names)):
             tree[col_names[i]] = uproot3.newtree({col_names[i]: "float64"})
             tree[col_names[i]].extend({col_names[i]: df[col_names[i]].to_numpy()})
+
+
+def RMS_function(response_norm):
+    square = np.square(response_norm)
+    MS = square.mean()
+    RMS = np.sqrt(MS)
+    return RMS
