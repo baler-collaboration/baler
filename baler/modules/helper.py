@@ -32,7 +32,7 @@ Baler has three running modes:\n
     args = parser.parse_args()
     if not args.mode or (args.mode != "newProject" and not args.project):
         parser.print_usage()
-    exit(1)
+        exit(1)
     if args.mode == "newProject":
         args.config = ""
     else:
