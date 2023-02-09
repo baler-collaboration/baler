@@ -138,6 +138,7 @@ docker run \
 --mount type=bind,source=${PWD}/projects/,target=/baler-root/projects \
 --mount type=bind,source=${PWD}/data/,target=/baler-root/data \
 ghcr.io/uomresearchit/baler:latest 
+[--mode=... project--=...]
 ```
 
 Where:
