@@ -12,52 +12,57 @@ from modules import helper
 from modules import models
 
 
-def import_config(config_path):
-    with open(config_path, encoding="utf-8") as json_config:
-        config = json.load(json_config)
-    return config
+def import_config(config_path: str) -> dict:
+    try:
+        with open(config_path, encoding="utf-8") as json_config:
+            config = json.load(json_config)
+        return config
+    except FileNotFoundError:
+        print(f"Config file not found at path: {config_path}")
+    except json.JSONDecodeError as e:
+        print(f"Failed to parse config file at path {config_path}: {e}")
 
 
-def save_model(model, model_path):
+def save_model(model, model_path: str) -> None:
     return torch.save(model.state_dict(), model_path)
 
 
 def initialise_model(config):
     model_name = config["model_name"]
-    ModelObject = getattr(models, model_name)
-    return ModelObject
+    model_object = getattr(models, model_name)
+    return model_object
 
 
-def load_model(ModelObject, model_path, n_features, z_dim):
+def load_model(model_object, model_path, n_features, z_dim):
     device = helper.get_device()
-    model = ModelObject(device, n_features, z_dim)
+    model = model_object(device, n_features, z_dim)
 
     # Loading the state_dict into the model
     model.load_state_dict(torch.load(str(model_path)), strict=False)
     return model
 
 
-def Type_clearing(TTree):
-    typenames = TTree.typenames()
-    Column_Type = []
-    Column_names = []
+def type_clearing(tt_tree):
+    type_names = tt_tree.typenames()
+    column_type = []
+    column_names = []
 
     # In order to remove non integers or -floats in the TTree,
     # we separate the values and keys
-    for keys in typenames:
-        Column_Type.append(typenames[keys])
-        Column_names.append(keys)
+    for keys in type_names:
+        column_type.append(type_names[keys])
+        column_names.append(keys)
 
     # Checks each value of the typename values to see if it isn't an int or
     # float, and then removes it
-    for i in range(len(Column_Type)):
-        if Column_Type[i] != "float[]" and Column_Type[i] != "int32_t[]":
+    for i in range(len(column_type)):
+        if column_type[i] != "float[]" and column_type[i] != "int32_t[]":
             # print('Index ',i,' was of type ',Typename_list_values[i],'\
             # and was deleted from the file')
-            del Column_names[i]
+            del column_names[i]
 
     # Returns list of column names to use in load_data function
-    return Column_names
+    return column_names
 
 
 def numpy_to_df(array, config):
@@ -70,18 +75,21 @@ def numpy_to_df(array, config):
     return df
 
 
-def load_data(data_path, config):
-    if ".csv" in data_path[-4:]:
+def load_data(data_path: str, config):
+    file_extension = data_path.split(".")[-1]
+    if file_extension == "csv":
         df = pd.read_csv(data_path, low_memory=False)
-    elif ".root" in data_path[-5:]:
+    elif file_extension == "root":
         tree = uproot.open(data_path)[config["Branch"]][config["Collection"]][
             config["Objects"]
         ]
-        global Names
-        Names = Type_clearing(tree)
-        df = tree.arrays(Names, library="pd")
-    elif ".pickle" in data_path[-8:]:
+        global names
+        names = type_clearing(tree)
+        df = tree.arrays(names, library="pd")
+    elif file_extension == "pickle" or file_extension == "pkl":
         df = pd.read_pickle(data_path)
+    else:
+        raise Exception(f"File extension {file_extension} not supported")
 
     return df
 
@@ -132,15 +140,15 @@ def renormalize_std(data, true_min, feature_range):
     return data
 
 
-def renormalize_func(norm_data, min_list, range_list, config):
+def renormalize_func(norm_data, min_list, range_list):
     norm_data = np.array(norm_data)
     renormalized = [
         renormalize_std(norm_data, min_list[i], range_list[i])
         for i in range(len(min_list))
     ]
-    renormalizedFull = [(renormalized[i][:, i]) for i in range(len(renormalized))]
-    renormalizedFull = np.array(renormalizedFull).T
-    return renormalizedFull
+    renormalized_full = [(renormalized[i][:, i]) for i in range(len(renormalized))]
+    renormalized_full = np.array(renormalized_full).T
+    return renormalized_full
 
 
 def get_columns(df):
@@ -152,11 +160,11 @@ def pickle_to_df(file_path, config):
     # From pickle to df:
     with open(file_path, "rb") as handle:
         data = pickle.load(handle)
-        df = pd.DataFrame(data, columns=Names)
-        return df, Names
+        df = pd.DataFrame(data, columns=names)
+        return df, names
 
 
-def df_to_root(df, config, col_names, save_path):
+def df_to_root(df, col_names, save_path):
     with uproot3.recreate(save_path) as tree:
         for i in range(len(col_names)):
             tree[col_names[i]] = uproot3.newtree({col_names[i]: "float64"})

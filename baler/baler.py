@@ -50,13 +50,11 @@ def perform_training(config, project_path):
         test_data,
         normalization_features["True min"],
         normalization_features["Feature Range"],
-        config,
     )
     reconstructed_data_renorm = helper.renormalize(
         reconstructed_data,
         normalization_features["True min"],
         normalization_features["Feature Range"],
-        config,
     )
     end = time.time()
     print("Un-normalization took:", f"{(end - start) / 60:.3} minutes")
@@ -118,7 +116,6 @@ def perform_decompression(config, project_path):
         decompressed,
         normalization_features["True min"],
         normalization_features["Feature Range"],
-        config,
     )
     end = time.time()
     print("Decompression took:", f"{(end - start) / 60:.3} minutes")
