@@ -1,0 +1,3 @@
+import baler
+
+baler.main()
