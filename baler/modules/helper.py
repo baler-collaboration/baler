@@ -1,7 +1,6 @@
 import argparse
 import os
 import pickle
-import shutil
 
 import numpy
 import pandas
@@ -31,6 +30,9 @@ Baler has three running modes:\n
     )
 
     args = parser.parse_args()
+    if not args.mode or (args.mode != "newProject" and not args.project):
+        parser.print_usage()
+    exit(1)
     if args.mode == "newProject":
         args.config = ""
     else:
@@ -40,18 +42,62 @@ Baler has three running modes:\n
     return args.config, args.mode, args.project
 
 
-def createNewProject(projectName):
-    project_path = f"projects/{projectName}"
-    # FIXME: do not aout delete existing paths
+def create_new_project(project_name: str, base_path: str = "projects") -> None:
+    project_path = os.path.join(base_path, project_name)
     if os.path.exists(project_path):
-        shutil.rmtree(project_path)
+        print(f"The project {project_path} already exists.")
+        return
+
+    required_directories = [
+        "compressed_output",
+        "decompressed_output",
+        "plotting",
+        "training",
+        "model",
+    ]
     os.makedirs(project_path)
-    shutil.copyfile("baler/modules/nominal_config.json", f"{project_path}/config.json")
-    os.makedirs(f"{project_path}/compressed_output/")
-    os.makedirs(f"{project_path}/decompressed_output/")
-    os.makedirs(f"{project_path}/plotting/")
-    os.makedirs(f"{project_path}/training/")
-    os.makedirs(f"{project_path}/model/")
+    with open(os.path.join(project_path, "config.json"), "w") as f:
+        f.write(create_default_config())
+    for directory in required_directories:
+        os.makedirs(os.path.join(project_path, directory))
+
+
+def create_default_config() -> str:
+    return """
+{
+    "epochs" : 5,
+    "early_stopping": true,
+    "lr_scheduler" : false,
+    "patience" : 100,
+    "min_delta" : 0,
+    "model_name" : "george_SAE",
+    "custom_norm" : false,
+    "l1" : true,
+    "reg_param" : 0.001,
+    "RHO" : 0.05,
+    "lr" : 0.001,
+    "batch_size" : 512,
+    "save_as_root" : true,
+    "cleared_col_names":["pt","eta","phi","m","EmEnergy","HadEnergy","InvisEnergy","AuxilEnergy"],
+    "test_size" : 0.15,
+    "Branch" : "Events",
+    "Collection": "recoGenJets_slimmedGenJets__PAT.",
+    "Objects": "recoGenJets_slimmedGenJets__PAT.obj",
+    "number_of_columns" : 8,
+    "latent_space_size" : 4,
+    "dropped_variables":    [
+        "recoGenJets_slimmedGenJets__PAT.obj.m_state.vertex_.fCoordinates.fX",
+        "recoGenJets_slimmedGenJets__PAT.obj.m_state.vertex_.fCoordinates.fY",
+        "recoGenJets_slimmedGenJets__PAT.obj.m_state.vertex_.fCoordinates.fZ",
+        "recoGenJets_slimmedGenJets__PAT.obj.m_state.qx3_",
+        "recoGenJets_slimmedGenJets__PAT.obj.m_state.pdgId_",
+        "recoGenJets_slimmedGenJets__PAT.obj.m_state.status_",
+        "recoGenJets_slimmedGenJets__PAT.obj.mJetArea",
+        "recoGenJets_slimmedGenJets__PAT.obj.mPileupEnergy",
+        "recoGenJets_slimmedGenJets__PAT.obj.mPassNumber"
+    ],
+    "input_path":"data/firstProject/cms_data.root"
+}"""
 
 
 def to_pickle(data, path):
