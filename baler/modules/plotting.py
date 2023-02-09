@@ -83,7 +83,7 @@ def plot(output_path, before_path, after_path):
             print(f"{index} of {number_of_columns}")
 
             response = (after - before) / before
-            response_list = list(filter(lambda p : -20<=p<=20, response[column]))
+            response_list = list(filter(lambda p: -20 <= p <= 20, response[column]))
             response_RMS = data_processing.RMS_function(response_norm=response_list)
             #            minimum = int(min(before[column]+after[column]))
             #            maximum = int(max(before[column]+after[column]))
@@ -122,10 +122,10 @@ def plot(output_path, before_path, after_path):
             divider = make_axes_locatable(ax1)
             ax3 = divider.append_axes("bottom", size="20%", pad=0.25)
             ax1.figure.add_axes(ax3)
-            ax3.bar(bins_after[:-1],height=(hist_after[0] - hist_before[0]))
-            ax3.axhline(y=0,linewidth=0.2, color='black')
-            ax3.set_ylim(-50,50)
-            ax3.set_ylabel('after - before')
+            ax3.bar(bins_after[:-1], height=(hist_after[0] - hist_before[0]))
+            ax3.axhline(y=0, linewidth=0.2, color="black")
+            ax3.set_ylim(-50, 50)
+            ax3.set_ylabel("after - before")
 
             #            minimum = min(response[column])
             #            maximum = max(response[column])
