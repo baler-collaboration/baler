@@ -24,12 +24,13 @@ def main():
 
 
 def perform_training(config, project_path):
-    train_set, test_set, number_of_columns, normalization_features = helper.process(
-        config["input_path"], config
-    )
-    train_set_norm = helper.normalize(train_set, config)
-    test_set_norm = helper.normalize(test_set, config)
-
+    (
+        train_set_norm,
+        test_set_norm,
+        number_of_columns,
+        normalization_features,
+        full_norm,
+    ) = helper.process(config["input_path"], config)
     device = helper.get_device()
 
     ModelObject = helper.model_init(config=config)

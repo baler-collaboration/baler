@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 from tqdm import tqdm
+from scipy.stats import wasserstein_distance
 
 ###############################################
 factor = 0.5
@@ -8,6 +9,30 @@ min_lr = 1e-6
 
 
 ###############################################
+def sparse_loss_function_EMD_L1(
+    model_children, true_data, reconstructed_data, reg_param, validate
+):
+    mse = nn.MSELoss()
+    mse_loss = mse(reconstructed_data, true_data)
+    q = [
+        wasserstein_distance(
+            true_data.detach().numpy()[i, :], reconstructed_data.detach().numpy()[i, :]
+        )
+        for i in range(len(true_data))
+    ]
+    emd_loss = sum(q)
+
+    l1_loss = 0
+    values = true_data
+    if validate == False:
+        for i in range(len(model_children)):
+            values = model_children[i](values)
+            l1_loss += torch.mean(torch.abs(values))
+
+        loss = emd_loss + mse_loss + reg_param * l1_loss
+        return loss, emd_loss, l1_loss
+    else:
+        return emd_loss
 
 
 def new_loss_func(model, reconstructed_data, true_data, reg_param, val):

@@ -133,9 +133,10 @@ def normalize(data, config):
 def process(data_path, config):
     df = data_processing.load_data(data_path, config)
     df = data_processing.clean_data(df, config)
-    # df = Concat_energy(df)
+    df = Concat_energy(df)
     normalization_features = data_processing.find_minmax(df)
     df = normalize(df, config)
+    full_norm = df
     train_set, test_set = data_processing.split(
         df, test_size=config["test_size"], random_state=1
     )
@@ -143,7 +144,7 @@ def process(data_path, config):
     assert (
         number_of_columns == config["number_of_columns"]
     ), f"The number of columns of dataframe is {number_of_columns}, config states {config['number_of_columns']}."
-    return train_set, test_set, number_of_columns, normalization_features
+    return train_set, test_set, number_of_columns, normalization_features, full_norm
 
 
 def renormalize(data, true_min_list, feature_range_list):
@@ -184,9 +185,8 @@ def compress(number_of_columns, model_path, input_path, config):
 
     # Give the encoding function the correct input as tensor
     data = data_loader(input_path, config)
-    data = data_processing.clean_data(data, config)
+    # data = data_processing.clean_data(data, config)
     data_before = numpy.array(data)
-
     data = normalize(data, config)
     data_tensor = numpy_to_tensor(data).to(model.device)
 
@@ -239,15 +239,12 @@ def get_device():
 
 
 def Concat_energy(df):
-    Energy = data_processing.compute_E(
+    Energy_df = data_processing.compute_E(
         mass=df["recoGenJets_slimmedGenJets__PAT.obj.m_state.p4Polar_.fCoordinates.fM"],
         eta=df[
             "recoGenJets_slimmedGenJets__PAT.obj.m_state.p4Polar_.fCoordinates.fEta"
         ],
         pt=df["recoGenJets_slimmedGenJets__PAT.obj.m_state.p4Polar_.fCoordinates.fPt"],
     )
-    print(type(Energy))
-    print(type(df))
-    concat_df = pandas.concat([df, Energy])
-    print(concat_df)
+    concat_df = pandas.concat([df, Energy_df], axis=1)
     return concat_df

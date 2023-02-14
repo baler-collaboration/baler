@@ -66,6 +66,7 @@ def plot(output_path, before_path, after_path):
             "HadEnergy",
             "InvisEnergy",
             "AuxilEnergy",
+            "Energy",
         ]
         before = pd.DataFrame(before, columns=names)
         after = pd.DataFrame(after, columns=names)
