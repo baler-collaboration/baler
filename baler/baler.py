@@ -72,6 +72,8 @@ def perform_plotting(project_path, config):
         output_path,
         project_path + "training/before.pickle",
         project_path + "training/after.pickle",
+        # project_path + "compressed_output/cleandata_pre_comp.pickle",
+        # project_path + "decompressed_output/decompressed.pickle",
     )
     helper.loss_plotter(project_path + "training/loss_data.csv", output_path, config)
 

@@ -57,17 +57,45 @@ def plot(output_path, before_path, after_path):
     before = np.array(before)
     # Added because plotting is not supported for non-DataFrame objects yet.
     if isinstance(before, pd.DataFrame) == False:
-        names = [
-            "pt",
-            "eta",
-            "phi",
-            "m",
-            "EmEnergy",
-            "HadEnergy",
-            "InvisEnergy",
-            "AuxilEnergy",
-            "Energy",
-        ]
+        if (before.shape)[1] == 24:
+            names = [
+                "pt_",
+                "eta_",
+                "phi_",
+                "mass_",
+                "mJetArea",
+                "mChargedHadronEnergy",
+                "mNeutralHadronEnergy",
+                "mPhotonEnergy",
+                "mHFHadronEnergy",
+                "mHFEMEnergy",
+                "mChargedHadronMultiplicity",
+                "mNeutralHadronMultiplicity",
+                "mPhotonMultiplicity",
+                "mElectronMultiplicity",
+                "mHFHadronMultiplicity",
+                "mHFEMMultiplicity",
+                "mNeutralEmEnergy",
+                "mChargedMultiplicity",
+                "mNeutralMultiplicity",
+                "mChargedEmEnergy",
+                "mChargedMuEnergy",
+                "mMuonEnergy",
+                "mMuonMultiplicity",
+                "mElectronEnergy",
+            ]
+        else:
+            names = [
+                "pt",
+                "eta",
+                "phi",
+                "m",
+                "EmEnergy",
+                "HadEnergy",
+                "InvisEnergy",
+                "AuxilEnergy",
+                "Energy",
+            ]
         before = pd.DataFrame(before, columns=names)
         after = pd.DataFrame(after, columns=names)
     else:
