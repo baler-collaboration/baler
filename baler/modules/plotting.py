@@ -104,7 +104,7 @@ def plot(output_path, before_path, after_path):
     columns = data_processing.get_columns(before)
     number_of_columns = len(columns)
 
-    with PdfPages(output_path + "comparison.pdf") as pdf:
+    with PdfPages(output_path + "comparison_test.pdf") as pdf:
         figure1, (ax1, ax2) = plt.subplots(
             1, 2, figsize=(18.3 * (1 / 2.54) * 1.7, 13.875 * (1 / 2.54) * 1.32)
         )
@@ -125,14 +125,14 @@ def plot(output_path, before_path, after_path):
             #            step = diff/100
             # counts_before, bins_before = np.histogram(before[column],bins=np.arange(minimum,maximum,step))
             counts_before, bins_before = np.histogram(
-                before[column], bins=np.arange(-200, 500, 1)
+                before[column], bins=np.arange(-200, 500, 10)
             )
             hist_before = ax1.hist(
                 bins_before[:-1], bins_before, weights=counts_before, label="Before"
             )
             # counts_after, bins_after = np.histogram(after[column],bins=np.arange(minimum,maximum,step))
             counts_after, bins_after = np.histogram(
-                after[column], bins=np.arange(-200, 500, 1)
+                after[column], bins=np.arange(-200, 500, 10)
             )
             hist_after = ax1.hist(
                 bins_after[:-1],
@@ -144,6 +144,7 @@ def plot(output_path, before_path, after_path):
             ax1.set_title(f"{column} Distribution")
             ax1.set_xlabel("column", ha="right", x=1.0)
             ax1.set_xticks([])
+            ax1.set_yscale("log")
             ax1.set_ylabel("Counts", ha="right", y=1.0)
             ax1.legend(loc="best")
 
@@ -151,9 +152,12 @@ def plot(output_path, before_path, after_path):
             divider = make_axes_locatable(ax1)
             ax3 = divider.append_axes("bottom", size="20%", pad=0.25)
             ax1.figure.add_axes(ax3)
-            ax3.bar(bins_after[:-1], height=(hist_after[0] - hist_before[0]))
+            ax3.bar(
+                bins_after[:-1],
+                height=((hist_after[0] - hist_before[0]) / hist_before[0]),
+            )
             ax3.axhline(y=0, linewidth=0.2, color="black")
-            ax3.set_ylim(-50, 50)
+            ax3.set_ylim(-2, 2)
             ax3.set_ylabel("after - before")
 
             #            minimum = min(response[column])
@@ -195,5 +199,6 @@ def plot(output_path, before_path, after_path):
             pdf.savefig()
             ax2.clear()
             ax1.clear()
+            ax3.clear()
 
             # if index==1: break
