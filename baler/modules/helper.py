@@ -35,7 +35,7 @@ Baler has three running modes:\n
         parser.print_usage()
         exit(1)
     if args.mode == "newProject":
-        args.config = ""
+        config = None
     else:
         project_path = f"projects/{args.project}/"
         #config_path = f"projects/{args.project}/config.py"
@@ -59,48 +59,51 @@ def create_new_project(project_name: str, base_path: str = "projects") -> None:
         "model",
     ]
     os.makedirs(project_path)
-    with open(os.path.join(project_path, "config.json"), "w") as f:
+    with open(os.path.join(project_path, "configClass.py"), "w") as f:
+        print(project_path)
         f.write(create_default_config())
     for directory in required_directories:
         os.makedirs(os.path.join(project_path, directory))
 
 
 def create_default_config() -> str:
-    return """
-{
-    "epochs" : 5,
-    "early_stopping": true,
-    "lr_scheduler" : false,
-    "patience" : 100,
-    "min_delta" : 0,
-    "model_name" : "george_SAE",
-    "custom_norm" : false,
-    "l1" : true,
-    "reg_param" : 0.001,
-    "RHO" : 0.05,
-    "lr" : 0.001,
-    "batch_size" : 512,
-    "save_as_root" : true,
-    "cleared_col_names":["pt","eta","phi","m","EmEnergy","HadEnergy","InvisEnergy","AuxilEnergy"],
-    "test_size" : 0.15,
-    "Branch" : "Events",
-    "Collection": "recoGenJets_slimmedGenJets__PAT.",
-    "Objects": "recoGenJets_slimmedGenJets__PAT.obj",
-    "number_of_columns" : 8,
-    "latent_space_size" : 4,
-    "dropped_variables":    [
-        "recoGenJets_slimmedGenJets__PAT.obj.m_state.vertex_.fCoordinates.fX",
-        "recoGenJets_slimmedGenJets__PAT.obj.m_state.vertex_.fCoordinates.fY",
-        "recoGenJets_slimmedGenJets__PAT.obj.m_state.vertex_.fCoordinates.fZ",
-        "recoGenJets_slimmedGenJets__PAT.obj.m_state.qx3_",
-        "recoGenJets_slimmedGenJets__PAT.obj.m_state.pdgId_",
-        "recoGenJets_slimmedGenJets__PAT.obj.m_state.status_",
-        "recoGenJets_slimmedGenJets__PAT.obj.mJetArea",
-        "recoGenJets_slimmedGenJets__PAT.obj.mPileupEnergy",
-        "recoGenJets_slimmedGenJets__PAT.obj.mPassNumber"
-    ],
-    "input_path":"data/firstProject/cms_data.root"
-}"""
+    return f"""
+class Configuration(object):
+    def __init__(self):
+        self.input_path = "data/firstProject/cms_data.root"
+
+        self.epochs = 5
+        self.early_stopping = True
+        self.lr_scheduler = False
+        self.patience = 100
+        self.min_delta = 0
+        self.model_name = "george_SAE"
+        self.custom_norm = False
+        self.l1 = True
+        self.reg_param = 0.001
+        self.RHO = 0.05
+        self.lr = 0.001
+        self.batch_size = 512
+        self.save_as_root = True
+        self.cleared_col_names = ["pt","eta","phi","m","EmEnergy","HadEnergy","InvisEnergy","AuxilEnergy"]
+        self.test_size = 0.15
+        self.Branch = "Events"
+        self.Collection = "recoGenJets_slimmedGenJets__PAT."
+        self.Objects = "recoGenJets_slimmedGenJets__PAT.obj"
+        self.number_of_columns = 8
+        self.latent_space_size = 4
+        self.dropped_variables = [
+            "recoGenJets_slimmedGenJets__PAT.obj.m_state.vertex_.fCoordinates.fX",
+            "recoGenJets_slimmedGenJets__PAT.obj.m_state.vertex_.fCoordinates.fY",
+            "recoGenJets_slimmedGenJets__PAT.obj.m_state.vertex_.fCoordinates.fZ",
+            "recoGenJets_slimmedGenJets__PAT.obj.m_state.qx3_",
+            "recoGenJets_slimmedGenJets__PAT.obj.m_state.pdgId_",
+            "recoGenJets_slimmedGenJets__PAT.obj.m_state.status_",
+            "recoGenJets_slimmedGenJets__PAT.obj.mJetArea",
+            "recoGenJets_slimmedGenJets__PAT.obj.mPileupEnergy",
+            "recoGenJets_slimmedGenJets__PAT.obj.mPassNumber"
+        ]
+"""
 
 
 def to_pickle(data, path):
