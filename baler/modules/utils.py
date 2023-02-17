@@ -14,13 +14,13 @@ def sparse_loss_function_EMD_L1(
 ):
     mse = nn.MSELoss()
     mse_loss = mse(reconstructed_data, true_data)
-    q = [
+    Wassterstein_distance_list = [
         wasserstein_distance(
             true_data.detach().numpy()[i, :], reconstructed_data.detach().numpy()[i, :]
         )
         for i in range(len(true_data))
     ]
-    emd_loss = sum(q)
+    emd_loss = sum(Wassterstein_distance_list)
 
     l1_loss = 0
     values = true_data
