@@ -11,6 +11,8 @@ def main():
     project_path = f"projects/{project}/"
     if mode == "newProject":
         helper.create_new_project(project)
+    elif mode == "pp":
+        pre_processing(config)
     elif mode == "train":
         perform_training(config, project_path)
     elif mode == "plot":
@@ -22,11 +24,11 @@ def main():
     elif mode == "info":
         print_info(project_path)
 
+def pre_processing(config):
+    config.pre_processing()
 
 def perform_training(config, project_path):
-    train_set, test_set, number_of_columns, normalization_features = helper.process(
-        config.input_path, config
-    )
+    train_set, test_set, number_of_columns, normalization_features = helper.process(config.input_path, config)
     train_set_norm = helper.normalize(train_set, config)
     test_set_norm = helper.normalize(test_set, config)
 

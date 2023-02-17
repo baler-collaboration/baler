@@ -138,7 +138,7 @@ def normalize(data, config):
 
 def process(data_path, config):
     df = data_processing.load_data(data_path, config)
-    df = data_processing.clean_data(df, config)
+    #df = data_processing.clean_data(df, config)
     normalization_features = data_processing.find_minmax(df)
     df = normalize(df, config)
     train_set, test_set = data_processing.split(
@@ -189,7 +189,7 @@ def compress(number_of_columns, model_path, input_path, config):
 
     # Give the encoding function the correct input as tensor
     data = data_loader(input_path, config)
-    data = data_processing.clean_data(data, config)
+    #data = data_processing.clean_data(data, config)
     data_before = numpy.array(data)
 
     data = normalize(data, config)

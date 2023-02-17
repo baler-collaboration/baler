@@ -42,7 +42,7 @@ def load_model(model_object, model_path, n_features, z_dim):
     return model
 
 
-def type_clearing(tt_tree):
+""" def type_clearing(tt_tree):
     type_names = tt_tree.typenames()
     column_type = []
     column_names = []
@@ -62,7 +62,7 @@ def type_clearing(tt_tree):
             del column_names[i]
 
     # Returns list of column names to use in load_data function
-    return column_names
+    return column_names """
 
 
 def numpy_to_df(array, config):
@@ -76,30 +76,16 @@ def numpy_to_df(array, config):
 
 
 def load_data(data_path: str, config):
-    file_extension = data_path.split(".")[-1]
-    if file_extension == "csv":
-        df = pd.read_csv(data_path, low_memory=False)
-    elif file_extension == "root":
-        tree = uproot.open(data_path)[config.Branch][config.Collection][
-            config.Objects
-        ]
-        global names
-        names = type_clearing(tree)
-        df = tree.arrays(names, library="pd")
-    elif file_extension == "pickle" or file_extension == "pkl":
-        df = pd.read_pickle(data_path)
-    else:
-        raise Exception(f"File extension {file_extension} not supported")
-
+    df = pd.read_pickle(data_path)
     return df
 
 
-def clean_data(df, config):
+""" def clean_data(df, config):
     df = df.drop(columns=config.dropped_variables)
     df = df.dropna()
     global cleared_column_names
     cleared_column_names = list(df)
-    return df
+    return df """
 
 
 def find_minmax(data):
