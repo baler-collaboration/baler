@@ -1,6 +1,7 @@
 import argparse
 import os
 import pickle
+import sys
 
 import numpy
 import pandas
@@ -36,10 +37,12 @@ Baler has three running modes:\n
     if args.mode == "newProject":
         args.config = ""
     else:
-        config_path = f"projects/{args.project}/config.json"
-        args.config = data_processing.import_config(config_path)
-
-    return args.config, args.mode, args.project
+        project_path = f"projects/{args.project}/"
+        #config_path = f"projects/{args.project}/config.py"
+        sys.path.append(project_path)
+        import configClass
+        config = configClass.Configuration()
+    return config, args.mode, args.project
 
 
 def create_new_project(project_name: str, base_path: str = "projects") -> None:
