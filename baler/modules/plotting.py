@@ -29,10 +29,10 @@ def loss_plot(path_to_loss_data, output_path, config):
     train_loss = loss_data["Train Loss"]
     conf_list = [
         len(train_loss),
-        config["model_name"],
-        config["reg_param"],
-        config["lr"],
-        config["batch_size"],
+        config.model_name,
+        config.reg_param,
+        config.lr,
+        config.batch_size,
     ]
 
     plt.figure(figsize=(10, 7))

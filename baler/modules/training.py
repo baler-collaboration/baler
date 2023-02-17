@@ -68,13 +68,13 @@ def validate(model, test_dl, test_ds, model_children, reg_param):
 
 
 def train(model, variables, train_data, test_data, parent_path, config):
-    learning_rate = config["lr"]
-    bs = config["batch_size"]
-    reg_param = config["reg_param"]
-    RHO = config["RHO"]
-    l1 = config["l1"]
-    epochs = config["epochs"]
-    latent_space_size = config["latent_space_size"]
+    learning_rate = config.lr
+    bs = config.batch_size
+    reg_param = config.reg_param
+    RHO = config.RHO
+    l1 = config.l1
+    epochs = config.epochs
+    latent_space_size = config.latent_space_size
 
     model_children = list(model.children())
 
@@ -97,15 +97,15 @@ def train(model, variables, train_data, test_data, parent_path, config):
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
     ## Activate early stopping
-    if config["early_stopping"] == True:
+    if config.early_stopping == True:
         early_stopping = utils.EarlyStopping(
-            patience=config["patience"], min_delta=config["min_delta"]
+            patience=config.patience, min_delta=config.min_delta
         )  # Changes to patience & min_delta can be made in configs
 
     ## Activate LR Scheduler
-    if config["lr_scheduler"] == True:
+    if config.lr_scheduler == True:
         lr_scheduler = utils.LRScheduler(
-            optimizer=optimizer, patience=config["patience"]
+            optimizer=optimizer, patience=config.patience
         )
 
     # train and validate the autoencoder neural network
@@ -137,9 +137,9 @@ def train(model, variables, train_data, test_data, parent_path, config):
             reg_param=reg_param,
         )
         val_loss.append(val_epoch_loss)
-        if config["lr_scheduler"] is True:
+        if config.lr_scheduler is True:
             lr_scheduler(val_epoch_loss)
-        if config["early_stopping"] is True:
+        if config.early_stopping is True:
             early_stopping(val_epoch_loss)
             if early_stopping.early_stop:
                 break

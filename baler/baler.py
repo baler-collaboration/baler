@@ -25,7 +25,7 @@ def main():
 
 def perform_training(config, project_path):
     train_set, test_set, number_of_columns, normalization_features = helper.process(
-        config["input_path"], config
+        config.input_path, config
     )
     train_set_norm = helper.normalize(train_set, config)
     test_set_norm = helper.normalize(test_set, config)
@@ -34,7 +34,7 @@ def perform_training(config, project_path):
 
     ModelObject = helper.model_init(config=config)
     model = ModelObject(
-        device=device, n_features=number_of_columns, z_dim=config["latent_space_size"]
+        device=device, n_features=number_of_columns, z_dim=config.latent_space_size
     )
 
     output_path = project_path + "training/"
@@ -80,8 +80,8 @@ def perform_compression(config, project_path):
     start = time.time()
     compressed, data_before = helper.compress(
         model_path=project_path + "model/model.pt",
-        number_of_columns=config["number_of_columns"],
-        input_path=config["input_path"],
+        number_of_columns=config.number_of_columns,
+        input_path=config.input_path,
         config=config,
     )
     # Converting back to numpyarray
@@ -101,7 +101,7 @@ def perform_decompression(config, project_path):
     start = time.time()
     decompressed = helper.decompress(
         model_path=project_path + "model/model.pt",
-        number_of_columns=config["number_of_columns"],
+        number_of_columns=config.number_of_columns,
         input_path=project_path + "compressed_output/compressed.pickle",
         config=config,
     )
@@ -121,7 +121,7 @@ def perform_decompression(config, project_path):
     print("Decompression took:", f"{(end - start) / 60:.3} minutes")
 
     # False by default
-    if config["save_as_root"]:
+    if config.save_as_root:
         helper.to_root(
             decompressed, config, project_path + "decompressed_output/decompressed.root"
         )

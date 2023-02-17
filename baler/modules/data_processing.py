@@ -28,7 +28,7 @@ def save_model(model, model_path: str) -> None:
 
 
 def initialise_model(config):
-    model_name = config["model_name"]
+    model_name = config.model_name
     model_object = getattr(models, model_name)
     return model_object
 
@@ -69,7 +69,7 @@ def numpy_to_df(array, config):
     if np.shape(array)[1] == 4:
         col_names = ["comp1", "comp2", "comp3", "comp4"]
     else:
-        col_names = config["cleared_col_names"]
+        col_names = config.cleared_col_names
     df = pd.DataFrame(array, columns=col_names)
 
     return df
@@ -80,8 +80,8 @@ def load_data(data_path: str, config):
     if file_extension == "csv":
         df = pd.read_csv(data_path, low_memory=False)
     elif file_extension == "root":
-        tree = uproot.open(data_path)[config["Branch"]][config["Collection"]][
-            config["Objects"]
+        tree = uproot.open(data_path)[config.Branch][config.Collection][
+            config.Objects
         ]
         global names
         names = type_clearing(tree)
@@ -95,7 +95,7 @@ def load_data(data_path: str, config):
 
 
 def clean_data(df, config):
-    df = df.drop(columns=config["dropped_variables"])
+    df = df.drop(columns=config.dropped_variables)
     df = df.dropna()
     global cleared_column_names
     cleared_column_names = list(df)
@@ -118,9 +118,9 @@ def find_minmax(data):
 
 def normalize(data, config):
     data = np.array(data)
-    if config["custom_norm"] is True:
+    if config.custom_norm is True:
         pass
-    elif config["custom_norm"] is False:
+    elif config.custom_norm is False:
         true_min = np.min(data)
         true_max = np.max(data)
         feature_range = true_max - true_min

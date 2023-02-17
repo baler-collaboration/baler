@@ -139,12 +139,12 @@ def process(data_path, config):
     normalization_features = data_processing.find_minmax(df)
     df = normalize(df, config)
     train_set, test_set = data_processing.split(
-        df, test_size=config["test_size"], random_state=1
+        df, test_size=config.test_size, random_state=1
     )
     number_of_columns = len(data_processing.get_columns(df))
     assert (
-        number_of_columns == config["number_of_columns"]
-    ), f"The number of columns of dataframe is {number_of_columns}, config states {config['number_of_columns']}."
+        number_of_columns == config.number_of_columns
+    ), f"The number of columns of dataframe is {number_of_columns}, config states {config.number_of_columns}."
     return train_set, test_set, number_of_columns, normalization_features
 
 
@@ -181,7 +181,7 @@ def compress(number_of_columns, model_path, input_path, config):
         ModelObject,
         model_path=model_path,
         n_features=number_of_columns,
-        z_dim=config["latent_space_size"],
+        z_dim=config.latent_space_size,
     )
 
     # Give the encoding function the correct input as tensor
@@ -203,7 +203,7 @@ def decompress(number_of_columns, model_path, input_path, config):
         ModelObject,
         model_path=model_path,
         n_features=number_of_columns,
-        z_dim=config["latent_space_size"],
+        z_dim=config.latent_space_size,
     )
 
     # Load the data & convert to tensor
