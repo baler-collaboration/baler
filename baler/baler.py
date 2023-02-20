@@ -97,10 +97,13 @@ def perform_compression(config, project_path):
     helper.to_pickle(
         data_before, project_path + "compressed_output/cleandata_pre_comp.pickle"
     )
+    helper.to_pickle(config.cleared_col_names,project_path+"compressed_output/column_names.pickle")
 
 
 def perform_decompression(config, project_path):
     print("Decompressing...")
+    #with open(project_path+"compressed_output/column_names.pickle", 'rb') as f: config.cleared_col_names = pickle.load(f)
+    config.cleared_col_names = helper.from_pickle(project_path+"compressed_output/column_names.pickle")
     start = time.time()
     decompressed = helper.decompress(
         model_path=project_path + "model/model.pt",

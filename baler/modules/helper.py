@@ -110,6 +110,10 @@ def to_pickle(data, path):
     with open(path, "wb") as handle:
         pickle.dump(data, handle)
 
+def from_pickle(path):
+    with open(path, 'rb') as handle:
+        return pickle.load(handle)
+
 
 def model_init(config):
     # This is used when we don't have saved model parameters.
@@ -140,11 +144,12 @@ def process(data_path, config):
     df = data_processing.load_data(data_path, config)
     #df = data_processing.clean_data(df, config)
     normalization_features = data_processing.find_minmax(df)
+    config.cleared_col_names = data_processing.get_columns(df)
+    number_of_columns = len(data_processing.get_columns(df))
     df = normalize(df, config)
     train_set, test_set = data_processing.split(
         df, test_size=config.test_size, random_state=1
     )
-    number_of_columns = len(data_processing.get_columns(df))
     #assert (
     #    number_of_columns == config.number_of_columns
     #), f"The number of columns of dataframe is {number_of_columns}, config states {config.number_of_columns}."
@@ -180,6 +185,7 @@ def detach(tensor):
 def compress(model_path, input_path, config):
     # Give the encoding function the correct input as tensor
     data = data_loader(input_path, config)
+    config.cleared_col_names = data_processing.get_columns(data)
     number_of_columns = len(data_processing.get_columns(data))
     latent_space_size = int(number_of_columns//config.compression_ratio)
     data_before = numpy.array(data)

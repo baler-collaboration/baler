@@ -18,7 +18,7 @@ class Configuration(object):
         self.save_as_root = True
         self.test_size = 0.15
 
-        self.cleared_col_names = ["pt","eta","phi","m","EmEnergy","HadEnergy","InvisEnergy","AuxilEnergy"]
+        #self.cleared_col_names = ["pt","eta","phi","m","EmEnergy","HadEnergy","InvisEnergy","AuxilEnergy"]
         #self.number_of_columns = 8
         #self.latent_space_size = 4
 
