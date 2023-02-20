@@ -1,8 +1,5 @@
-import pre_processing.root as preProcessClass
-
 class Configuration(object):
     def __init__(self):
-        self.unprocessed_path = "data/cms/cms_data.root"
         self.input_path = "data/cms/cms_data.pickle"
 
         self.epochs = 5
@@ -25,7 +22,9 @@ class Configuration(object):
         self.latent_space_size = 4
 
     def pre_processing(self):
-        self.pre_processor = preProcessClass.PreProcessor(self.unprocessed_path,self.input_path)
+        import pre_processing.root as preProcessorClass
+        self.unprocessed_path = "data/cms/cms_data.root"
+        self.pre_processor = preProcessorClass.PreProcessor(self.unprocessed_path,self.input_path)
         self.pre_processor.number_of_columns = 8
         self.pre_processor.latent_space_size = 4
         self.pre_processor.cleared_col_names = ["pt","eta","phi","m","EmEnergy","HadEnergy","InvisEnergy","AuxilEnergy"]
