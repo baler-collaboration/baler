@@ -31,6 +31,8 @@ def perform_training(config, project_path):
     train_set, test_set, number_of_columns, normalization_features = helper.process(config.input_path, config)
     train_set_norm = helper.normalize(train_set, config)
     test_set_norm = helper.normalize(test_set, config)
+    config.latent_space_size = int(number_of_columns//config.compression_ratio)
+    config.number_of_columns = number_of_columns
 
     device = helper.get_device()
 
@@ -82,7 +84,6 @@ def perform_compression(config, project_path):
     start = time.time()
     compressed, data_before = helper.compress(
         model_path=project_path + "model/model.pt",
-        number_of_columns=config.number_of_columns,
         input_path=config.input_path,
         config=config,
     )
@@ -103,7 +104,6 @@ def perform_decompression(config, project_path):
     start = time.time()
     decompressed = helper.decompress(
         model_path=project_path + "model/model.pt",
-        number_of_columns=config.number_of_columns,
         input_path=project_path + "compressed_output/compressed.pickle",
         config=config,
     )

@@ -1,8 +1,9 @@
 class Configuration(object):
     def __init__(self):
         self.input_path = "data/cms/cms_data.pickle"
+        self.compression_ratio = 2.0
 
-        self.epochs = 5
+        self.epochs = 2
         self.early_stopping = True
         self.lr_scheduler = False
         self.patience = 100
@@ -18,8 +19,8 @@ class Configuration(object):
         self.test_size = 0.15
 
         self.cleared_col_names = ["pt","eta","phi","m","EmEnergy","HadEnergy","InvisEnergy","AuxilEnergy"]
-        self.number_of_columns = 8
-        self.latent_space_size = 4
+        #self.number_of_columns = 8
+        #self.latent_space_size = 4
 
     def pre_processing(self):
         import pre_processing.root as preProcessorClass

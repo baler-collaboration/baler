@@ -145,9 +145,9 @@ def process(data_path, config):
         df, test_size=config.test_size, random_state=1
     )
     number_of_columns = len(data_processing.get_columns(df))
-    assert (
-        number_of_columns == config.number_of_columns
-    ), f"The number of columns of dataframe is {number_of_columns}, config states {config.number_of_columns}."
+    #assert (
+    #    number_of_columns == config.number_of_columns
+    #), f"The number of columns of dataframe is {number_of_columns}, config states {config.number_of_columns}."
     return train_set, test_set, number_of_columns, normalization_features
 
 
@@ -177,42 +177,47 @@ def detach(tensor):
     return tensor.cpu().detach().numpy()
 
 
-def compress(number_of_columns, model_path, input_path, config):
+def compress(model_path, input_path, config):
+    # Give the encoding function the correct input as tensor
+    data = data_loader(input_path, config)
+    number_of_columns = len(data_processing.get_columns(data))
+    latent_space_size = int(number_of_columns//config.compression_ratio)
+    data_before = numpy.array(data)
+    data = normalize(data, config)
+    
     # Initialise and load the model correctly.
     ModelObject = data_processing.initialise_model(config=config)
     model = data_processing.load_model(
         ModelObject,
         model_path=model_path,
         n_features=number_of_columns,
-        z_dim=config.latent_space_size,
+        z_dim=latent_space_size,
     )
-
-    # Give the encoding function the correct input as tensor
-    data = data_loader(input_path, config)
-    #data = data_processing.clean_data(data, config)
-    data_before = numpy.array(data)
-
-    data = normalize(data, config)
     data_tensor = numpy_to_tensor(data).to(model.device)
 
     compressed = model.encode(data_tensor)
     return compressed, data_before
 
 
-def decompress(number_of_columns, model_path, input_path, config):
+def decompress(model_path, input_path, config):
+
+    # Load the data & convert to tensor
+    data = data_loader(input_path, config)
+    latent_space_size = len(data[0])
+    #number_of_columns=8
+    modelDict = torch.load(str(model_path))
+    number_of_columns = len(modelDict[list(modelDict.keys())[-1]])
+
+
     # Initialise and load the model correctly.
     ModelObject = data_processing.initialise_model(config=config)
     model = data_processing.load_model(
         ModelObject,
         model_path=model_path,
         n_features=number_of_columns,
-        z_dim=config.latent_space_size,
+        z_dim=latent_space_size,
     )
-
-    # Load the data & convert to tensor
-    data = data_loader(input_path, config)
     data_tensor = numpy_to_tensor(data).to(model.device)
-
     decompressed = model.decode(data_tensor)
     return decompressed
 
