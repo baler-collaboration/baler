@@ -7,6 +7,7 @@ import pandas as pd
 from matplotlib.backends.backend_pdf import PdfPages
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import modules.data_processing as data_processing
+import modules.helper as helper
 
 
 def to_percent(y, position):
@@ -48,29 +49,21 @@ def loss_plot(path_to_loss_data, output_path, config):
     # plt.show()
 
 
-def plot(output_path, before_path, after_path):
+def plot(project_path):
+    output_path = project_path + "plotting/"
+    before_path = project_path + "training/before.pickle"
+    after_path = project_path + "training/after.pickle"
     with open(before_path, "rb") as handle:
         before = pickle.load(handle)
     with open(after_path, "rb") as handle:
         after = pickle.load(handle)
-
     before = np.array(before)
     # Added because plotting is not supported for non-DataFrame objects yet.
-    if isinstance(before, pd.DataFrame) == False:
-        names = [
-            "pt",
-            "eta",
-            "phi",
-            "m",
-            "EmEnergy",
-            "HadEnergy",
-            "InvisEnergy",
-            "AuxilEnergy",
-        ]
-        before = pd.DataFrame(before, columns=names)
-        after = pd.DataFrame(after, columns=names)
-    else:
-        pass
+
+    column_names = helper.from_pickle(project_path+"compressed_output/column_names.pickle")
+    
+    before = pd.DataFrame(before, columns=column_names)
+    after = pd.DataFrame(after, columns=column_names)
 
     columns = data_processing.get_columns(before)
     number_of_columns = len(columns)

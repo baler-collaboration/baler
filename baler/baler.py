@@ -70,13 +70,8 @@ def perform_training(config, project_path):
 
 
 def perform_plotting(project_path, config):
-    output_path = project_path + "plotting/"
-    helper.plot(
-        output_path,
-        project_path + "training/before.pickle",
-        project_path + "training/after.pickle",
-    )
-    helper.loss_plotter(project_path + "training/loss_data.csv", output_path, config)
+    helper.plot(project_path)
+    helper.loss_plotter(project_path + "training/loss_data.csv", project_path + "plotting/", config)
 
 
 def perform_compression(config, project_path):
@@ -102,7 +97,6 @@ def perform_compression(config, project_path):
 
 def perform_decompression(config, project_path):
     print("Decompressing...")
-    #with open(project_path+"compressed_output/column_names.pickle", 'rb') as f: config.cleared_col_names = pickle.load(f)
     config.cleared_col_names = helper.from_pickle(project_path+"compressed_output/column_names.pickle")
     start = time.time()
     decompressed = helper.decompress(

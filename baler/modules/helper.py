@@ -166,8 +166,8 @@ def train(model, number_of_columns, train_set, test_set, project_path, config):
     )
 
 
-def plot(output_path, before, after):
-    plotting.plot(output_path, before, after)
+def plot(project_path):
+    plotting.plot(project_path)
 
 
 def loss_plotter(path_to_loss_data, output_path, config):
