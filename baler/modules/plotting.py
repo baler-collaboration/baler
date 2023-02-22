@@ -69,9 +69,19 @@ def plot(project_path):
     number_of_columns = len(columns)
 
     with PdfPages(output_path + "comparison.pdf") as pdf:
-        figure1, (ax1, ax2) = plt.subplots(
-            1, 2, figsize=(18.3 * (1 / 2.54) * 1.7, 13.875 * (1 / 2.54) * 1.32)
-        )
+        fig = plt.figure(constrained_layout=True, figsize=(10, 4))
+        subfigs = fig.subfigures(1, 2, wspace=0.07, width_ratios=[1, 1])
+        #figure1, (ax1, ax2) = plt.subplots(
+        #    1, 2, figsize=(18.3 * (1 / 2.54) * 1.7, 13.875 * (1 / 2.54) * 1.32)
+        
+        axsLeft = subfigs[0].subplots(2, 1, sharex=True)
+        ax1=axsLeft[0]
+        ax3=axsLeft[1]
+
+        axsRight = subfigs[1].subplots()
+        ax2=axsRight
+
+
         for index, column in enumerate(columns):
             print(f"{index} of {number_of_columns}")
 
@@ -88,15 +98,20 @@ def plot(project_path):
             #                continue
             #            step = diff/100
             # counts_before, bins_before = np.histogram(before[column],bins=np.arange(minimum,maximum,step))
+            x_min = min([min(before[column]),min(after[column])])
+            x_max = max([max(before[column]),max(after[column])])
+            diff = x_max - x_min
+
+
             counts_before, bins_before = np.histogram(
-                before[column], bins=np.arange(-200, 500, 1)
+                before[column], bins=np.linspace(x_min, x_max,101)
             )
             hist_before = ax1.hist(
                 bins_before[:-1], bins_before, weights=counts_before, label="Before"
             )
             # counts_after, bins_after = np.histogram(after[column],bins=np.arange(minimum,maximum,step))
             counts_after, bins_after = np.histogram(
-                after[column], bins=np.arange(-200, 500, 1)
+                after[column], bins=np.linspace(x_min, x_max,101)
             )
             hist_after = ax1.hist(
                 bins_after[:-1],
@@ -109,16 +124,23 @@ def plot(project_path):
             ax1.set_xlabel("column", ha="right", x=1.0)
             ax1.set_xticks([])
             ax1.set_ylabel("Counts", ha="right", y=1.0)
+            ax1.set_yscale("log")
             ax1.legend(loc="best")
 
+            ax1.set_xlim(x_min-(diff/2)*0.1,x_max+abs(x_max*0.1))
+
             # Residual subplot in comparison
-            divider = make_axes_locatable(ax1)
-            ax3 = divider.append_axes("bottom", size="20%", pad=0.25)
-            ax1.figure.add_axes(ax3)
-            ax3.bar(bins_after[:-1], height=(hist_after[0] - hist_before[0]))
+            #divider = make_axes_locatable(ax1)
+            #ax3 = divider.append_axes("bottom", size="20%", pad=0.25)
+            #ax1.figure.add_axes(ax3)
+            #ax3.bar(bins_after[:-1], height=(hist_after[0] - hist_before[0])/hist_before[0])
+            data_bin_centers = bins_after[:-1]+(bins_after[1:]-bins_after[:-1])/2
+            ax3.scatter(data_bin_centers, ((counts_after - counts_before)/counts_before)*100) # FIXME: Dividing by zero
             ax3.axhline(y=0, linewidth=0.2, color="black")
-            ax3.set_ylim(-50, 50)
-            ax3.set_ylabel("after - before")
+            ax3.set_ylim(-200, 200)
+            #ax3.set_ylabel("(after - before)/before")
+            ax3.set_ylabel("Relative Difference [%]")
+            #ax3.set_xlim(x_min-abs(x_min*0.1),x_max+abs(x_max*0.1))
 
             #            minimum = min(response[column])
             #            maximum = max(response[column])
@@ -159,5 +181,6 @@ def plot(project_path):
             pdf.savefig()
             ax2.clear()
             ax1.clear()
+            ax3.clear()
 
-            # if index==1: break
+            #if index==3: break
