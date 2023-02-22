@@ -89,12 +89,11 @@ def plot(output_path, before_path, after_path):
                 "pt",
                 "eta",
                 "phi",
-                "m",
+                "energy",
                 "EmEnergy",
                 "HadEnergy",
                 "InvisEnergy",
                 "AuxilEnergy",
-                "Energy",
             ]
         before = pd.DataFrame(before, columns=names)
         after = pd.DataFrame(after, columns=names)
@@ -104,7 +103,7 @@ def plot(output_path, before_path, after_path):
     columns = data_processing.get_columns(before)
     number_of_columns = len(columns)
 
-    with PdfPages(output_path + "comparison_test.pdf") as pdf:
+    with PdfPages(output_path + "comparison.pdf") as pdf:
         figure1, (ax1, ax2) = plt.subplots(
             1, 2, figsize=(18.3 * (1 / 2.54) * 1.7, 13.875 * (1 / 2.54) * 1.32)
         )
@@ -125,14 +124,14 @@ def plot(output_path, before_path, after_path):
             #            step = diff/100
             # counts_before, bins_before = np.histogram(before[column],bins=np.arange(minimum,maximum,step))
             counts_before, bins_before = np.histogram(
-                before[column], bins=np.arange(-200, 500, 10)
+                before[column], bins=np.arange(-200, 500, 1)
             )
             hist_before = ax1.hist(
                 bins_before[:-1], bins_before, weights=counts_before, label="Before"
             )
             # counts_after, bins_after = np.histogram(after[column],bins=np.arange(minimum,maximum,step))
             counts_after, bins_after = np.histogram(
-                after[column], bins=np.arange(-200, 500, 10)
+                after[column], bins=np.arange(-200, 500, 1)
             )
             hist_after = ax1.hist(
                 bins_after[:-1],
@@ -154,7 +153,7 @@ def plot(output_path, before_path, after_path):
             ax1.figure.add_axes(ax3)
             ax3.bar(
                 bins_after[:-1],
-                height=((hist_after[0] - hist_before[0]) / hist_before[0]),
+                height=((hist_after[0] - hist_before[0])),
             )
             ax3.axhline(y=0, linewidth=0.2, color="black")
             ax3.set_ylim(-2, 2)

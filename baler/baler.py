@@ -30,7 +30,9 @@ def perform_training(config, project_path):
         number_of_columns,
         normalization_features,
         full_norm,
+        full_pre_norm,
     ) = helper.process(config["input_path"], config)
+    helper.to_pickle(full_norm, project_path + "training/fulldata_norm.pickle")
     device = helper.get_device()
 
     ModelObject = helper.model_init(config=config)
@@ -62,6 +64,8 @@ def perform_training(config, project_path):
 
     helper.to_pickle(test_data_renorm, output_path + "before.pickle")
     helper.to_pickle(reconstructed_data_renorm, output_path + "after.pickle")
+    helper.to_pickle(full_pre_norm, output_path + "fulldata_energy.pickle")
+
     normalization_features.to_csv(project_path + "model/cms_normalization_features.csv")
     helper.model_saver(trained_model, project_path + "model/model.pt")
 
@@ -72,7 +76,7 @@ def perform_plotting(project_path, config):
         output_path,
         # project_path + "training/before.pickle",
         # project_path + "training/after.pickle",
-        project_path + "compressed_output/cleandata_pre_comp.pickle",
+        project_path + "training/fulldata_energy.pickle",
         project_path + "decompressed_output/decompressed.pickle",
     )
     helper.loss_plotter(project_path + "training/loss_data.csv", output_path, config)

@@ -133,8 +133,10 @@ def normalize(data, config):
 def process(data_path, config):
     df = data_processing.load_data(data_path, config)
     df = data_processing.clean_data(df, config)
-    # if config["energy"] == True:
-    #    df = Concat_energy(df)
+    if config["energy"] == True:
+        #    df = Concat_energy(df)
+        df = convert_mass_to_energy(df)
+    full_pre_norm = df
     normalization_features = data_processing.find_minmax(df)
     df = normalize(df, config)
     full_norm = df
@@ -145,7 +147,14 @@ def process(data_path, config):
     assert (
         number_of_columns == config["number_of_columns"]
     ), f"The number of columns of dataframe is {number_of_columns}, config states {config['number_of_columns']}."
-    return train_set, test_set, number_of_columns, normalization_features, full_norm
+    return (
+        train_set,
+        test_set,
+        number_of_columns,
+        normalization_features,
+        full_norm,
+        full_pre_norm,
+    )
 
 
 def renormalize(data, true_min_list, feature_range_list):
@@ -186,7 +195,10 @@ def compress(number_of_columns, model_path, input_path, config):
 
     # Give the encoding function the correct input as tensor
     data = data_loader(input_path, config)
-    data = data_processing.clean_data(data, config)
+
+    ## CHANGE BACK
+
+    # data = data_processing.clean_data(data, config)
     data_before = numpy.array(data)
     data = normalize(data, config)
     data_tensor = numpy_to_tensor(data).to(model.device)
@@ -249,3 +261,41 @@ def Concat_energy(df):
     )
     concat_df = pandas.concat([df, Energy_df], axis=1)
     return concat_df
+
+
+def convert_mass_to_energy(df):
+    # Takes df with mass
+    # mass_col_name = [col for col in df.columns if ".fM" in col]
+    # pt_col_name = [col for col in df.columns if ".fPt" in col]
+    # eta_col_name = [col for col in df.columns if ".fEta" in col]
+    print(df.columns)
+    mass = df["recoGenJets_slimmedGenJets__PAT.obj.m_state.p4Polar_.fCoordinates.fM"]
+    eta = df["recoGenJets_slimmedGenJets__PAT.obj.m_state.p4Polar_.fCoordinates.fEta"]
+    pt = df["recoGenJets_slimmedGenJets__PAT.obj.m_state.p4Polar_.fCoordinates.fPt"]
+    energy = data_processing.compute_E(mass=mass, eta=eta, pt=pt)
+    df["recoGenJets_slimmedGenJets__PAT.obj.m_state.p4Polar_.fCoordinates.fM"] = energy
+
+    """
+    def energy(mass):
+        masspt = (
+            df["recoGenJets_slimmedGenJets__PAT.obj.m_state.p4Polar_.fCoordinates.fPt"]
+            ** 2
+            + mass**2
+        )
+        cosh = (
+            numpy.cosh(
+                df[
+                    "recoGenJets_slimmedGenJets__PAT.obj.m_state.p4Polar_.fCoordinates.fEta"
+                ]
+            )
+        ) ** 2
+        total = numpy.sqrt(masspt * cosh)
+        return total
+
+    df["recoGenJets_slimmedGenJets__PAT.obj.m_state.p4Polar_.fCoordinates.fM"] = df[
+        "recoGenJets_slimmedGenJets__PAT.obj.m_state.p4Polar_.fCoordinates.fM"
+    ].apply(energy)
+    
+    """
+
+    return df

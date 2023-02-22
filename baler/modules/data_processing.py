@@ -97,8 +97,8 @@ def load_data(data_path: str, config):
 def clean_data(df, config):
     df = df.drop(columns=config["dropped_variables"])
     df = df.dropna()
-    df = df[df["recoPFJets_ak5PFJets__RECO.obj.pt_"] < 8000]
-    df = df[df["recoPFJets_ak5PFJets__RECO.obj.mass_"] < 800]
+    # df = df[df["recoPFJets_ak5PFJets__RECO.obj.pt_"] < 8000]
+    # df = df[df["recoPFJets_ak5PFJets__RECO.obj.mass_"] < 800]
     global cleared_column_names
     cleared_column_names = list(df)
     return df
