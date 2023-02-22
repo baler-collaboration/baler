@@ -192,7 +192,12 @@ def compress(model_path, input_path, config):
     data = data_loader(input_path, config)
     config.cleared_col_names = data_processing.get_columns(data)
     number_of_columns = len(data_processing.get_columns(data))
-    latent_space_size = int(number_of_columns//config.compression_ratio)
+    try:
+        config.latent_space_size = int(number_of_columns//config.compression_ratio)
+        config.number_of_columns = number_of_columns
+    except AttributeError:
+        print(config.latent_space_size,config.number_of_columns)
+        assert(number_of_columns==config.number_of_columns)
     data_before = numpy.array(data)
     data = normalize(data, config)
     
@@ -202,7 +207,7 @@ def compress(model_path, input_path, config):
         ModelObject,
         model_path=model_path,
         n_features=number_of_columns,
-        z_dim=latent_space_size,
+        z_dim=config.latent_space_size,
     )
     data_tensor = numpy_to_tensor(data).to(model.device)
 
