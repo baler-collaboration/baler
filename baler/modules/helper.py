@@ -147,6 +147,11 @@ def process(data_path, config):
     config.cleared_col_names = data_processing.get_columns(df)
     number_of_columns = len(data_processing.get_columns(df))
     df = normalize(df, config)
+
+    print("\nNumber of nput variables",len(list(df.columns)))
+    print("List of nput variables",list(df.columns))
+    print("\n")
+
     train_set, test_set = data_processing.split(
         df, test_size=config.test_size, random_state=1
     )
