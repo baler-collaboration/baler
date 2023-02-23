@@ -272,7 +272,7 @@ To build an Apptainer sandbox, a container completely constrained within a speci
 
 ```console
 apptainer build \
---sandbox baler-sandbox/ 
+--sandbox baler-sandbox \
 docker://ghcr.io/uomresearchit/baler:latest
 ```
 
