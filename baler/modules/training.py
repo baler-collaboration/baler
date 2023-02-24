@@ -149,7 +149,7 @@ def train(model, variables, train_data, test_data, parent_path, config):
     )
 
     data_as_tensor = torch.tensor(test_data.values, dtype=torch.float64)
-    data_as_tensor = data_as_tensor.to(model.device)
+    data_as_tensor = data_as_tensor.to(device)
     pred_as_tensor = model(data_as_tensor)
 
     return data_as_tensor, pred_as_tensor
