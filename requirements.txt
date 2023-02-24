@@ -1,9 +1,0 @@
-matplotlib==3.4.3
-numpy==1.22.3
-pandas==1.2.2
-pytest==7.0.1
-scikit_learn==1.2.1
-torch==1.11.0a0+gitbc2c6ed
-tqdm==4.61.2
-uproot==4.2.0
-uproot3==3.14.2
