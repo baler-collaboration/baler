@@ -15,10 +15,12 @@ def fit(model, train_dl, train_ds, model_children, regular_param, optimizer, RHO
     model.train()
 
     running_loss = 0.0
+    counter = 0
     n_data = int(len(train_ds) / train_dl.batch_size)
     for inputs, labels in tqdm(
         train_dl, total=n_data, desc="# Training", file=sys.stdout
     ):
+        counter += 1
         inputs = inputs.to(model.device)
         optimizer.zero_grad()
         reconstructions = model(inputs)
@@ -35,7 +37,7 @@ def fit(model, train_dl, train_ds, model_children, regular_param, optimizer, RHO
 
         running_loss += loss.item()
 
-    epoch_loss = running_loss / len(train_dl)
+    epoch_loss = running_loss / counter
     print(f"# Finished. Training Loss: {loss:.6f}")
     return epoch_loss, mse_loss, l1_loss
 
@@ -44,13 +46,14 @@ def validate(model, test_dl, test_ds, model_children, reg_param):
     print("### Beginning Validating")
 
     model.eval()
-
+    counter = 0
     running_loss = 0.0
     n_data = int(len(test_ds) / test_dl.batch_size)
     with torch.no_grad():
         for inputs, labels in tqdm(
             test_dl, total=n_data, desc="# Validating", file=sys.stdout
         ):
+            counter += 1
             inputs = inputs.to(model.device)
             reconstructions = model(inputs)
             loss = utils.sparse_loss_function_L1(
@@ -62,7 +65,7 @@ def validate(model, test_dl, test_ds, model_children, reg_param):
             )
             running_loss += loss.item()
 
-    epoch_loss = running_loss / len(test_dl)
+    epoch_loss = running_loss / counter
     print(f"# Finished. Validation Loss: {loss:.6f}")
     return epoch_loss
 

@@ -146,7 +146,7 @@ def process(data_path, config):
     normalization_features = data_processing.find_minmax(df)
     config.cleared_col_names = data_processing.get_columns(df)
     number_of_columns = len(data_processing.get_columns(df))
-    df = normalize(df, config)
+    #df = normalize(df, config)
 
     print("\nNumber of input variables",len(list(df.columns)))
     print("List of input variables",list(df.columns))

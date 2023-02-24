@@ -104,16 +104,17 @@ def plot(project_path):
                 label="After",
                 histtype="step",
             )
+            ax1.plot([], [], " ", label=f"Counts before: {len(before)}")
+            ax1.plot([], [], " ", label=f"Counts after: {len(after)}")
             ax1.set_title(f"{column} Distribution")
-            ax1.set_xlabel("column", ha="right", x=1.0)
-            ax1.set_xticks([])
+            ax1.set_xlabel(f"{column}", ha="right", x=1.0)
+            #ax1.set_xticks([])
             ax1.set_ylabel("Counts", ha="right", y=1.0)
             ax1.set_yscale("log")
             ax1.legend(loc="best")
 
             #ax1.set_xlim(x_min-(diff/2)*0.1,x_max+abs(x_max*0.1))
-            ax1.set_xlim(0,1)
-
+            ax1.set_xlim(-0.05,1.05)
             # Residual subplot in comparison
             #divider = make_axes_locatable(ax1)
             #ax3 = divider.append_axes("bottom", size="20%", pad=0.25)
