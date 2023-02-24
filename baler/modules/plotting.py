@@ -88,14 +88,14 @@ def plot(project_path):
             response_RMS = data_processing.RMS_function(response_norm=response_list)
 
             counts_before, bins_before = np.histogram(
-                before[column], bins=np.linspace(0, 1,101)
+                before[column], bins=np.linspace(0, 1,201)
             )
             hist_before = ax1.hist(
                 bins_before[:-1], bins_before, weights=counts_before, label="Before"
             )
             # counts_after, bins_after = np.histogram(after[column],bins=np.arange(minimum,maximum,step))
             counts_after, bins_after = np.histogram(
-                after[column], bins=np.linspace(0, 1,101)
+                after[column], bins=np.linspace(0, 1,201)
             )
             hist_after = ax1.hist(
                 bins_after[:-1],
@@ -139,7 +139,7 @@ def plot(project_path):
             #            step = diff/100
             # counts_response, bins_response = np.histogram(response[column],bins=np.arange(minimum,maximum,step))
             counts_response, bins_response = np.histogram(
-                response[column], bins=np.arange(-2, 2, 0.1)
+                response[column], bins=np.arange(-2, 2, 0.01)
             )
             ax2.hist(
                 bins_response[:-1],
