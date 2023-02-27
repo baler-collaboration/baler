@@ -1,6 +1,6 @@
 class Configuration(object):
     def __init__(self):
-        self.input_path = "data/cms/cms_data.pickle"
+        self.input_path = "data/first/george.pickle"
         self.compression_ratio = 2.0
 
         self.epochs = 2
@@ -24,7 +24,7 @@ class Configuration(object):
 
     def pre_processing(self):
         import pre_processing.root as preProcessorClass
-        self.unprocessed_path = "data/cms/cms_data.root"
+        self.unprocessed_path = "data/first/george.root"
         self.pre_processor = preProcessorClass.PreProcessor(self.unprocessed_path,self.input_path)
         self.pre_processor.number_of_columns = 8
         self.pre_processor.latent_space_size = 4

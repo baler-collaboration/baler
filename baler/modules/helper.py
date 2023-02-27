@@ -142,6 +142,7 @@ def normalize(data, config):
 
 def process(data_path, config):
     df = data_processing.load_data(data_path, config)
+    config.cleared_col_names = data_processing.get_columns(df)
     #df = data_processing.clean_data(df, config)
     normalization_features = data_processing.find_minmax(df)
     config.cleared_col_names = data_processing.get_columns(df)

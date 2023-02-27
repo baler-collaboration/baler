@@ -67,6 +67,7 @@ def perform_training(config, project_path):
     helper.to_pickle(reconstructed_data_renorm, output_path + "after.pickle")
     normalization_features.to_csv(project_path + "model/cms_normalization_features.csv")
     helper.model_saver(model, project_path + "model/model.pt")
+    helper.to_pickle(config.cleared_col_names,project_path+"compressed_output/column_names.pickle")
 
 
 def perform_plotting(project_path, config):
