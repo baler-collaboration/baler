@@ -121,7 +121,7 @@ def plot(project_path):
             #ax1.figure.add_axes(ax3)
             #ax3.bar(bins_after[:-1], height=(hist_after[0] - hist_before[0])/hist_before[0])
             data_bin_centers = bins_after[:-1]+(bins_after[1:]-bins_after[:-1])/2
-            ax3.scatter(data_bin_centers, (counts_after - counts_before),) # FIXME: Dividing by zero
+            ax3.scatter(data_bin_centers, (counts_after - counts_before),marker='.') # FIXME: Dividing by zero
             ax3.axhline(y=0, linewidth=0.2, color="black")
             ax3.set_ylim(-200, 200)
             #ax3.set_ylabel("(after - before)/before")
