@@ -148,7 +148,6 @@ def process(data_path, config):
     number_of_columns = len(data_processing.get_columns(df))
     #df = normalize(df, config)
 
-    print("List of input variables",list(df.columns))
     print("\n")
 
     train_set, test_set = data_processing.split(
