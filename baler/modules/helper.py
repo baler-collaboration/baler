@@ -38,7 +38,6 @@ Baler has three running modes:\n
         config = None
     else:
         project_path = f"projects/{args.project}/"
-        #config_path = f"projects/{args.project}/config.py"
         sys.path.append(project_path)
         import configClass
         config = configClass.Configuration()
@@ -68,11 +67,12 @@ def create_new_project(project_name: str, base_path: str = "projects") -> None:
 
 def create_default_config() -> str:
     return f"""
-class Configuration(object):
+class Configuration():
     def __init__(self):
-        self.input_path = "data/firstProject/cms_data.root"
+        self.input_path = "data/first/george.pickle"
+        self.compression_ratio = 2.0
 
-        self.epochs = 5
+        self.epochs = 2
         self.early_stopping = True
         self.lr_scheduler = False
         self.patience = 100
@@ -85,24 +85,7 @@ class Configuration(object):
         self.lr = 0.001
         self.batch_size = 512
         self.save_as_root = True
-        self.cleared_col_names = ["pt","eta","phi","m","EmEnergy","HadEnergy","InvisEnergy","AuxilEnergy"]
         self.test_size = 0.15
-        self.Branch = "Events"
-        self.Collection = "recoGenJets_slimmedGenJets__PAT."
-        self.Objects = "recoGenJets_slimmedGenJets__PAT.obj"
-        self.number_of_columns = 8
-        self.latent_space_size = 4
-        self.dropped_variables = [
-            "recoGenJets_slimmedGenJets__PAT.obj.m_state.vertex_.fCoordinates.fX",
-            "recoGenJets_slimmedGenJets__PAT.obj.m_state.vertex_.fCoordinates.fY",
-            "recoGenJets_slimmedGenJets__PAT.obj.m_state.vertex_.fCoordinates.fZ",
-            "recoGenJets_slimmedGenJets__PAT.obj.m_state.qx3_",
-            "recoGenJets_slimmedGenJets__PAT.obj.m_state.pdgId_",
-            "recoGenJets_slimmedGenJets__PAT.obj.m_state.status_",
-            "recoGenJets_slimmedGenJets__PAT.obj.mJetArea",
-            "recoGenJets_slimmedGenJets__PAT.obj.mPileupEnergy",
-            "recoGenJets_slimmedGenJets__PAT.obj.mPassNumber"
-        ]
 """
 
 
@@ -143,7 +126,6 @@ def normalize(data, config):
 def process(data_path, config):
     df = data_processing.load_data(data_path, config)
     config.cleared_col_names = data_processing.get_columns(df)
-    #df = data_processing.clean_data(df, config)
     normalization_features = data_processing.find_minmax(df)
     config.cleared_col_names = data_processing.get_columns(df)
     number_of_columns = len(data_processing.get_columns(df))
@@ -151,9 +133,6 @@ def process(data_path, config):
     train_set, test_set = data_processing.split(
         df, test_size=config.test_size, random_state=1
     )
-    #assert (
-    #    number_of_columns == config.number_of_columns
-    #), f"The number of columns of dataframe is {number_of_columns}, config states {config.number_of_columns}."
     return train_set, test_set, number_of_columns, normalization_features
 
 
@@ -211,7 +190,6 @@ def decompress(model_path, input_path, config):
     # Load the data & convert to tensor
     data = data_loader(input_path, config)
     latent_space_size = len(data[0])
-    #number_of_columns=8
     modelDict = torch.load(str(model_path))
     number_of_columns = len(modelDict[list(modelDict.keys())[-1]])
 
@@ -230,7 +208,6 @@ def decompress(model_path, input_path, config):
 
 
 def to_root(data_path, config, save_path):
-    # if '.pickle' in data_path[-8:]:
     if isinstance(data_path, pickle.Pickler):
         df, Names = data_processing.pickle_to_df(file_path=data_path, config=config)
         return data_processing.df_to_root(df, Names, save_path)

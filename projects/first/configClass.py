@@ -1,26 +1,23 @@
+from dataclasses import dataclass
+
+@dataclass
 class Configuration(object):
-    def __init__(self):
-        self.input_path = "data/first/george.pickle"
-        self.compression_ratio = 2.0
-
-        self.epochs = 2
-        self.early_stopping = True
-        self.lr_scheduler = False
-        self.patience = 100
-        self.min_delta = 0
-        self.model_name = "george_SAE"
-        self.custom_norm = False
-        self.l1 = True
-        self.reg_param = 0.001
-        self.RHO = 0.05
-        self.lr = 0.001
-        self.batch_size = 512
-        self.save_as_root = True
-        self.test_size = 0.15
-
-        #self.cleared_col_names = ["pt","eta","phi","m","EmEnergy","HadEnergy","InvisEnergy","AuxilEnergy"]
-        #self.number_of_columns = 8
-        #self.latent_space_size = 4
+    input_path          : str   = "data/first/george.pickle"
+    compression_ratio   : float = 2.0
+    epochs              : int   = 2
+    early_stopping      : bool  = True
+    lr_scheduler        : bool  = False
+    patience            : int   = 100
+    min_delta           : int   = 0
+    model_name          : str   = "george_SAE"
+    custom_norm         : bool  = False
+    l1                  : bool  = True
+    reg_param           : float = 0.001
+    RHO                 : float = 0.05
+    lr                  : float = 0.001
+    batch_size          : int   = 512
+    save_as_root        : bool  = True
+    test_size           : float = 0.15
 
     def pre_processing(self):
         import pre_processing.root as preProcessorClass

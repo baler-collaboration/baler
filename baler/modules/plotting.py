@@ -16,7 +16,7 @@ def to_percent(y, position):
     s = str(100 * round(y, 2))
 
     # The percent symbol needs escaping in latex
-    if mpl.rcParams["text.usetex"] is True:
+    if mpl.rcParams["text.usetex"]:
         return s + r"$\%$"
     else:
         return s + "%"
