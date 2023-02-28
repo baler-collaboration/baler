@@ -29,10 +29,16 @@ def pre_processing(config):
 
 def perform_training(config, project_path):
     train_set, test_set, number_of_columns, normalization_features = helper.process(config.input_path, config)
-    train_set_norm = helper.normalize(train_set, config)
-    test_set_norm = helper.normalize(test_set, config)
-    config.latent_space_size = int(number_of_columns//config.compression_ratio)
-    config.number_of_columns = number_of_columns
+    #train_set_norm = helper.normalize(train_set, config)
+    #test_set_norm = helper.normalize(test_set, config)
+    try:
+        config.latent_space_size = int(number_of_columns//config.compression_ratio)
+        config.number_of_columns = number_of_columns
+    except AttributeError:
+        print(config.latent_space_size,config.number_of_columns)
+        assert(number_of_columns==config.number_of_columns)
+
+    
 
     device = helper.get_device()
 
@@ -43,11 +49,11 @@ def perform_training(config, project_path):
 
     output_path = project_path + "training/"
     test_data_tensor, reconstructed_data_tensor = helper.train(
-        model, number_of_columns, train_set_norm, test_set_norm, output_path, config
+        model, number_of_columns, train_set, test_set, output_path, config
     )
     test_data = helper.detach(test_data_tensor)
     reconstructed_data = helper.detach(reconstructed_data_tensor)
-
+    """ 
     print("Un-normalzing...")
     start = time.time()
     test_data_renorm = helper.renormalize(
@@ -62,10 +68,10 @@ def perform_training(config, project_path):
     )
     end = time.time()
     print("Un-normalization took:", f"{(end - start) / 60:.3} minutes")
-
-    helper.to_pickle(test_data_renorm, output_path + "before.pickle")
-    helper.to_pickle(reconstructed_data_renorm, output_path + "after.pickle")
-    normalization_features.to_csv(project_path + "model/cms_normalization_features.csv")
+    """
+    helper.to_pickle(test_data, output_path + "before.pickle")
+    helper.to_pickle(reconstructed_data, output_path + "after.pickle")
+    #normalization_features.to_csv(project_path + "model/cms_normalization_features.csv")
     helper.model_saver(model, project_path + "model/model.pt")
     helper.to_pickle(config.cleared_col_names,project_path+"compressed_output/column_names.pickle")
 
@@ -108,15 +114,15 @@ def perform_decompression(config, project_path):
 
     # Converting back to numpyarray
     decompressed = helper.detach(decompressed)
-    normalization_features = pd.read_csv(
-        project_path + "model/cms_normalization_features.csv"
-    )
+    #normalization_features = pd.read_csv(
+    #    project_path + "model/cms_normalization_features.csv"
+    #)
 
-    decompressed = helper.renormalize(
-        decompressed,
-        normalization_features["True min"],
-        normalization_features["Feature Range"],
-    )
+    #decompressed = helper.renormalize(
+    #    decompressed,
+    #    normalization_features["True min"],
+    #    normalization_features["Feature Range"],
+    #)
     end = time.time()
     print("Decompression took:", f"{(end - start) / 60:.3} minutes")
 
