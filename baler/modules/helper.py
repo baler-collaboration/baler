@@ -8,7 +8,8 @@ import pandas
 import torch
 
 from modules import training, plotting, data_processing
-
+from dataclasses import dataclass
+import importlib
 
 def get_arguments():
     parser = argparse.ArgumentParser(
@@ -37,10 +38,8 @@ Baler has three running modes:\n
     if args.mode == "newProject":
         config = None
     else:
-        project_path = f"projects/{args.project}/"
-        sys.path.append(project_path)
-        import configClass
-        config = configClass.Configuration()
+        config = configClass
+        importlib.import_module(f"projects.{args.project}.{args.project}_config").set_config(config)
     return config, args.mode, args.project
 
 
@@ -64,6 +63,25 @@ def create_new_project(project_name: str, base_path: str = "projects") -> None:
     for directory in required_directories:
         os.makedirs(os.path.join(project_path, directory))
 
+
+@dataclass
+class configClass:
+    input_path          : str
+    compression_ratio   : float
+    epochs              : int
+    early_stopping      : bool
+    lr_scheduler        : bool
+    patience            : int
+    min_delta           : int
+    model_name          : str
+    custom_norm         : bool
+    l1                  : bool
+    reg_param           : float
+    RHO                 : float
+    lr                  : float
+    batch_size          : int
+    save_as_root        : bool
+    test_size           : float
 
 def create_default_config() -> str:
     return f"""
