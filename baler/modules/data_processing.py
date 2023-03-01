@@ -131,7 +131,6 @@ def renormalize_func(norm_data, min_list, range_list):
         renormalize_std(norm_data, min_list[i], range_list[i])
         for i in range(len(min_list))
     ]
-    print(norm_data[0])
     renormalized_full = [(renormalized[i][:, i]) for i in range(len(renormalized))]
     renormalized_full = np.array(renormalized_full).T
     return renormalized_full
