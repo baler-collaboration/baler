@@ -177,22 +177,21 @@ def detach(tensor):
     return tensor.cpu().detach().numpy()
 
 
-def compress(model_path, input_path, config):
+def compress(model_path, config):
     # Give the encoding function the correct input as tensor
-    data = data_loader(input_path)
-    config.cleared_col_names = data_processing.get_columns(data)
+    data = data_loader(config.input_path)
+    cleared_col_names = data_processing.get_columns(data)
     number_of_columns = len(data_processing.get_columns(data))
     try:
         config.latent_space_size = int(number_of_columns//config.compression_ratio)
         config.number_of_columns = number_of_columns
     except AttributeError:
-        print(config.latent_space_size,config.number_of_columns)
         assert(number_of_columns==config.number_of_columns)
     data_before = numpy.array(data)
-    data = normalize(data, config)
+    data = normalize(data, config.custom_norm, cleared_col_names)
     
     # Initialise and load the model correctly.
-    ModelObject = data_processing.initialise_model(config=config)
+    ModelObject = data_processing.initialise_model(config.model_name)
     model = data_processing.load_model(
         ModelObject,
         model_path=model_path,
@@ -202,10 +201,10 @@ def compress(model_path, input_path, config):
     data_tensor = numpy_to_tensor(data).to(model.device)
 
     compressed = model.encode(data_tensor)
-    return compressed, data_before
+    return compressed, data_before, cleared_col_names
 
 
-def decompress(model_path, input_path, cleared_col_names, config):
+def decompress(model_path, input_path, model_name):
 
     # Load the data & convert to tensor
     data = data_loader(input_path)
@@ -215,7 +214,7 @@ def decompress(model_path, input_path, cleared_col_names, config):
 
 
     # Initialise and load the model correctly.
-    ModelObject = data_processing.initialise_model(config=config)
+    ModelObject = data_processing.initialise_model(model_name)
     model = data_processing.load_model(
         ModelObject,
         model_path=model_path,
@@ -227,16 +226,16 @@ def decompress(model_path, input_path, cleared_col_names, config):
     return decompressed
 
 
-def to_root(data_path, config, save_path):
+def to_root(data_path, cleared_col_names, save_path):
     if isinstance(data_path, pickle.Pickler):
-        df, Names = data_processing.pickle_to_df(file_path=data_path, config=config)
+        df, Names = data_processing.pickle_to_df(file_path=data_path)
         return data_processing.df_to_root(df, Names, save_path)
     elif isinstance(data_path, pandas.DataFrame):
         return data_processing.df_to_root(
             data_path, col_names=data_path.columns(), save_path=save_path
         )
     elif isinstance(data_path, numpy.ndarray):
-        df = data_processing.numpy_to_df(data_path, config)
+        df = data_processing.numpy_to_df(data_path, cleared_col_names)
         df_names = df.columns
         return data_processing.df_to_root(df, col_names=df_names, save_path=save_path)
 

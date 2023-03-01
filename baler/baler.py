@@ -21,7 +21,7 @@ def main():
     elif mode == "compress":
         perform_compression(config, project_path)
     elif mode == "decompress":
-        perform_decompression(config, project_path)
+        perform_decompression(config.save_as_root, config.model_name, project_path)
     elif mode == "info":
         print_info(project_path)
 
@@ -83,9 +83,8 @@ def perform_plotting(project_path, config):
 def perform_compression(config, project_path):
     print("Compressing...")
     start = time.time()
-    compressed, data_before = helper.compress(
+    compressed, data_before, cleared_col_names = helper.compress(
         model_path=project_path + "model/model.pt",
-        input_path=config.input_path,
         config=config,
     )
     # Converting back to numpyarray
@@ -98,37 +97,37 @@ def perform_compression(config, project_path):
     helper.to_pickle(
         data_before, project_path + "compressed_output/cleandata_pre_comp.pickle"
     )
-    helper.to_pickle(config.cleared_col_names,project_path+"compressed_output/column_names.pickle")
+    helper.to_pickle(cleared_col_names,project_path+"compressed_output/column_names.pickle")
 
 
-def perform_decompression(config, project_path):
+def perform_decompression(save_as_root, model_name, project_path):
     print("Decompressing...")
     cleared_col_names = helper.from_pickle(project_path+"compressed_output/column_names.pickle")
     start = time.time()
     decompressed = helper.decompress(
         model_path=project_path + "model/model.pt",
         input_path=project_path + "compressed_output/compressed.pickle",
-        config=config,
+        model_name=model_name,
     )
 
     # Converting back to numpyarray
     decompressed = helper.detach(decompressed)
-    #normalization_features = pd.read_csv(
-    #    project_path + "model/cms_normalization_features.csv"
-    #)
+    normalization_features = pd.read_csv(
+        project_path + "model/cms_normalization_features.csv"
+    )
 
-    #decompressed = helper.renormalize(
-    #    decompressed,
-    #    normalization_features["True min"],
-    #    normalization_features["Feature Range"],
-    #)
+    decompressed = helper.renormalize(
+        decompressed,
+        normalization_features["True min"],
+        normalization_features["Feature Range"],
+    )
     end = time.time()
     print("Decompression took:", f"{(end - start) / 60:.3} minutes")
 
     # False by default
-    if config.save_as_root:
+    if save_as_root:
         helper.to_root(
-            decompressed, config, project_path + "decompressed_output/decompressed.root"
+            decompressed, cleared_col_names, project_path + "decompressed_output/decompressed.root"
         )
         helper.to_pickle(
             decompressed, project_path + "decompressed_output/decompressed.pickle"
