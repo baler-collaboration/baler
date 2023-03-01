@@ -259,3 +259,46 @@ docker://ghcr.io/uomresearchit/baler:latest \
 --project=firstProject \
 --mode=train
 ```
+
+### Running on Blackett (UNIMAN GPU Cluster) ###
+
+In order to run Baler on a managed platform may require additional options to be uesd to work with the system wide Apptainer configuration and respect good practice such as writing to appropriate storage areas.
+
+An example implementation has been made on a Univerity of Manchester (UK) GPU equipped cluster, named Blackett.
+
+#### Create an Apptainer sandbox ####
+
+To build an Apptainer sandbox, a container completely constrained within a specified local directory, the following command can be run:
+
+```console
+apptainer build \
+--sandbox baler-sandbox \
+docker://ghcr.io/uomresearchit/baler:latest
+```
+
+Where:
+  * `apptainer build` specifies the building of an Apptainer image
+  * `--sandbox baler-sandbox/` specifies the output directory for the sandboxed container
+  * `docker://ghcr.io/uomresearchit/baler:latest` specifies that a the Baler Docker image should be targeted
+
+#### Run the Apptainer sandbox ####
+
+Now that the sandbox has been created, we can run the container. 
+
+```console
+apptainer run \
+--no-home \
+--no-mount bind-paths \
+--pwd /baler-root \
+--nv \
+--bind ${PWD}/baler/projects/:/baler-root/projects \
+--bind ${PWD}/baler/data:/baler-root/data \
+baler-sandbox/ \
+--project=firstProject \
+--mode=train
+```
+Where:
+  * `-no-home` specifies to not mount the user's home directory (small, networked storage on Blackett)
+  * `--no-mount bind-paths` specifies to not mount the directories specified in the global Apptainer config
+  * `--pwd /baler-root` sets the working directory for the container runtime 
+  * `--nv` allows the use of Nvidia graphics cards
