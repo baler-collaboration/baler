@@ -11,18 +11,6 @@ from sklearn.model_selection import train_test_split
 from modules import helper
 from modules import models
 
-
-def import_config(config_path: str) -> dict:
-    try:
-        with open(config_path, encoding="utf-8") as json_config:
-            config = json.load(json_config)
-        return config
-    except FileNotFoundError:
-        print(f"Config file not found at path: {config_path}")
-    except json.JSONDecodeError as e:
-        print(f"Failed to parse config file at path {config_path}: {e}")
-
-
 def save_model(model, model_path: str) -> None:
     return torch.save(model.state_dict(), model_path)
 
@@ -41,29 +29,6 @@ def load_model(model_object, model_path, n_features, z_dim):
     return model
 
 
-""" def type_clearing(tt_tree):
-    type_names = tt_tree.typenames()
-    column_type = []
-    column_names = []
-
-    # In order to remove non integers or -floats in the TTree,
-    # we separate the values and keys
-    for keys in type_names:
-        column_type.append(type_names[keys])
-        column_names.append(keys)
-
-    # Checks each value of the typename values to see if it isn't an int or
-    # float, and then removes it
-    for i in range(len(column_type)):
-        if column_type[i] != "float[]" and column_type[i] != "int32_t[]":
-            # print('Index ',i,' was of type ',Typename_list_values[i],'\
-            # and was deleted from the file')
-            del column_names[i]
-
-    # Returns list of column names to use in load_data function
-    return column_names """
-
-
 def numpy_to_df(array, cleared_col_names):
     if np.shape(array)[1] == 4:
         col_names = ["comp1", "comp2", "comp3", "comp4"]
@@ -77,14 +42,6 @@ def numpy_to_df(array, cleared_col_names):
 def load_data(data_path: str):
     df = pd.read_pickle(data_path)
     return df
-
-
-""" def clean_data(df, config):
-    df = df.drop(columns=config.dropped_variables)
-    df = df.dropna()
-    global cleared_column_names
-    cleared_column_names = list(df)
-    return df """
 
 
 def find_minmax(data):
