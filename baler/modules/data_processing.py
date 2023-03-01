@@ -102,11 +102,11 @@ def find_minmax(data):
     return normalization_features
 
 
-def normalize(data, config):
+def normalize(data, custom_norm):
     data = np.array(data)
-    if config.custom_norm:
+    if custom_norm:
         pass
-    elif not config.custom_norm:
+    elif not custom_norm:
         true_min = np.min(data)
         true_max = np.max(data)
         feature_range = true_max - true_min

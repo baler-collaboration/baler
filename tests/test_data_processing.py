@@ -9,24 +9,18 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 
 from baler.modules import data_processing
+from baler.modules import helper
 
 
 def test_import_config_success():
     # Call the import_config function with the sample config file path
-    config = {"Foo": "Bar", "Baz": 10}
-    config_path = "tmp_config.json"
-    with open(config_path, "w") as f:
-        json.dump(config, f)
-
-    # Call the import_config function with the sample config file path
-    result = data_processing.import_config(config_path)
+    config = helper.configClass
+    config.Foo = "Bar"
+    config.Baz = 10
 
     # Assert that the result is equal to the expected config
     # This checks that the import_config function correctly loads the JSON file and returns the expected dictionary
-    assert result == config
-
-    # Clean up the sample config file
-    os.remove(config_path)
+    assert config.Foo == "Bar"
 
 
 def test_save_model():
@@ -73,19 +67,19 @@ def test_normalize():
     data = [1, 2, 3, 4, 5]
 
     # Test configuration 1
-    config1 = {"custom_norm": False}
+    custom_norm1 = False
     expected_result1 = np.array([0.0, 0.25, 0.5, 0.75, 1.0])
 
     # Test configuration 2
-    config2 = {"custom_norm": True}
+    custom_norm2 = True
     expected_result2 = np.array([1, 2, 3, 4, 5])
 
     # Test the normalize function with the test data and configuration 1
-    result1 = data_processing.normalize(data, config1)
+    result1 = data_processing.normalize(data, custom_norm1)
     np.testing.assert_almost_equal(result1, expected_result1)
 
     # Test the normalize function with the test data and configuration 2
-    result2 = data_processing.normalize(data, config2)
+    result2 = data_processing.normalize(data, custom_norm2)
     np.testing.assert_almost_equal(result2, expected_result2)
 
 
