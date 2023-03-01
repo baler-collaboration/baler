@@ -165,10 +165,28 @@ def pickle_to_df(file_path, config):
 
 
 def df_to_root(df, col_names, save_path):
-    with uproot3.recreate(save_path) as tree:
-        for i in range(len(col_names)):
-            tree[col_names[i]] = uproot3.newtree({col_names[i]: "float64"})
-            tree[col_names[i]].extend({col_names[i]: df[col_names[i]].to_numpy()})
+    col = col_names
+    data = np.array(df)
+    Event_dict = {}
+    Value_dict = {}
+
+    # Fills a dictionary with Branch names and which dtype to fill said branch with
+    for Branch in col:
+        Event_dict[Branch] = np.float64
+
+    # Fills a dictionary with Branch names and corresponding value
+    for i in range(len(col)):
+        Value_dict[col[i]] = data[:, i]
+
+    # Creates the root file
+    with uproot.recreate(save_path) as fout:
+        # Creates the tree & branches
+        fout.mktree(
+            "Events",
+            Event_dict,
+        )
+        # Fills the branches
+        fout["Events"].extend(Value_dict)
 
 
 def RMS_function(response_norm):
