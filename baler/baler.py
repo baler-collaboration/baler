@@ -4,15 +4,16 @@ import time
 import pandas as pd
 
 import modules.helper as helper
+import importlib
 
 
 def main():
-    config, mode, project = helper.get_arguments()
-    project_path = f"projects/{project}/"
+    config, mode, project_name = helper.get_arguments()
+    project_path = f"projects/{project_name}/"
     if mode == "newProject":
-        helper.create_new_project(project)
+        helper.create_new_project(project_name)
     elif mode == "pp":
-        pre_processing(config,project)
+        pre_processing(config.input_path,project_name)
     elif mode == "train":
         perform_training(config, project_path)
     elif mode == "plot":
@@ -24,13 +25,13 @@ def main():
     elif mode == "info":
         print_info(project_path)
 
-def pre_processing(config,project):
-    helper.pre_processing(config,project)
+def pre_processing(input_path,project_name):
+    importlib.import_module(f"projects.{project_name}.{project_name}_config").pre_processing(input_path)
 
 def perform_training(config, project_path):
     train_set, test_set, number_of_columns, normalization_features = helper.process(config.input_path, config)
-    #train_set_norm = helper.normalize(train_set, config)
-    #test_set_norm = helper.normalize(test_set, config)
+    train_set_norm = helper.normalize(train_set, config)
+    test_set_norm = helper.normalize(test_set, config)
     try:
         config.latent_space_size = int(number_of_columns//config.compression_ratio)
         config.number_of_columns = number_of_columns
@@ -49,11 +50,11 @@ def perform_training(config, project_path):
 
     output_path = project_path + "training/"
     test_data_tensor, reconstructed_data_tensor = helper.train(
-        model, number_of_columns, train_set, test_set, output_path, config
+        model, number_of_columns, train_set_norm, test_set_norm, output_path, config
     )
     test_data = helper.detach(test_data_tensor)
     reconstructed_data = helper.detach(reconstructed_data_tensor)
-    """ 
+    
     print("Un-normalzing...")
     start = time.time()
     test_data_renorm = helper.renormalize(
@@ -68,9 +69,9 @@ def perform_training(config, project_path):
     )
     end = time.time()
     print("Un-normalization took:", f"{(end - start) / 60:.3} minutes")
-    """
-    helper.to_pickle(test_data, output_path + "before.pickle")
-    helper.to_pickle(reconstructed_data, output_path + "after.pickle")
+    
+    helper.to_pickle(test_data_renorm, output_path + "before.pickle")
+    helper.to_pickle(reconstructed_data_renorm, output_path + "after.pickle")
     #normalization_features.to_csv(project_path + "model/cms_normalization_features.csv")
     helper.model_saver(model, project_path + "model/model.pt")
     helper.to_pickle(config.cleared_col_names,project_path+"compressed_output/column_names.pickle")

@@ -83,9 +83,6 @@ class configClass:
     save_as_root        : bool
     test_size           : float
 
-def pre_processing(config,project_name):
-    importlib.import_module(f"projects.{project_name}.{project_name}_config").pre_processing(config.input_path)
-
 def create_default_config(project_name) -> str:
     return f"""
 def set_config(c):
@@ -136,7 +133,7 @@ def numpy_to_tensor(data):
 
 def normalize(data, config):
     data = numpy.apply_along_axis(
-        data_processing.normalize, axis=0, arr=data, config=config
+        data_processing.normalize, axis=0, arr=data, custom_norm=config.custom_norm
     )
     df = data_processing.numpy_to_df(data, config)
     return df
