@@ -57,9 +57,9 @@ def create_new_project(project_name: str, base_path: str = "projects") -> None:
         "model",
     ]
     os.makedirs(project_path)
-    with open(os.path.join(project_path, "configClass.py"), "w") as f:
+    with open(os.path.join(project_path, f"{project_name}_config.py"), "w") as f:
         print(project_path)
-        f.write(create_default_config())
+        f.write(create_default_config(project_name))
     for directory in required_directories:
         os.makedirs(os.path.join(project_path, directory))
 
@@ -83,27 +83,28 @@ class configClass:
     save_as_root        : bool
     test_size           : float
 
-def create_default_config() -> str:
-    return f"""
-class Configuration():
-    def __init__(self):
-        self.input_path = "data/first/george.pickle"
-        self.compression_ratio = 2.0
+def pre_processing(config,project_name):
+    importlib.import_module(f"projects.{project_name}.{project_name}_config").pre_processing(config.input_path)
 
-        self.epochs = 2
-        self.early_stopping = True
-        self.lr_scheduler = False
-        self.patience = 100
-        self.min_delta = 0
-        self.model_name = "george_SAE"
-        self.custom_norm = False
-        self.l1 = True
-        self.reg_param = 0.001
-        self.RHO = 0.05
-        self.lr = 0.001
-        self.batch_size = 512
-        self.save_as_root = True
-        self.test_size = 0.15
+def create_default_config(project_name) -> str:
+    return f"""
+def set_config(c):
+    c.input_path          = "data/{project_name}/{project_name}.pickle"
+    c.compression_ratio   = 2.0
+    c.epochs              = 5
+    c.early_stopping      = True
+    c.lr_scheduler        = False
+    c.patience            = 100
+    c.min_delta           = 0
+    c.model_name          = "george_SAE"
+    c.custom_norm         = False
+    c.l1                  = True
+    c.reg_param             = 0.001
+    c.RHO                 = 0.05
+    c.lr                  = 0.001
+    c.batch_size          = 512
+    c.save_as_root        = True
+    c.test_size           = 0.15
 """
 
 
