@@ -27,8 +27,7 @@ def save_model(model, model_path: str) -> None:
     return torch.save(model.state_dict(), model_path)
 
 
-def initialise_model(config):
-    model_name = config.model_name
+def initialise_model(model_name):
     model_object = getattr(models, model_name)
     return model_object
 
@@ -65,17 +64,17 @@ def load_model(model_object, model_path, n_features, z_dim):
     return column_names """
 
 
-def numpy_to_df(array, config):
+def numpy_to_df(array, cleared_col_names):
     if np.shape(array)[1] == 4:
         col_names = ["comp1", "comp2", "comp3", "comp4"]
     else:
-        col_names = config.cleared_col_names
+        col_names = cleared_col_names
     df = pd.DataFrame(array, columns=col_names)
 
     return df
 
 
-def load_data(data_path: str, config):
+def load_data(data_path: str):
     df = pd.read_pickle(data_path)
     return df
 
@@ -142,7 +141,7 @@ def get_columns(df):
 
 
 def pickle_to_df(file_path, config):
-    load_data(file_path, config)
+    load_data(file_path)
     # From pickle to df:
     with open(file_path, "rb") as handle:
         data = pickle.load(handle)

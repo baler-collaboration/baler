@@ -29,9 +29,9 @@ def pre_processing(input_path,project_name):
     importlib.import_module(f"projects.{project_name}.{project_name}_config").pre_processing(input_path)
 
 def perform_training(config, project_path):
-    train_set, test_set, number_of_columns, normalization_features = helper.process(config.input_path, config)
-    train_set_norm = helper.normalize(train_set, config)
-    test_set_norm = helper.normalize(test_set, config)
+    train_set, test_set, number_of_columns, normalization_features, cleared_col_names = helper.process(config.input_path,config.test_size)
+    train_set_norm = helper.normalize(train_set, config.custom_norm, cleared_col_names)
+    test_set_norm = helper.normalize(test_set, config.custom_norm, cleared_col_names)
     try:
         config.latent_space_size = int(number_of_columns//config.compression_ratio)
         config.number_of_columns = number_of_columns
@@ -39,11 +39,9 @@ def perform_training(config, project_path):
         print(config.latent_space_size,config.number_of_columns)
         assert(number_of_columns==config.number_of_columns)
 
-    
-
     device = helper.get_device()
 
-    ModelObject = helper.model_init(config=config)
+    ModelObject = helper.model_init(config.model_name)
     model = ModelObject(
         device=device, n_features=number_of_columns, z_dim=config.latent_space_size
     )
@@ -74,7 +72,7 @@ def perform_training(config, project_path):
     helper.to_pickle(reconstructed_data_renorm, output_path + "after.pickle")
     #normalization_features.to_csv(project_path + "model/cms_normalization_features.csv")
     helper.model_saver(model, project_path + "model/model.pt")
-    helper.to_pickle(config.cleared_col_names,project_path+"compressed_output/column_names.pickle")
+    helper.to_pickle(cleared_col_names,project_path+"compressed_output/column_names.pickle")
 
 
 def perform_plotting(project_path, config):
@@ -105,7 +103,7 @@ def perform_compression(config, project_path):
 
 def perform_decompression(config, project_path):
     print("Decompressing...")
-    config.cleared_col_names = helper.from_pickle(project_path+"compressed_output/column_names.pickle")
+    cleared_col_names = helper.from_pickle(project_path+"compressed_output/column_names.pickle")
     start = time.time()
     decompressed = helper.decompress(
         model_path=project_path + "model/model.pt",

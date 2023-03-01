@@ -114,14 +114,14 @@ def from_pickle(path):
         return pickle.load(handle)
 
 
-def model_init(config):
+def model_init(model_name):
     # This is used when we don't have saved model parameters.
-    ModelObject = data_processing.initialise_model(config=config)
+    ModelObject = data_processing.initialise_model(model_name)
     return ModelObject
 
 
-def data_loader(data_path, config):
-    return data_processing.load_data(data_path, config)
+def data_loader(data_path):
+    return data_processing.load_data(data_path)
 
 
 def numpy_to_tensor(data):
@@ -131,26 +131,24 @@ def numpy_to_tensor(data):
     return torch.from_numpy(data)
 
 
-def normalize(data, config):
+def normalize(data, custom_norm, cleared_col_names):
     data = numpy.apply_along_axis(
-        data_processing.normalize, axis=0, arr=data, custom_norm=config.custom_norm
+        data_processing.normalize, axis=0, arr=data, custom_norm=custom_norm
     )
-    df = data_processing.numpy_to_df(data, config)
+    df = data_processing.numpy_to_df(data, cleared_col_names)
     return df
 
 
-def process(data_path, config):
-    df = data_processing.load_data(data_path, config)
-    config.cleared_col_names = data_processing.get_columns(df)
+def process(data_path,test_size):
+    df = data_processing.load_data(data_path)
+    cleared_col_names = data_processing.get_columns(df)
     normalization_features = data_processing.find_minmax(df)
-    config.cleared_col_names = data_processing.get_columns(df)
     number_of_columns = len(data_processing.get_columns(df))
-    #df = normalize(df, config)
 
     train_set, test_set = data_processing.split(
-        df, test_size=config.test_size, random_state=1
+        df, test_size=test_size, random_state=1
     )
-    return train_set, test_set, number_of_columns, normalization_features
+    return train_set, test_set, number_of_columns, normalization_features, cleared_col_names
 
 
 def renormalize(data, true_min_list, feature_range_list):
@@ -181,7 +179,7 @@ def detach(tensor):
 
 def compress(model_path, input_path, config):
     # Give the encoding function the correct input as tensor
-    data = data_loader(input_path, config)
+    data = data_loader(input_path)
     config.cleared_col_names = data_processing.get_columns(data)
     number_of_columns = len(data_processing.get_columns(data))
     try:
@@ -207,10 +205,10 @@ def compress(model_path, input_path, config):
     return compressed, data_before
 
 
-def decompress(model_path, input_path, config):
+def decompress(model_path, input_path, cleared_col_names, config):
 
     # Load the data & convert to tensor
-    data = data_loader(input_path, config)
+    data = data_loader(input_path)
     latent_space_size = len(data[0])
     modelDict = torch.load(str(model_path))
     number_of_columns = len(modelDict[list(modelDict.keys())[-1]])
