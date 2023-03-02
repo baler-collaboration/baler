@@ -43,6 +43,7 @@ def loss_plot(path_to_loss_data, output_path, config):
     for i in range(len(conf_list)):
         plt.plot([], [], " ", label=str_list[i] + " " + str(conf_list[i]))
     plt.xlabel("Epochs")
+    plt.yscale("log")
     plt.ylabel("Loss")
     plt.legend(loc="best")
     plt.savefig(output_path + "_Loss_plot.pdf")
@@ -51,13 +52,19 @@ def loss_plot(path_to_loss_data, output_path, config):
 
 def plot(project_path):
     output_path = project_path + "plotting/"
-    before_path = project_path + "training/before.pickle"
-    after_path = project_path + "training/after.pickle"
+    before_path = project_path + "training/before_unnorm.pickle"
+    after_path = project_path + "training/after_unnorm.pickle"
+    before_path_norm = project_path + "training/before.pickle"
+    after_path_norm = project_path + "training/after.pickle"
 
     with open(before_path, "rb") as handle:
         before = pickle.load(handle)
     with open(after_path, "rb") as handle:
         after = pickle.load(handle)
+    with open(before_path_norm, "rb") as handle:
+        before_norm = pickle.load(handle)
+    with open(after_path_norm, "rb") as handle:
+        after_norm = pickle.load(handle)
     before = np.array(before)
     # Added because plotting is not supported for non-DataFrame objects yet.
 

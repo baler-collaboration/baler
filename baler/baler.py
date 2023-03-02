@@ -53,7 +53,7 @@ def perform_training(config, project_path):
     )
     test_data = helper.detach(test_data_tensor)
     reconstructed_data = helper.detach(reconstructed_data_tensor)
-    """ 
+
     print("Un-normalzing...")
     start = time.time()
     test_data_renorm = helper.renormalize(
@@ -68,10 +68,12 @@ def perform_training(config, project_path):
     )
     end = time.time()
     print("Un-normalization took:", f"{(end - start) / 60:.3} minutes")
-    """
+
     helper.to_pickle(test_data, output_path + "before.pickle")
     helper.to_pickle(reconstructed_data, output_path + "after.pickle")
-    #normalization_features.to_csv(project_path + "model/cms_normalization_features.csv")
+    helper.to_pickle(test_data_renorm, output_path + "before_unnorm.pickle")
+    helper.to_pickle(reconstructed_data_renorm, output_path + "after_unnorm.pickle")
+    normalization_features.to_csv(project_path + "model/cms_normalization_features.csv")
     helper.model_saver(model, project_path + "model/model.pt")
 
 
