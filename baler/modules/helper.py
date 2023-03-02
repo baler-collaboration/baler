@@ -141,16 +141,17 @@ def normalize(data, config):
 
 
 def process(data_path, config):
+    print(f"Path to data trained on: {data_path}")
     df = data_processing.load_data(data_path, config)
+    #df = convert_mass_to_energy(df)
     #df = data_processing.clean_data(df, config)
     normalization_features = data_processing.find_minmax(df)
     config.cleared_col_names = data_processing.get_columns(df)
     number_of_columns = len(data_processing.get_columns(df))
-    #df = normalize(df, config)
-
-    print("\nNumber of input variables",len(list(df.columns)))
-    print("List of input variables",list(df.columns))
-    print("\n")
+    df = normalize(df, config)
+    #print("\nNumber of input variables",len(list(df.columns)))
+    #print("List of input variables",list(df.columns))
+    #print("\n")
 
     train_set, test_set = data_processing.split(
         df, test_size=config.test_size, random_state=1
@@ -262,3 +263,49 @@ def get_device():
         dev = "cpu"
         device = torch.device(dev)
     return device
+
+
+def compute_E(mass, eta, pt):
+    masspt = pt**2 + mass**2
+    cosh = (numpy.cosh(eta)) ** 2
+    total = numpy.sqrt(masspt * cosh)
+    return total#pandas.DataFrame({"Energy": total})
+
+
+def convert_mass_to_energy(df):
+    # Takes df with mass
+    # mass_col_name = [col for col in df.columns if ".fM" in col]
+    # pt_col_name = [col for col in df.columns if ".fPt" in col]
+    # eta_col_name = [col for col in df.columns if ".fEta" in col]
+    mass = df["recoPFJets_ak5PFJets__RECO.obj.mass_"]
+    eta = df["recoPFJets_ak5PFJets__RECO.obj.eta_"]
+    pt = df["recoPFJets_ak5PFJets__RECO.obj.pt_"]
+    energy = compute_E(mass=mass, eta=eta, pt=pt)
+    df["recoPFJets_ak5PFJets__RECO.obj.mass_"] = energy
+    df.columns = df.columns.str.replace("mass_","energy_")
+
+
+    """
+    def energy(mass):
+        masspt = (
+            df["recoGenJets_slimmedGenJets__PAT.obj.m_state.p4Polar_.fCoordinates.fPt"]
+            ** 2
+            + mass**2
+        )
+        cosh = (
+            numpy.cosh(
+                df[
+                    "recoGenJets_slimmedGenJets__PAT.obj.m_state.p4Polar_.fCoordinates.fEta"
+                ]
+            )
+        ) ** 2
+        total = numpy.sqrt(masspt * cosh)
+        return total
+
+    df["recoGenJets_slimmedGenJets__PAT.obj.m_state.p4Polar_.fCoordinates.fM"] = df[
+        "recoGenJets_slimmedGenJets__PAT.obj.m_state.p4Polar_.fCoordinates.fM"
+    ].apply(energy)
+    
+    """
+
+    return df
