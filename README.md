@@ -4,6 +4,10 @@
 # Introduction
 Baler is a tool used to test the feasibility of compressing different types of scientific data using machine learning-based autoencoders.
 
+If you wish to contribute, please see [contributing](https://github.com/baler-compressor/baler/documentation/CONTRIBUTING.md)
+
+---
+
 The main object the user has to produce before using Baler is a configuration file. The configuration primarily contains:
 * The path to the data which is going to be compressed
 * The name of the autoencoder to be used. Either pre-defined or homemade 
