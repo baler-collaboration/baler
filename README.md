@@ -270,6 +270,15 @@ In order to run Baler on a managed platform may require additional options to be
 
 An example implementation has been made on a Univerity of Manchester (UK) GPU equipped cluster, named Blackett.
 
+#### Ensure the Container is **not** written to the home area ####
+
+By default, Apptainer will write to your home area, this is not desirable on Blackett. To control this:
+
+```console
+cd /to/data/dir
+export APPTAINER_CACHEDIR=${PWD} # ensure you are in hard disc area, not shared
+```
+
 #### Create an Apptainer sandbox ####
 
 To build an Apptainer sandbox, a container completely constrained within a specified local directory, the following command can be run:
