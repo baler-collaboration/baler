@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 import torch
 import uproot
-import uproot3
 from sklearn.model_selection import train_test_split
 
 from modules import helper
