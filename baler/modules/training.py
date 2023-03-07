@@ -7,7 +7,8 @@ from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
 
 import modules.utils as utils
-
+import modules.helper as helper
+import os
 import random
 import numpy as np
 
@@ -161,6 +162,23 @@ def train(model, variables, train_data, test_data, parent_path, config):
             early_stopping(train_epoch_loss)
             if early_stopping.early_stop:
                 break
+        
+        ## Make-shift implementation to save models & values after 100 epochs:
+        save_model_and_data = True
+        if save_model_and_data:    
+            if epoch%100 == 0:
+                path = os.path.join(parent_path, f'model_{epoch}.pt')
+                path_data = os.path.join(parent_path, f'after_{epoch}.pickle')
+                path_pred = os.path.join(parent_path, f'before_{epoch}.pickle')
+
+                helper.model_saver(model,path)
+                data_tensor = torch.tensor(test_data.values, dtype=torch.float64).to(model.device)
+                pred_tensor = model(data_tensor)
+                data = helper.detach(data_tensor)
+                pred = helper.detach(pred_tensor)
+
+                helper.to_pickle(data, path_data)
+                helper.to_pickle(pred,path_pred)
 
     end = time.time()
 
