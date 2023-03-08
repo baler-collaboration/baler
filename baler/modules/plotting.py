@@ -69,9 +69,10 @@ def plot(project_path):
     # Added because plotting is not supported for non-DataFrame objects yet.
 
     column_names = helper.from_pickle(project_path+"compressed_output/column_names.pickle")
-    
-    before = pd.DataFrame(before, columns=column_names)
-    after = pd.DataFrame(after, columns=column_names)
+    #column_names[3] = 'recoPFJets_ak5PFJets__RECO.obj.energy_'
+
+    before = pd.DataFrame(before_norm, columns=column_names)
+    after = pd.DataFrame(after_norm, columns=column_names)
 
     columns = data_processing.get_columns(before)
     number_of_columns = len(columns)
@@ -146,7 +147,7 @@ def plot(project_path):
             #            step = diff/100
             # counts_response, bins_response = np.histogram(response[column],bins=np.arange(minimum,maximum,step))
             counts_response, bins_response = np.histogram(
-                response[column], bins=np.arange(-2, 2, 0.01)
+                response[column], bins=np.arange(-1, 1, 0.01)
             )
             ax2.hist(
                 bins_response[:-1],
