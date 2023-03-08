@@ -114,15 +114,15 @@ def perform_decompression(config, project_path):
 
     # Converting back to numpyarray
     decompressed = helper.detach(decompressed)
-    #normalization_features = pd.read_csv(
-    #    project_path + "model/cms_normalization_features.csv"
-    #)
+    normalization_features = pd.read_csv(
+        project_path + "model/cms_normalization_features.csv"
+    )
 
-    #decompressed = helper.renormalize(
-    #    decompressed,
-    #    normalization_features["True min"],
-    #    normalization_features["Feature Range"],
-    #)
+    decompressed = helper.renormalize(
+        decompressed,
+        normalization_features["True min"],
+        normalization_features["Feature Range"],
+    )
     end = time.time()
     print("Decompression took:", f"{(end - start) / 60:.3} minutes")
 
