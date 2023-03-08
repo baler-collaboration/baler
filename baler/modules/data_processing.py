@@ -11,6 +11,7 @@ from sklearn.model_selection import train_test_split
 from modules import helper
 from modules import models
 
+
 def save_model(model, model_path: str) -> None:
     return torch.save(model.state_dict(), model_path)
 

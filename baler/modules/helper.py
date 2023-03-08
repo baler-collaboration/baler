@@ -11,6 +11,7 @@ from modules import training, plotting, data_processing
 from dataclasses import dataclass
 import importlib
 
+
 def get_arguments():
     parser = argparse.ArgumentParser(
         prog="baler.py",
@@ -39,7 +40,9 @@ Baler has three running modes:\n
         config = None
     else:
         config = configClass
-        importlib.import_module(f"projects.{args.project}.{args.project}_config").set_config(config)
+        importlib.import_module(
+            f"projects.{args.project}.{args.project}_config"
+        ).set_config(config)
     return config, args.mode, args.project
 
 
@@ -66,22 +69,23 @@ def create_new_project(project_name: str, base_path: str = "projects") -> None:
 
 @dataclass
 class configClass:
-    input_path          : str
-    compression_ratio   : float
-    epochs              : int
-    early_stopping      : bool
-    lr_scheduler        : bool
-    patience            : int
-    min_delta           : int
-    model_name          : str
-    custom_norm         : bool
-    l1                  : bool
-    reg_param           : float
-    RHO                 : float
-    lr                  : float
-    batch_size          : int
-    save_as_root        : bool
-    test_size           : float
+    input_path: str
+    compression_ratio: float
+    epochs: int
+    early_stopping: bool
+    lr_scheduler: bool
+    patience: int
+    min_delta: int
+    model_name: str
+    custom_norm: bool
+    l1: bool
+    reg_param: float
+    RHO: float
+    lr: float
+    batch_size: int
+    save_as_root: bool
+    test_size: float
+
 
 def create_default_config(project_name) -> str:
     return f"""
@@ -109,8 +113,9 @@ def to_pickle(data, path):
     with open(path, "wb") as handle:
         pickle.dump(data, handle)
 
+
 def from_pickle(path):
-    with open(path, 'rb') as handle:
+    with open(path, "rb") as handle:
         return pickle.load(handle)
 
 
@@ -139,16 +144,20 @@ def normalize(data, custom_norm, cleared_col_names):
     return df
 
 
-def process(data_path,test_size):
+def process(data_path, test_size):
     df = data_processing.load_data(data_path)
     cleared_col_names = data_processing.get_columns(df)
     normalization_features = data_processing.find_minmax(df)
     number_of_columns = len(data_processing.get_columns(df))
 
-    train_set, test_set = data_processing.split(
-        df, test_size=test_size, random_state=1
+    train_set, test_set = data_processing.split(df, test_size=test_size, random_state=1)
+    return (
+        train_set,
+        test_set,
+        number_of_columns,
+        normalization_features,
+        cleared_col_names,
     )
-    return train_set, test_set, number_of_columns, normalization_features, cleared_col_names
 
 
 def renormalize(data, true_min_list, feature_range_list):
@@ -183,13 +192,13 @@ def compress(model_path, config):
     cleared_col_names = data_processing.get_columns(data)
     number_of_columns = len(data_processing.get_columns(data))
     try:
-        config.latent_space_size = int(number_of_columns//config.compression_ratio)
+        config.latent_space_size = int(number_of_columns // config.compression_ratio)
         config.number_of_columns = number_of_columns
     except AttributeError:
-        assert(number_of_columns==config.number_of_columns)
+        assert number_of_columns == config.number_of_columns
     data_before = numpy.array(data)
     data = normalize(data, config.custom_norm, cleared_col_names)
-    
+
     # Initialise and load the model correctly.
     ModelObject = data_processing.initialise_model(config.model_name)
     model = data_processing.load_model(
@@ -211,7 +220,6 @@ def decompress(model_path, input_path, model_name):
     latent_space_size = len(data[0])
     modelDict = torch.load(str(model_path))
     number_of_columns = len(modelDict[list(modelDict.keys())[-1]])
-
 
     # Initialise and load the model correctly.
     ModelObject = data_processing.initialise_model(model_name)
