@@ -10,26 +10,6 @@ min_lr = 1e-6
 ###############################################
 
 
-def new_loss_func(model, reconstructed_data, true_data, reg_param, val):
-    # Still WIP. Other loss function is completely fine!
-    mse = nn.MSELoss()
-    mse_loss = mse(reconstructed_data, true_data)
-    l1_loss = 0
-
-    if not val:
-        for i in model.parameters():
-            l1_loss += torch.abs(i).sum()
-
-            # l1_loss = sum(torch.sum(torch.abs(p)) for p in model.parameters())
-
-            loss = mse_loss + reg_param * l1_loss
-            return loss, mse_loss, l1_loss
-
-    else:
-        loss = mse_loss
-        return loss
-
-
 def sparse_loss_function_L1(
     model_children, true_data, reconstructed_data, reg_param, validate
 ):

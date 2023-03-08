@@ -6,6 +6,7 @@ import torch
 from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
 
+import modules.helper as helper
 import modules.utils as utils
 
 
@@ -16,10 +17,7 @@ def fit(model, train_dl, train_ds, model_children, regular_param, optimizer, RHO
 
     running_loss = 0.0
     n_data = int(len(train_ds) / train_dl.batch_size)
-    for inputs, labels in tqdm(
-        train_dl, total=n_data, desc="# Training", file=sys.stdout
-    ):
-        inputs = inputs.to(model.device)
+    for inputs in tqdm(train_dl, total=n_data, desc="# Training", file=sys.stdout):
         optimizer.zero_grad()
         reconstructions = model(inputs)
         loss, mse_loss, l1_loss = utils.sparse_loss_function_L1(
@@ -48,10 +46,7 @@ def validate(model, test_dl, test_ds, model_children, reg_param):
     running_loss = 0.0
     n_data = int(len(test_ds) / test_dl.batch_size)
     with torch.no_grad():
-        for inputs, labels in tqdm(
-            test_dl, total=n_data, desc="# Validating", file=sys.stdout
-        ):
-            inputs = inputs.to(model.device)
+        for inputs in tqdm(test_dl, total=n_data, desc="# Validating", file=sys.stdout):
             reconstructions = model(inputs)
             loss = utils.sparse_loss_function_L1(
                 model_children=model_children,
@@ -78,20 +73,18 @@ def train(model, variables, train_data, test_data, parent_path, config):
 
     model_children = list(model.children())
 
-    # Constructs a tensor object of the data and wraps them in a TensorDataset object.
-    train_ds = TensorDataset(
-        torch.tensor(train_data.values, dtype=torch.float64),
-        torch.tensor(train_data.values, dtype=torch.float64),
-    )
-    valid_ds = TensorDataset(
-        torch.tensor(test_data.values, dtype=torch.float64),
-        torch.tensor(test_data.values, dtype=torch.float64),
-    )
+    # Initialize model with appropriate device
+    device = helper.get_device()
+    model = model.to(device)
 
-    # Converts the TensorDataset into a DataLoader object and combines into one DataLoaders object (a basic wrapper
+    # Converting data to tensors
+    train_ds = torch.tensor(train_data.values, dtype=torch.float64, device=device)
+    valid_ds = torch.tensor(train_data.values, dtype=torch.float64, device=device)
+
+    # Pushing input data into the torch-DataLoader object and combines into one DataLoaders object (a basic wrapper
     # around several DataLoader objects).
-    train_dl = DataLoader(train_ds, batch_size=bs, shuffle=True)
-    valid_dl = DataLoader(valid_ds, batch_size=bs)  ## Used to be batch_size = bs * 2
+    train_dl = DataLoader(train_ds, batch_size=bs, shuffle=True, drop_last=True)
+    valid_dl = DataLoader(valid_ds, batch_size=bs, drop_last=True)
 
     ## Select Optimizer
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
@@ -152,7 +145,7 @@ def train(model, variables, train_data, test_data, parent_path, config):
     )
 
     data_as_tensor = torch.tensor(test_data.values, dtype=torch.float64)
-    data_as_tensor = data_as_tensor.to(model.device)
+    data_as_tensor = data_as_tensor.to(device)
     pred_as_tensor = model(data_as_tensor)
 
     return data_as_tensor, pred_as_tensor

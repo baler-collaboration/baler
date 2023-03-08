@@ -172,6 +172,7 @@ def detach(tensor):
 
 
 def compress(number_of_columns, model_path, input_path, config):
+    device = get_device()
     # Initialise and load the model correctly.
     ModelObject = data_processing.initialise_model(config=config)
     model = data_processing.load_model(
@@ -187,13 +188,14 @@ def compress(number_of_columns, model_path, input_path, config):
     data_before = numpy.array(data)
 
     data = normalize(data, config)
-    data_tensor = numpy_to_tensor(data).to(model.device)
+    data_tensor = numpy_to_tensor(data).to(device)
 
     compressed = model.encode(data_tensor)
     return compressed, data_before
 
 
 def decompress(number_of_columns, model_path, input_path, config):
+    device = get_device()
     # Initialise and load the model correctly.
     ModelObject = data_processing.initialise_model(config=config)
     model = data_processing.load_model(
@@ -205,7 +207,7 @@ def decompress(number_of_columns, model_path, input_path, config):
 
     # Load the data & convert to tensor
     data = data_loader(input_path, config)
-    data_tensor = numpy_to_tensor(data).to(model.device)
+    data_tensor = numpy_to_tensor(data).to(device)
 
     decompressed = model.decode(data_tensor)
     return decompressed
