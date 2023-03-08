@@ -41,7 +41,12 @@ def perform_training(config, project_path):
         full_norm,
         full_pre_norm,
         cleared_col_names,
-    ) = helper.process(config.input_path, config.custom_norm, config.test_size, config.energy_conversion)
+    ) = helper.process(
+        config.input_path,
+        config.custom_norm,
+        config.test_size,
+        config.energy_conversion,
+    )
     train_set_norm = helper.normalize(train_set, config.custom_norm, cleared_col_names)
     test_set_norm = helper.normalize(test_set, config.custom_norm, cleared_col_names)
     try:

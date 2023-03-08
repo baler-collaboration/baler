@@ -152,8 +152,8 @@ def process(data_path, custom_norm, test_size, energy_conversion):
 
     if energy_conversion:
         print("Converting mass to energy with eta, pt & mass")
-        df = convert_mass_to_energy(df,cleared_col_names)
-    
+        df = convert_mass_to_energy(df, cleared_col_names)
+
     full_pre_norm = df
     normalization_features = data_processing.find_minmax(df)
     df = normalize(df, custom_norm, cleared_col_names)
@@ -281,6 +281,7 @@ def get_device():
         device = torch.device(dev)
     return device
 
+
 def compute_E(mass, eta, pt):
     masspt = pt**2 + mass**2
     cosh = (numpy.cosh(eta)) ** 2
@@ -288,34 +289,36 @@ def compute_E(mass, eta, pt):
     return total
 
 
-def convert_mass_to_energy(df,col_names):
+def convert_mass_to_energy(df, col_names):
     ## Find mass, eta & pt:
     for i in range(len(col_names)):
         if col_names[i].split(".")[-1] == "pt":
-            pt = df.iloc[:,i]
-            
+            pt = df.iloc[:, i]
+
         if col_names[i].split(".")[-1] == "mass_":
-            mass = df.iloc[:,i]
-            
-            #Store name to rename & replace mass in df:
+            mass = df.iloc[:, i]
+
+            # Store name to rename & replace mass in df:
             mass_name = str(col_names[i])
 
         if col_names[i].split(".")[-1] == "99":
-            eta = df.iloc[:,i]
+            eta = df.iloc[:, i]
 
         else:
-            print("Can't convert to energy. Please turn off `energy_conversion` in the config to continue")
+            print(
+                "Can't convert to energy. Please turn off `energy_conversion` in the config to continue"
+            )
             exit(1)
 
     # Compute mass
     energy = compute_E(mass=mass, eta=eta, pt=pt)
 
     # Get correct new column name
-    energy_name = mass_name.replace("mass_","energy_")
+    energy_name = mass_name.replace("mass_", "energy_")
 
     # Replace mass with energy
     df[mass_name] = energy
 
     # Replace column name
-    df.columns = df.columns.str.replace(mass_name,energy_name,regex=True)
+    df.columns = df.columns.str.replace(mass_name, energy_name, regex=True)
     return df
