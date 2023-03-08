@@ -22,7 +22,7 @@ def fit(model, train_dl, train_ds, model_children, regular_param, optimizer, RHO
         inputs = inputs.to(model.device)
         optimizer.zero_grad()
         reconstructions = model(inputs)
-        loss, mse_loss, l1_loss = utils.sparse_loss_function_L1(
+        loss, mse_loss, l1_loss = utils.sparse_loss_function_EMD_L1(
             model_children=model_children,
             true_data=inputs,
             reconstructed_data=reconstructions,
@@ -37,7 +37,7 @@ def fit(model, train_dl, train_ds, model_children, regular_param, optimizer, RHO
 
     epoch_loss = running_loss / len(train_dl)
     print(f"# Finished. Training Loss: {loss:.6f}")
-    return epoch_loss, mse_loss, l1_loss
+    return epoch_loss, mse_loss, l1_loss, model
 
 
 def validate(model, test_dl, test_ds, model_children, reg_param):
@@ -53,7 +53,7 @@ def validate(model, test_dl, test_ds, model_children, reg_param):
         ):
             inputs = inputs.to(model.device)
             reconstructions = model(inputs)
-            loss = utils.sparse_loss_function_L1(
+            loss = utils.sparse_loss_function_EMD_L1(
                 model_children=model_children,
                 true_data=inputs,
                 reconstructed_data=reconstructions,
@@ -116,7 +116,7 @@ def train(model, variables, train_data, test_data, parent_path, config):
     for epoch in range(epochs):
         print(f"Epoch {epoch + 1} of {epochs}")
 
-        train_epoch_loss, mse_loss_fit, regularizer_loss_fit = fit(
+        train_epoch_loss, mse_loss_fit, regularizer_loss_fit, trained_model = fit(
             model=model,
             train_dl=train_dl,
             train_ds=train_ds,
@@ -130,7 +130,7 @@ def train(model, variables, train_data, test_data, parent_path, config):
         train_loss.append(train_epoch_loss)
 
         val_epoch_loss = validate(
-            model=model,
+            model=trained_model,
             test_dl=valid_dl,
             test_ds=valid_ds,
             model_children=model_children,
@@ -153,6 +153,6 @@ def train(model, variables, train_data, test_data, parent_path, config):
 
     data_as_tensor = torch.tensor(test_data.values, dtype=torch.float64)
     data_as_tensor = data_as_tensor.to(model.device)
-    pred_as_tensor = model(data_as_tensor)
+    pred_as_tensor = trained_model(data_as_tensor)
 
-    return data_as_tensor, pred_as_tensor
+    return data_as_tensor, pred_as_tensor, trained_model

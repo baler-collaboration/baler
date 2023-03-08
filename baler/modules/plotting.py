@@ -57,16 +57,44 @@ def plot(output_path, before_path, after_path):
     before = np.array(before)
     # Added because plotting is not supported for non-DataFrame objects yet.
     if isinstance(before, pd.DataFrame) == False:
-        names = [
-            "pt",
-            "eta",
-            "phi",
-            "m",
-            "EmEnergy",
-            "HadEnergy",
-            "InvisEnergy",
-            "AuxilEnergy",
-        ]
+        if (before.shape)[1] == 24:
+            names = [
+                "pt_",
+                "eta_",
+                "phi_",
+                "mass_",
+                "mJetArea",
+                "mChargedHadronEnergy",
+                "mNeutralHadronEnergy",
+                "mPhotonEnergy",
+                "mHFHadronEnergy",
+                "mHFEMEnergy",
+                "mChargedHadronMultiplicity",
+                "mNeutralHadronMultiplicity",
+                "mPhotonMultiplicity",
+                "mElectronMultiplicity",
+                "mHFHadronMultiplicity",
+                "mHFEMMultiplicity",
+                "mNeutralEmEnergy",
+                "mChargedMultiplicity",
+                "mNeutralMultiplicity",
+                "mChargedEmEnergy",
+                "mChargedMuEnergy",
+                "mMuonEnergy",
+                "mMuonMultiplicity",
+                "mElectronEnergy",
+            ]
+        else:
+            names = [
+                "pt",
+                "eta",
+                "phi",
+                "energy",
+                "EmEnergy",
+                "HadEnergy",
+                "InvisEnergy",
+                "AuxilEnergy",
+            ]
         before = pd.DataFrame(before, columns=names)
         after = pd.DataFrame(after, columns=names)
     else:
@@ -115,6 +143,7 @@ def plot(output_path, before_path, after_path):
             ax1.set_title(f"{column} Distribution")
             ax1.set_xlabel("column", ha="right", x=1.0)
             ax1.set_xticks([])
+            ax1.set_yscale("log")
             ax1.set_ylabel("Counts", ha="right", y=1.0)
             ax1.legend(loc="best")
 
@@ -122,9 +151,12 @@ def plot(output_path, before_path, after_path):
             divider = make_axes_locatable(ax1)
             ax3 = divider.append_axes("bottom", size="20%", pad=0.25)
             ax1.figure.add_axes(ax3)
-            ax3.bar(bins_after[:-1], height=(hist_after[0] - hist_before[0]))
+            ax3.bar(
+                bins_after[:-1],
+                height=((hist_after[0] - hist_before[0])),
+            )
             ax3.axhline(y=0, linewidth=0.2, color="black")
-            ax3.set_ylim(-50, 50)
+            ax3.set_ylim(-2, 2)
             ax3.set_ylabel("after - before")
 
             #            minimum = min(response[column])
@@ -166,5 +198,6 @@ def plot(output_path, before_path, after_path):
             pdf.savefig()
             ax2.clear()
             ax1.clear()
+            ax3.clear()
 
             # if index==1: break

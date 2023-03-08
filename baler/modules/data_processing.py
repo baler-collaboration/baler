@@ -96,6 +96,8 @@ def load_data(data_path: str, config):
 def clean_data(df, config):
     df = df.drop(columns=config["dropped_variables"])
     df = df.dropna()
+    # df = df[df["recoPFJets_ak5PFJets__RECO.obj.pt_"] < 8000]
+    # df = df[df["recoPFJets_ak5PFJets__RECO.obj.mass_"] < 800]
     global cleared_column_names
     cleared_column_names = list(df)
     return df
@@ -193,3 +195,10 @@ def RMS_function(response_norm):
     MS = square.mean()
     RMS = np.sqrt(MS)
     return RMS
+
+
+def compute_E(mass, eta, pt):
+    masspt = pt**2 + mass**2
+    cosh = (np.cosh(eta)) ** 2
+    total = np.sqrt(masspt * cosh)
+    return pd.DataFrame({"Energy": total})
