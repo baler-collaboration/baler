@@ -7,6 +7,7 @@ import pandas as pd
 from matplotlib.backends.backend_pdf import PdfPages
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import modules.data_processing as data_processing
+import modules.helper as helper
 
 
 def to_percent(y, position):
@@ -15,7 +16,7 @@ def to_percent(y, position):
     s = str(100 * round(y, 2))
 
     # The percent symbol needs escaping in latex
-    if mpl.rcParams["text.usetex"] is True:
+    if mpl.rcParams["text.usetex"]:
         return s + r"$\%$"
     else:
         return s + "%"
@@ -29,10 +30,10 @@ def loss_plot(path_to_loss_data, output_path, config):
     train_loss = loss_data["Train Loss"]
     conf_list = [
         len(train_loss),
-        config["model_name"],
-        config["reg_param"],
-        config["lr"],
-        config["batch_size"],
+        config.model_name,
+        config.reg_param,
+        config.lr,
+        config.batch_size,
     ]
 
     plt.figure(figsize=(10, 7))
@@ -48,7 +49,11 @@ def loss_plot(path_to_loss_data, output_path, config):
     # plt.show()
 
 
-def plot(output_path, before_path, after_path):
+def plot(project_path):
+    output_path = project_path + "plotting/"
+    before_path = project_path + "training/before.pickle"
+    after_path = project_path + "training/after.pickle"
+
     with open(before_path, "rb") as handle:
         before = pickle.load(handle)
     with open(after_path, "rb") as handle:
@@ -56,121 +61,79 @@ def plot(output_path, before_path, after_path):
 
     before = np.array(before)
     # Added because plotting is not supported for non-DataFrame objects yet.
-    if isinstance(before, pd.DataFrame) == False:
-        if (before.shape)[1] == 24:
-            names = [
-                "pt_",
-                "eta_",
-                "phi_",
-                "mass_",
-                "mJetArea",
-                "mChargedHadronEnergy",
-                "mNeutralHadronEnergy",
-                "mPhotonEnergy",
-                "mHFHadronEnergy",
-                "mHFEMEnergy",
-                "mChargedHadronMultiplicity",
-                "mNeutralHadronMultiplicity",
-                "mPhotonMultiplicity",
-                "mElectronMultiplicity",
-                "mHFHadronMultiplicity",
-                "mHFEMMultiplicity",
-                "mNeutralEmEnergy",
-                "mChargedMultiplicity",
-                "mNeutralMultiplicity",
-                "mChargedEmEnergy",
-                "mChargedMuEnergy",
-                "mMuonEnergy",
-                "mMuonMultiplicity",
-                "mElectronEnergy",
-            ]
-        else:
-            names = [
-                "pt",
-                "eta",
-                "phi",
-                "energy",
-                "EmEnergy",
-                "HadEnergy",
-                "InvisEnergy",
-                "AuxilEnergy",
-            ]
-        before = pd.DataFrame(before, columns=names)
-        after = pd.DataFrame(after, columns=names)
-    else:
-        pass
 
-    columns = data_processing.get_columns(before)
-    number_of_columns = len(columns)
+    column_names = helper.from_pickle(
+        project_path + "compressed_output/column_names.pickle"
+    )
 
-    with PdfPages(output_path + "comparison.pdf") as pdf:
-        figure1, (ax1, ax2) = plt.subplots(
-            1, 2, figsize=(18.3 * (1 / 2.54) * 1.7, 13.875 * (1 / 2.54) * 1.32)
-        )
+    before = pd.DataFrame(before, columns=column_names)
+    after = pd.DataFrame(after, columns=column_names)
+
+    response = (after - before) / before
+
+    with PdfPages(project_path + "/plotting/comparison.pdf") as pdf:
+        fig = plt.figure(constrained_layout=True, figsize=(10, 4))
+        subfigs = fig.subfigures(1, 2, wspace=0.07, width_ratios=[1, 1])
+
+        axsLeft = subfigs[0].subplots(2, 1, sharex=True)
+        ax1 = axsLeft[0]
+        ax3 = axsLeft[1]
+        axsRight = subfigs[1].subplots()
+        ax2 = axsRight
+
+        columns = list(before.columns)
+        number_of_columns = len(columns)
         for index, column in enumerate(columns):
-            print(f"{index} of {number_of_columns}")
-
-            response = (after - before) / before
+            column_name = column.split(".")[-1]
+            print(f"Plotting: {column_name} ({index+1} of {number_of_columns})")
             response_list = list(filter(lambda p: -20 <= p <= 20, response[column]))
-            response_RMS = data_processing.RMS_function(response_norm=response_list)
-            #            minimum = int(min(before[column]+after[column]))
-            #            maximum = int(max(before[column]+after[column]))
-            #            diff = maximum - minimum
-            #            if diff == np.inf or diff == 0:#FIXME: We have to skip some variables
-            #                pdf.savefig()
-            #                ax2.clear()
-            #                ax1.clear()
-            #                continue
-            #            step = diff/100
-            # counts_before, bins_before = np.histogram(before[column],bins=np.arange(minimum,maximum,step))
+            square = np.square(response_list)
+            MS = square.mean()
+            response_RMS = np.sqrt(MS)
+
+            x_min = min(before[column] + after[column])
+            x_max = max(before[column] + after[column])
+            x_diff = abs(x_max - x_min)
+
+            # Before Histogram
             counts_before, bins_before = np.histogram(
-                before[column], bins=np.arange(-200, 500, 1)
+                before[column],
+                bins=np.linspace(x_min - 0.1 * x_diff, x_max + 0.1 * x_diff, 200),
             )
-            hist_before = ax1.hist(
+            ax1.hist(
                 bins_before[:-1], bins_before, weights=counts_before, label="Before"
             )
-            # counts_after, bins_after = np.histogram(after[column],bins=np.arange(minimum,maximum,step))
+
+            # After Histogram
             counts_after, bins_after = np.histogram(
-                after[column], bins=np.arange(-200, 500, 1)
+                after[column],
+                bins=np.linspace(x_min - 0.1 * x_diff, x_max + 0.1 * x_diff, 200),
             )
-            hist_after = ax1.hist(
+            ax1.hist(
                 bins_after[:-1],
                 bins_after,
                 weights=counts_after,
                 label="After",
                 histtype="step",
             )
-            ax1.set_title(f"{column} Distribution")
-            ax1.set_xlabel("column", ha="right", x=1.0)
-            ax1.set_xticks([])
-            ax1.set_yscale("log")
+
             ax1.set_ylabel("Counts", ha="right", y=1.0)
+            ax1.set_yscale("log")
             ax1.legend(loc="best")
+            ax1.set_xlim(x_min - 0.1 * x_diff, x_max + 0.1 * x_diff)
 
-            # Residual subplot in comparison
-            divider = make_axes_locatable(ax1)
-            ax3 = divider.append_axes("bottom", size="20%", pad=0.25)
-            ax1.figure.add_axes(ax3)
-            ax3.bar(
-                bins_after[:-1],
-                height=((hist_after[0] - hist_before[0])),
-            )
+            data_bin_centers = bins_after[:-1] + (bins_after[1:] - bins_after[:-1]) / 2
+            ax3.scatter(
+                data_bin_centers, (counts_after - counts_before), marker="."
+            )  # FIXME: Dividing by zero
             ax3.axhline(y=0, linewidth=0.2, color="black")
-            ax3.set_ylim(-2, 2)
-            ax3.set_ylabel("after - before")
+            ax3.set_xlabel(f"{column_name}", ha="right", x=1.0)
+            ax3.set_ylim(-200, 200)
+            ax3.set_ylabel("Residual")
 
-            #            minimum = min(response[column])
-            #            maximum = max(response[column])
-            #            diff = maximum - minimum
-            #            if diff == np.inf or diff == 0:
-            #                pdf.savefig()
-            #                ax2.clear()
-            #                ax1.clear()
-            #                continue
-            #            step = diff/100
-            # counts_response, bins_response = np.histogram(response[column],bins=np.arange(minimum,maximum,step))
+            # Response Histogram
             counts_response, bins_response = np.histogram(
-                response[column], bins=np.arange(-2, 2, 0.1)
+                response[column], bins=np.arange(-2, 2, 0.01)
             )
             ax2.hist(
                 bins_response[:-1],
@@ -183,21 +146,15 @@ def plot(output_path, before_path, after_path):
                 color="k",
                 linestyle="dashed",
                 linewidth=1,
-                label=f"Mean {round(np.mean(response_list),8)}",
+                label=f"Mean {round(np.mean(response_list),4)}",
             )
             ax2.plot([], [], " ", label=f"RMS: {round(response_RMS,8)}")
 
-            # To have percent on the x-axis
-            # formatter = mpl.ticker.FuncFormatter(to_percent)
-            # ax2.xaxis.set_major_formatter(formatter)
-            ax2.set_title(f"{column} Response")
-            ax2.set_xlabel(f"{column} Response", ha="right", x=1.0)
+            ax2.set_xlabel(f"{column_name} Response", ha="right", x=1.0)
             ax2.set_ylabel("Counts", ha="right", y=1.0)
-            ax2.legend(loc="best")
+            ax2.legend(loc="best", title=f"RMS: {round(response_RMS,4)}")
 
             pdf.savefig()
             ax2.clear()
             ax1.clear()
             ax3.clear()
-
-            # if index==1: break

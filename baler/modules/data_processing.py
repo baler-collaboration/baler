@@ -11,23 +11,11 @@ from modules import helper
 from modules import models
 
 
-def import_config(config_path: str) -> dict:
-    try:
-        with open(config_path, encoding="utf-8") as json_config:
-            config = json.load(json_config)
-        return config
-    except FileNotFoundError:
-        print(f"Config file not found at path: {config_path}")
-    except json.JSONDecodeError as e:
-        print(f"Failed to parse config file at path {config_path}: {e}")
-
-
 def save_model(model, model_path: str) -> None:
     return torch.save(model.state_dict(), model_path)
 
 
-def initialise_model(config):
-    model_name = config["model_name"]
+def initialise_model(model_name):
     model_object = getattr(models, model_name)
     return model_object
 
@@ -64,27 +52,27 @@ def type_clearing(tt_tree):
     return column_names
 
 
-def numpy_to_df(array, config):
+def numpy_to_df(array, cleared_col_names):
     if np.shape(array)[1] == 4:
         col_names = ["comp1", "comp2", "comp3", "comp4"]
     else:
-        col_names = config["cleared_col_names"]
+        col_names = cleared_col_names
     df = pd.DataFrame(array, columns=col_names)
 
     return df
 
 
-def load_data(data_path: str, config):
+def load_data(data_path: str):
     file_extension = data_path.split(".")[-1]
     if file_extension == "csv":
         df = pd.read_csv(data_path, low_memory=False)
-    elif file_extension == "root":
-        tree = uproot.open(data_path)[config["Branch"]][config["Collection"]][
-            config["Objects"]
-        ]
-        global names
-        names = type_clearing(tree)
-        df = tree.arrays(names, library="pd")
+    # elif file_extension == "root":
+    #     tree = uproot.open(data_path)[config["Branch"]][config["Collection"]][
+    #         config["Objects"]
+    #     ]
+    #     global names
+    #     names = type_clearing(tree)
+    #     df = tree.arrays(names, library="pd")
     elif file_extension == "pickle" or file_extension == "pkl":
         df = pd.read_pickle(data_path)
     else:
@@ -117,11 +105,11 @@ def find_minmax(data):
     return normalization_features
 
 
-def normalize(data, config):
+def normalize(data, custom_norm):
     data = np.array(data)
-    if config["custom_norm"] is True:
+    if custom_norm:
         pass
-    elif config["custom_norm"] is False:
+    elif not custom_norm:
         true_min = np.min(data)
         true_max = np.max(data)
         feature_range = true_max - true_min
@@ -156,8 +144,8 @@ def get_columns(df):
     return list(df.columns)
 
 
-def pickle_to_df(file_path, config):
-    load_data(file_path, config)
+def pickle_to_df(file_path):
+    load_data(file_path)
     # From pickle to df:
     with open(file_path, "rb") as handle:
         data = pickle.load(handle)
@@ -195,10 +183,3 @@ def RMS_function(response_norm):
     MS = square.mean()
     RMS = np.sqrt(MS)
     return RMS
-
-
-def compute_E(mass, eta, pt):
-    masspt = pt**2 + mass**2
-    cosh = (np.cosh(eta)) ** 2
-    total = np.sqrt(masspt * cosh)
-    return pd.DataFrame({"Energy": total})
