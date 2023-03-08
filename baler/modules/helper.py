@@ -1,7 +1,7 @@
 import argparse
 import os
 import pickle
-
+import sys
 import numpy
 import pandas
 import torch
@@ -39,8 +39,8 @@ Baler has three running modes:\n
         config = None
     else:
         config = configClass
-        importlib.import_module(
-            f"projects.{args.project}.{args.project}_config"
+        importlib.import_module(name=
+            f".", package=f"{args.project}_config"
         ).set_config(config)
     return config, args.mode, args.project
 
@@ -84,6 +84,7 @@ class configClass:
     batch_size: int
     save_as_root: bool
     test_size: float
+    energy_conversion: bool
 
 
 def create_default_config(project_name) -> str:
@@ -105,6 +106,8 @@ def set_config(c):
     c.batch_size          = 512
     c.save_as_root        = True
     c.test_size           = 0.15
+    c.energy_conversion   = False
+
 """
 
 
@@ -143,12 +146,14 @@ def normalize(data, custom_norm, cleared_col_names):
     return df
 
 
-def process(data_path, custom_norm, test_size):
+def process(data_path, custom_norm, test_size, energy_conversion):
     df = data_processing.load_data(data_path)
-    # if config.energy == True:
-    #     #    df = Concat_energy(df)
-    #     df = convert_mass_to_energy(df)
     cleared_col_names = data_processing.get_columns(df)
+
+    if energy_conversion:
+        print("Converting mass to energy with eta, pt & mass")
+        df = convert_mass_to_energy(df,cleared_col_names)
+    
     full_pre_norm = df
     normalization_features = data_processing.find_minmax(df)
     df = normalize(df, custom_norm, cleared_col_names)
@@ -275,3 +280,42 @@ def get_device():
         dev = "cpu"
         device = torch.device(dev)
     return device
+
+def compute_E(mass, eta, pt):
+    masspt = pt**2 + mass**2
+    cosh = (numpy.cosh(eta)) ** 2
+    total = numpy.sqrt(masspt * cosh)
+    return total
+
+
+def convert_mass_to_energy(df,col_names):
+    ## Find mass, eta & pt:
+    for i in range(len(col_names)):
+        if col_names[i].split(".")[-1] == "pt":
+            pt = df.iloc[:,i]
+            
+        if col_names[i].split(".")[-1] == "mass_":
+            mass = df.iloc[:,i]
+            
+            #Store name to rename & replace mass in df:
+            mass_name = str(col_names[i])
+
+        if col_names[i].split(".")[-1] == "99":
+            eta = df.iloc[:,i]
+
+        else:
+            print("Can't convert to energy. Please turn off `energy_conversion` in the config to continue")
+            exit(1)
+
+    # Compute mass
+    energy = compute_E(mass=mass, eta=eta, pt=pt)
+
+    # Get correct new column name
+    energy_name = mass_name.replace("mass_","energy_")
+
+    # Replace mass with energy
+    df[mass_name] = energy
+
+    # Replace column name
+    df.columns = df.columns.str.replace(mass_name,energy_name,regex=True)
+    return df
