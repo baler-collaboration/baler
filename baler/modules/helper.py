@@ -39,8 +39,8 @@ Baler has three running modes:\n
         config = None
     else:
         config = configClass
-        importlib.import_module(name=
-            f".", package=f"{args.project}_config"
+        importlib.import_module(
+            f"projects.{args.project}.{args.project}_config"
         ).set_config(config)
     return config, args.mode, args.project
 
