@@ -214,7 +214,6 @@ def compress(model_path, config):
 
 
 def decompress(model_path, input_path, model_name):
-
     # Load the data & convert to tensor
     data = data_loader(input_path)
     latent_space_size = len(data[0])
