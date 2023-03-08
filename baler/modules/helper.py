@@ -1,7 +1,6 @@
 import argparse
 import os
 import pickle
-import sys
 
 import numpy
 import pandas
@@ -144,10 +143,17 @@ def normalize(data, custom_norm, cleared_col_names):
     return df
 
 
-def process(data_path, test_size):
+def process(data_path, custom_norm, test_size):
     df = data_processing.load_data(data_path)
+    # if config.energy == True:
+    #     #    df = Concat_energy(df)
+    #     df = convert_mass_to_energy(df)
     cleared_col_names = data_processing.get_columns(df)
+    full_pre_norm = df
     normalization_features = data_processing.find_minmax(df)
+    df = normalize(df, custom_norm, cleared_col_names)
+    full_norm = df
+    train_set, test_set = data_processing.split(df, test_size=test_size, random_state=1)
     number_of_columns = len(data_processing.get_columns(df))
 
     train_set, test_set = data_processing.split(df, test_size=test_size, random_state=1)
@@ -156,6 +162,8 @@ def process(data_path, test_size):
         test_set,
         number_of_columns,
         normalization_features,
+        full_norm,
+        full_pre_norm,
         cleared_col_names,
     )
 
@@ -207,6 +215,13 @@ def compress(model_path, config):
         n_features=number_of_columns,
         z_dim=config.latent_space_size,
     )
+
+    # Give the encoding function the correct input as tensor
+    data = data_loader(config.input_path)
+    # data = data_processing.clean_data(data, config)
+    data_before = numpy.array(data)
+
+    data = normalize(data, config.custom_norm, cleared_col_names)
     data_tensor = numpy_to_tensor(data).to(model.device)
 
     compressed = model.encode(data_tensor)
@@ -228,7 +243,11 @@ def decompress(model_path, input_path, model_name):
         n_features=number_of_columns,
         z_dim=latent_space_size,
     )
+
+    # Load the data & convert to tensor
+    data = data_loader(input_path)
     data_tensor = numpy_to_tensor(data).to(model.device)
+
     decompressed = model.decode(data_tensor)
     return decompressed
 

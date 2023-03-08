@@ -58,6 +58,7 @@ def plot(project_path):
         before = pickle.load(handle)
     with open(after_path, "rb") as handle:
         after = pickle.load(handle)
+
     before = np.array(before)
     # Added because plotting is not supported for non-DataFrame objects yet.
 
@@ -147,6 +148,7 @@ def plot(project_path):
                 linewidth=1,
                 label=f"Mean {round(np.mean(response_list),4)}",
             )
+            ax2.plot([], [], " ", label=f"RMS: {round(response_RMS,8)}")
 
             ax2.set_xlabel(f"{column_name} Response", ha="right", x=1.0)
             ax2.set_ylabel("Counts", ha="right", y=1.0)

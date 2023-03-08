@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 import torch
 import uproot
-import uproot3
 from sklearn.model_selection import train_test_split
 
 from modules import helper
@@ -30,6 +29,29 @@ def load_model(model_object, model_path, n_features, z_dim):
     return model
 
 
+def type_clearing(tt_tree):
+    type_names = tt_tree.typenames()
+    column_type = []
+    column_names = []
+
+    # In order to remove non integers or -floats in the TTree,
+    # we separate the values and keys
+    for keys in type_names:
+        column_type.append(type_names[keys])
+        column_names.append(keys)
+
+    # Checks each value of the typename values to see if it isn't an int or
+    # float, and then removes it
+    for i in range(len(column_type)):
+        if column_type[i] != "float[]" and column_type[i] != "int32_t[]":
+            # print('Index ',i,' was of type ',Typename_list_values[i],'\
+            # and was deleted from the file')
+            del column_names[i]
+
+    # Returns list of column names to use in load_data function
+    return column_names
+
+
 def numpy_to_df(array, cleared_col_names):
     if np.shape(array)[1] == 4:
         col_names = ["comp1", "comp2", "comp3", "comp4"]
@@ -41,7 +63,31 @@ def numpy_to_df(array, cleared_col_names):
 
 
 def load_data(data_path: str):
-    df = pd.read_pickle(data_path)
+    file_extension = data_path.split(".")[-1]
+    if file_extension == "csv":
+        df = pd.read_csv(data_path, low_memory=False)
+    # elif file_extension == "root":
+    #     tree = uproot.open(data_path)[config["Branch"]][config["Collection"]][
+    #         config["Objects"]
+    #     ]
+    #     global names
+    #     names = type_clearing(tree)
+    #     df = tree.arrays(names, library="pd")
+    elif file_extension == "pickle" or file_extension == "pkl":
+        df = pd.read_pickle(data_path)
+    else:
+        raise Exception(f"File extension {file_extension} not supported")
+
+    return df
+
+
+def clean_data(df, config):
+    df = df.drop(columns=config["dropped_variables"])
+    df = df.dropna()
+    # df = df[df["recoPFJets_ak5PFJets__RECO.obj.pt_"] < 8000]
+    # df = df[df["recoPFJets_ak5PFJets__RECO.obj.mass_"] < 800]
+    global cleared_column_names
+    cleared_column_names = list(df)
     return df
 
 
@@ -108,10 +154,28 @@ def pickle_to_df(file_path):
 
 
 def df_to_root(df, col_names, save_path):
-    with uproot3.recreate(save_path) as tree:
-        for i in range(len(col_names)):
-            tree[col_names[i]] = uproot3.newtree({col_names[i]: "float64"})
-            tree[col_names[i]].extend({col_names[i]: df[col_names[i]].to_numpy()})
+    col = col_names
+    data = np.array(df)
+    Event_dict = {}
+    Value_dict = {}
+
+    # Fills a dictionary with Branch names and which dtype to fill said branch with
+    for Branch in col:
+        Event_dict[Branch] = np.float64
+
+    # Fills a dictionary with Branch names and corresponding value
+    for i in range(len(col)):
+        Value_dict[col[i]] = data[:, i]
+
+    # Creates the root file
+    with uproot.recreate(save_path) as fout:
+        # Creates the tree & branches
+        fout.mktree(
+            "Events",
+            Event_dict,
+        )
+        # Fills the branches
+        fout["Events"].extend(Value_dict)
 
 
 def RMS_function(response_norm):
