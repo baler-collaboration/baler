@@ -72,10 +72,12 @@ def validate(model, test_dl, test_ds, model_children, reg_param):
     print(f"# Finished. Validation Loss: {loss:.6f}")
     return epoch_loss
 
+
 def seed_worker(worker_id):
     worker_seed = torch.initial_seed() % 2**32
     np.random.seed(worker_seed)
     random.seed(worker_seed)
+
 
 def train(model, variables, train_data, test_data, parent_path, config):
 
@@ -108,8 +110,12 @@ def train(model, variables, train_data, test_data, parent_path, config):
 
     # Converts the TensorDataset into a DataLoader object and combines into one DataLoaders object (a basic wrapper
     # around several DataLoader objects).
-    train_dl = DataLoader(train_ds, batch_size=bs, shuffle=False, worker_init_fn=seed_worker, generator=g)
-    valid_dl = DataLoader(valid_ds, batch_size=bs, worker_init_fn=seed_worker, generator=g)  ## Used to be batch_size = bs * 2
+    train_dl = DataLoader(
+        train_ds, batch_size=bs, shuffle=False, worker_init_fn=seed_worker, generator=g
+    )
+    valid_dl = DataLoader(
+        valid_ds, batch_size=bs, worker_init_fn=seed_worker, generator=g
+    )  ## Used to be batch_size = bs * 2
 
     ## Select Optimizer
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
@@ -122,9 +128,7 @@ def train(model, variables, train_data, test_data, parent_path, config):
 
     ## Activate LR Scheduler
     if config.lr_scheduler == True:
-        lr_scheduler = utils.LRScheduler(
-            optimizer=optimizer, patience=config.patience
-        )
+        lr_scheduler = utils.LRScheduler(optimizer=optimizer, patience=config.patience)
 
     # train and validate the autoencoder neural network
     train_loss = []
