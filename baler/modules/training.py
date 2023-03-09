@@ -87,6 +87,7 @@ def train(model, variables, train_data, test_data, parent_path, config):
     g = torch.Generator()
     g.manual_seed(0)
 
+    test_size = config.test_size
     learning_rate = config.lr
     bs = config.batch_size
     reg_param = config.reg_param
@@ -150,14 +151,19 @@ def train(model, variables, train_data, test_data, parent_path, config):
 
         train_loss.append(train_epoch_loss)
 
-        val_epoch_loss = validate(
-            model=trained_model,
-            test_dl=valid_dl,
-            test_ds=valid_ds,
-            model_children=model_children,
-            reg_param=reg_param,
-        )
-        val_loss.append(val_epoch_loss)
+        if test_size:
+            val_epoch_loss = validate(
+                model=trained_model,
+                test_dl=valid_dl,
+                test_ds=valid_ds,
+                model_children=model_children,
+                reg_param=reg_param,
+            )
+            val_loss.append(val_epoch_loss)
+        else:
+            val_epoch_loss = train_epoch_loss
+            val_loss.append(val_epoch_loss)
+            
         if config.lr_scheduler:
             lr_scheduler(val_epoch_loss)
         if config.early_stopping:
