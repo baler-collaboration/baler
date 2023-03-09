@@ -168,9 +168,7 @@ def train(model, variables, train_data, test_data, parent_path, config):
     end = time.time()
 
     print(f"{(end - start) / 60:.3} minutes")
-    pd.DataFrame({"Train Loss": train_loss, "Val Loss": val_loss}).to_csv(
-        parent_path + "loss_data.csv"
-    )
+    np.save(parent_path + "loss_data.npy", np.array([train_loss, val_loss]))
 
     data_as_tensor = torch.tensor(test_data, dtype=torch.float64)
     data_as_tensor = data_as_tensor.to(model.device)

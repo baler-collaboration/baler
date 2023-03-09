@@ -90,8 +90,8 @@ def perform_training(config, project_path):
 
 def perform_plotting(project_path, config):
     output_path = project_path + "plotting/"
-    helper.plot(project_path)
-    helper.loss_plotter(project_path + "training/loss_data.csv", output_path, config)
+    helper.plot(project_path, config)
+    helper.loss_plotter(project_path + "training/loss_data.npy", output_path, config)
 
 
 def perform_compression(config, project_path):

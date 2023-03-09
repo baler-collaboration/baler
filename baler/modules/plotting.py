@@ -23,11 +23,11 @@ def to_percent(y, position):
 
 
 def loss_plot(path_to_loss_data, output_path, config):
-    loss_data = pd.read_csv(path_to_loss_data)
+    loss_data = np.load(path_to_loss_data)
     str_list = ["Epochs:", "Model Name:", "Reg. Param:", "lr:", "BS:"]
 
-    val_loss = loss_data["Val Loss"]
-    train_loss = loss_data["Train Loss"]
+    train_loss = loss_data[0]
+    val_loss = loss_data[1]
     conf_list = [
         len(train_loss),
         config.model_name,
@@ -49,25 +49,14 @@ def loss_plot(path_to_loss_data, output_path, config):
     # plt.show()
 
 
-def plot(project_path):
-    output_path = project_path + "plotting/"
-    before_path = project_path + "training/before.pickle"
-    after_path = project_path + "training/after.pickle"
+def plot(project_path, config):
+    names_path = config.names_path
+    before_path = config.data_path
+    after_path = project_path + "decompressed_output/decompressed.npy"
 
-    with open(before_path, "rb") as handle:
-        before = pickle.load(handle)
-    with open(after_path, "rb") as handle:
-        after = pickle.load(handle)
-
-    before = np.array(before)
-    # Added because plotting is not supported for non-DataFrame objects yet.
-
-    column_names = helper.from_pickle(
-        project_path + "compressed_output/column_names.pickle"
-    )
-
-    before = pd.DataFrame(before, columns=column_names)
-    after = pd.DataFrame(after, columns=column_names)
+    column_names = np.load(names_path)
+    before = pd.DataFrame(np.load(before_path), columns=column_names)
+    after = pd.DataFrame(np.load(after_path), columns=column_names)
 
     response = (after - before) / before
 
