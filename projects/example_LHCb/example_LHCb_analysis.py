@@ -16,6 +16,11 @@ def create_branches(df):
 def fit(x, a, b, c, k):
      return a*np.exp(-((x-b)**2)/(2*c**2)) + k
 
+column_names = np.load("./data/example_LHCb/example_LHCb_names.npy")
+before = np.load("./data/example_LHCb/example_LHCb_data.npy")
+before = np.load("./data/example_LHCb/example_LHCb_data.npy")
+
+
 with open("./projects/example_LHCb/compressed_output/column_names.pickle", "rb") as handle:
     column_names = pickle.load(handle)
 with open("./data/example_LHCb/example_LHCb.pickle", "rb") as handle:

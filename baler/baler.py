@@ -2,6 +2,7 @@ import os
 import time
 
 import pandas as pd
+import numpy as np
 
 import modules.helper as helper
 
@@ -33,13 +34,14 @@ def perform_training(config, project_path):
         full_pre_norm,
         cleared_col_names,
     ) = helper.process(
-        config.input_path,
+        config.data_path,
+        config.names_path,
         config.custom_norm,
         config.test_size,
         config.energy_conversion,
     )
-    train_set_norm = helper.normalize(train_set, config.custom_norm, cleared_col_names)
-    test_set_norm = helper.normalize(test_set, config.custom_norm, cleared_col_names)
+    train_set_norm = helper.normalize(train_set, config.custom_norm)
+    test_set_norm = helper.normalize(test_set, config.custom_norm)
     try:
         config.latent_space_size = int(number_of_columns // config.compression_ratio)
         config.number_of_columns = number_of_columns
@@ -64,23 +66,26 @@ def perform_training(config, project_path):
     start = time.time()
     test_data_renorm = helper.renormalize(
         test_data,
-        normalization_features["True min"],
-        normalization_features["Feature Range"],
+        normalization_features[0],
+        normalization_features[1],
     )
     reconstructed_data_renorm = helper.renormalize(
         reconstructed_data,
-        normalization_features["True min"],
-        normalization_features["Feature Range"],
+        normalization_features[0],
+        normalization_features[1],
     )
     end = time.time()
     print("Un-normalization took:", f"{(end - start) / 60:.3} minutes")
 
-    helper.to_pickle(test_data_renorm, output_path + "before.pickle")
-    helper.to_pickle(reconstructed_data_renorm, output_path + "after.pickle")
-    helper.to_pickle(full_pre_norm, output_path + "fulldata_energy.pickle")
+    # helper.to_pickle(test_data_renorm, output_path + "before.pickle")
+    # helper.to_pickle(reconstructed_data_renorm, output_path + "after.pickle")
+    # helper.to_pickle(full_pre_norm, output_path + "fulldata_energy.pickle")
 
-    normalization_features.to_csv(project_path + "model/cms_normalization_features.csv")
-    helper.model_saver(trained_model, project_path + "model/model.pt")
+    np.save(
+        project_path + "compressed_output/normalization_features.npy",
+        normalization_features,
+    )
+    helper.model_saver(trained_model, project_path + "compressed_output/model.pt")
 
 
 def perform_plotting(project_path, config):
@@ -93,7 +98,7 @@ def perform_compression(config, project_path):
     print("Compressing...")
     start = time.time()
     compressed, data_before, cleared_col_names = helper.compress(
-        model_path=project_path + "model/model.pt",
+        model_path=project_path + "compressed_output/model.pt",
         config=config,
     )
     # Converting back to numpyarray
@@ -102,55 +107,34 @@ def perform_compression(config, project_path):
 
     print("Compression took:", f"{(end - start) / 60:.3} minutes")
 
-    helper.to_pickle(compressed, project_path + "compressed_output/compressed.pickle")
-    helper.to_pickle(
-        data_before, project_path + "compressed_output/cleandata_pre_comp.pickle"
-    )
-    helper.to_pickle(
-        cleared_col_names, project_path + "compressed_output/column_names.pickle"
-    )
+    np.save(project_path + "compressed_output/compressed.npy", compressed)
+    np.save(project_path + "compressed_output/names.npy", cleared_col_names)
 
 
 def perform_decompression(save_as_root, model_name, project_path):
     print("Decompressing...")
-    cleared_col_names = helper.from_pickle(
-        project_path + "compressed_output/column_names.pickle"
-    )
+    cleared_col_names = np.load(project_path + "compressed_output/names.npy")
     start = time.time()
     decompressed = helper.decompress(
-        model_path=project_path + "model/model.pt",
-        input_path=project_path + "compressed_output/compressed.pickle",
+        model_path=project_path + "compressed_output/model.pt",
+        input_path=project_path + "compressed_output/compressed.npy",
         model_name=model_name,
     )
 
     # Converting back to numpyarray
     decompressed = helper.detach(decompressed)
-    normalization_features = pd.read_csv(
-        project_path + "model/cms_normalization_features.csv"
+    normalization_features = np.load(
+        project_path + "compressed_output/normalization_features.npy"
     )
 
     decompressed = helper.renormalize(
         decompressed,
-        normalization_features["True min"],
-        normalization_features["Feature Range"],
+        normalization_features[0],
+        normalization_features[1],
     )
     end = time.time()
     print("Decompression took:", f"{(end - start) / 60:.3} minutes")
-
-    # False by default
-    if save_as_root:
-        helper.to_root(
-            decompressed,
-            cleared_col_names,
-            project_path + "decompressed_output/decompressed.root",
-        )
-        helper.to_pickle(
-            decompressed, project_path + "decompressed_output/decompressed.pickle"
-        )
-    else:
-        helper.to_pickle(
-            decompressed, project_path + "decompressed_output/decompressed.pickle"
-        )
+    np.save(project_path + "decompressed_output/decompressed.npy", decompressed)
 
 
 def print_info(project_path):

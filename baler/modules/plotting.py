@@ -158,3 +158,6 @@ def plot(project_path):
             ax2.clear()
             ax1.clear()
             ax3.clear()
+
+            if index == 3:
+                break

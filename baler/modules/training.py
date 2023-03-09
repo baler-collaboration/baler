@@ -99,12 +99,12 @@ def train(model, variables, train_data, test_data, parent_path, config):
 
     # Constructs a tensor object of the data and wraps them in a TensorDataset object.
     train_ds = TensorDataset(
-        torch.tensor(train_data.values, dtype=torch.float64),
-        torch.tensor(train_data.values, dtype=torch.float64),
+        torch.tensor(train_data, dtype=torch.float64),
+        torch.tensor(train_data, dtype=torch.float64),
     )
     valid_ds = TensorDataset(
-        torch.tensor(test_data.values, dtype=torch.float64),
-        torch.tensor(test_data.values, dtype=torch.float64),
+        torch.tensor(test_data, dtype=torch.float64),
+        torch.tensor(test_data, dtype=torch.float64),
     )
 
     # Converts the TensorDataset into a DataLoader object and combines into one DataLoaders object (a basic wrapper
@@ -172,7 +172,7 @@ def train(model, variables, train_data, test_data, parent_path, config):
         parent_path + "loss_data.csv"
     )
 
-    data_as_tensor = torch.tensor(test_data.values, dtype=torch.float64)
+    data_as_tensor = torch.tensor(test_data, dtype=torch.float64)
     data_as_tensor = data_as_tensor.to(model.device)
     pred_as_tensor = trained_model(data_as_tensor)
 
