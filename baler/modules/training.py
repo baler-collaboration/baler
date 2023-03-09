@@ -163,7 +163,7 @@ def train(model, variables, train_data, test_data, parent_path, config):
         else:
             val_epoch_loss = train_epoch_loss
             val_loss.append(val_epoch_loss)
-            
+
         if config.lr_scheduler:
             lr_scheduler(val_epoch_loss)
         if config.early_stopping:

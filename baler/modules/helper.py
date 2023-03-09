@@ -39,9 +39,9 @@ Baler has three running modes:\n
         config = None
     else:
         config = configClass
-        importlib.import_module(
-            f"projects.{args.project}.{args.project}_config"
-        ).set_config(config)
+        importlib.import_module(name=".", package=f"{args.project}_config").set_config(
+            config
+        )
     return config, args.mode, args.project
 
 
@@ -162,10 +162,12 @@ def process(data_path, custom_norm, test_size, energy_conversion):
         train_set = df
         test_set = train_set
     else:
-        train_set, test_set = data_processing.split(df, test_size=test_size, random_state=1)
-        number_of_columns = len(data_processing.get_columns(df))
+        train_set, test_set = data_processing.split(
+            df, test_size=test_size, random_state=1
+        )
 
-    # train_set, test_set = data_processing.split(df, test_size=test_size, random_state=1)
+    number_of_columns = len(data_processing.get_columns(df))
+
     return (
         train_set,
         test_set,
