@@ -158,10 +158,14 @@ def process(data_path, custom_norm, test_size, energy_conversion):
     normalization_features = data_processing.find_minmax(df)
     df = normalize(df, custom_norm, cleared_col_names)
     full_norm = df
-    train_set, test_set = data_processing.split(df, test_size=test_size, random_state=1)
-    number_of_columns = len(data_processing.get_columns(df))
+    if not test_size:
+        train_set = df
+        test_set = train_set
+    else:
+        train_set, test_set = data_processing.split(df, test_size=test_size, random_state=1)
+        number_of_columns = len(data_processing.get_columns(df))
 
-    train_set, test_set = data_processing.split(df, test_size=test_size, random_state=1)
+    # train_set, test_set = data_processing.split(df, test_size=test_size, random_state=1)
     return (
         train_set,
         test_set,
