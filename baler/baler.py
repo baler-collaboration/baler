@@ -4,7 +4,6 @@ import time
 import pandas as pd
 
 import modules.helper as helper
-import importlib
 
 
 def main():
@@ -12,8 +11,6 @@ def main():
     project_path = f"projects/{project_name}/"
     if mode == "newProject":
         helper.create_new_project(project_name)
-    elif mode == "pp":
-        pre_processing(config.input_path, project_name)
     elif mode == "train":
         perform_training(config, project_path)
     elif mode == "plot":
@@ -24,12 +21,6 @@ def main():
         perform_decompression(config.save_as_root, config.model_name, project_path)
     elif mode == "info":
         print_info(project_path)
-
-
-def pre_processing(input_path, project_name):
-    importlib.import_module(
-        f"projects.{project_name}.{project_name}_config"
-    ).pre_processing(input_path)
 
 
 def perform_training(config, project_path):
