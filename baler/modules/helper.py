@@ -39,10 +39,10 @@ Baler has three running modes:\n
         config = None
     else:
         config = configClass
-        importlib.import_module(name=".", package=f"{args.project}_config").set_config(
-            config
-        )
-    return config, args.mode, args.project
+        importlib.import_module(
+            f"projects.{args.project}.{args.project}_config"
+        ).set_config(config)
+        return args.mode, args.project
 
 
 def create_new_project(project_name: str, base_path: str = "projects") -> None:
