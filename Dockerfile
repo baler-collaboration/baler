@@ -78,5 +78,5 @@ RUN apt update && \
     mkdir -p /etc/fixuid && \
     printf "user: $USER\ngroup: $GROUP\n" > /etc/fixuid/config.yml
 
-USER docker:docker
-ENTRYPOINT ["sh", "-c", "fixuid && python baler"]
+COPY entrypoint.sh entrypoint.sh
+ENTRYPOINT ["./entrypoint.sh"]
