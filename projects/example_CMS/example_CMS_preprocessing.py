@@ -1,7 +1,12 @@
 import uproot
+import numpy as np
+import pandas as pd
+
+PROJECT_NAME = "example_CMS"
+DATA_PATH = "./data/example_CMS/example_CMS.root"
 
 
-def pre_processing(input_path, output_path):
+def pre_processing():
 
     Branch = "Events"
     Collection = "recoGenJets_slimmedGenJets__PAT."
@@ -19,7 +24,7 @@ def pre_processing(input_path, output_path):
     ]
 
     # Load data
-    tree = uproot.open(input_path)[Branch][Collection][Objects]
+    tree = uproot.open(DATA_PATH)[Branch][Collection][Objects]
     # Type clearing
     names = type_clearing(tree)
     df = tree.arrays(names, library="pd")
@@ -28,8 +33,11 @@ def pre_processing(input_path, output_path):
     df = df.reset_index(drop=True)
     df = df.dropna()
     global cleared_column_names
-    cleared_column_names = list(df)
-    df.to_pickle(output_path)
+    cleared_column_names = np.array(list(df))
+    arr = df.to_numpy()
+
+    np.save(f"./data/{PROJECT_NAME}/{PROJECT_NAME}_names.npy", cleared_column_names)
+    np.save(f"./data/{PROJECT_NAME}/{PROJECT_NAME}_data.npy", arr)
 
 
 def type_clearing(tt_tree):
@@ -54,7 +62,4 @@ def type_clearing(tt_tree):
     return column_names
 
 
-data_path_beofre_pre_processing = "./data/example_CMS/example_CMS.root"
-output_path = "./data/example_CMS/example_CMS.pickle"
-
-pre_processing(data_path_beofre_pre_processing, output_path)
+pre_processing()
