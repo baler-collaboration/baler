@@ -7,10 +7,10 @@ import modules.helper as helper
 
 
 def main():
-    config, mode, project = helper.get_arguments()
-    project_path = f"projects/{project}/"
+    config, mode, project_name = helper.get_arguments()
+    project_path = f"projects/{project_name}/"
     if mode == "newProject":
-        helper.create_new_project(project)
+        helper.create_new_project(project_name)
     elif mode == "train":
         perform_training(config, project_path)
     elif mode == "plot":
@@ -18,23 +18,42 @@ def main():
     elif mode == "compress":
         perform_compression(config, project_path)
     elif mode == "decompress":
-        perform_decompression(config, project_path)
+        perform_decompression(config.save_as_root, config.model_name, project_path)
     elif mode == "info":
         print_info(project_path)
 
 
 def perform_training(config, project_path):
-    train_set, test_set, number_of_columns, normalization_features = helper.process(
-        config["input_path"], config
+    (
+        train_set_norm,
+        test_set_norm,
+        number_of_columns,
+        normalization_features,
+        full_norm,
+        full_pre_norm,
+        cleared_col_names,
+    ) = helper.process(
+        config.input_path,
+        config.custom_norm,
+        config.test_size,
+        config.energy_conversion,
     )
-    train_set_norm = helper.normalize(train_set, config)
-    test_set_norm = helper.normalize(test_set, config)
 
-    ModelObject = helper.model_init(config=config)
-    model = ModelObject(n_features=number_of_columns, z_dim=config["latent_space_size"])
+    try:
+        config.latent_space_size = int(number_of_columns // config.compression_ratio)
+        config.number_of_columns = number_of_columns
+    except AttributeError:
+        print(config.latent_space_size, config.number_of_columns)
+        assert number_of_columns == config.number_of_columns
+    device = helper.get_device()
+
+    ModelObject = helper.model_init(config.model_name)
+    model = ModelObject(
+        device=device, n_features=number_of_columns, z_dim=config.latent_space_size
+    )
 
     output_path = project_path + "training/"
-    test_data_tensor, reconstructed_data_tensor = helper.train(
+    test_data_tensor, reconstructed_data_tensor, trained_model = helper.train(
         model, number_of_columns, train_set_norm, test_set_norm, output_path, config
     )
     test_data = helper.detach(test_data_tensor)
@@ -57,27 +76,23 @@ def perform_training(config, project_path):
 
     helper.to_pickle(test_data_renorm, output_path + "before.pickle")
     helper.to_pickle(reconstructed_data_renorm, output_path + "after.pickle")
+    helper.to_pickle(full_pre_norm, output_path + "fulldata_energy.pickle")
+
     normalization_features.to_csv(project_path + "model/cms_normalization_features.csv")
-    helper.model_saver(model, project_path + "model/model.pt")
+    helper.model_saver(trained_model, project_path + "model/model.pt")
 
 
 def perform_plotting(project_path, config):
     output_path = project_path + "plotting/"
-    helper.plot(
-        output_path,
-        project_path + "training/before.pickle",
-        project_path + "training/after.pickle",
-    )
+    helper.plot(project_path)
     helper.loss_plotter(project_path + "training/loss_data.csv", output_path, config)
 
 
 def perform_compression(config, project_path):
     print("Compressing...")
     start = time.time()
-    compressed, data_before = helper.compress(
+    compressed, data_before, cleared_col_names = helper.compress(
         model_path=project_path + "model/model.pt",
-        number_of_columns=config["number_of_columns"],
-        input_path=config["input_path"],
         config=config,
     )
     # Converting back to numpyarray
@@ -90,16 +105,21 @@ def perform_compression(config, project_path):
     helper.to_pickle(
         data_before, project_path + "compressed_output/cleandata_pre_comp.pickle"
     )
+    helper.to_pickle(
+        cleared_col_names, project_path + "compressed_output/column_names.pickle"
+    )
 
 
-def perform_decompression(config, project_path):
+def perform_decompression(save_as_root, model_name, project_path):
     print("Decompressing...")
+    cleared_col_names = helper.from_pickle(
+        project_path + "compressed_output/column_names.pickle"
+    )
     start = time.time()
     decompressed = helper.decompress(
         model_path=project_path + "model/model.pt",
-        number_of_columns=config["number_of_columns"],
         input_path=project_path + "compressed_output/compressed.pickle",
-        config=config,
+        model_name=model_name,
     )
 
     # Converting back to numpyarray
@@ -117,9 +137,11 @@ def perform_decompression(config, project_path):
     print("Decompression took:", f"{(end - start) / 60:.3} minutes")
 
     # False by default
-    if config["save_as_root"]:
+    if save_as_root:
         helper.to_root(
-            decompressed, config, project_path + "decompressed_output/decompressed.root"
+            decompressed,
+            cleared_col_names,
+            project_path + "decompressed_output/decompressed.root",
         )
         helper.to_pickle(
             decompressed, project_path + "decompressed_output/decompressed.pickle"
