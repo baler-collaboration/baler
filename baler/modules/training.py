@@ -17,9 +17,7 @@ def fit(model, train_dl, train_ds, model_children, regular_param, optimizer, RHO
 
     running_loss = 0.0
     n_data = int(len(train_ds) / train_dl.batch_size)
-    for inputs in tqdm(
-        train_dl, total=n_data, desc="# Training", file=sys.stdout
-    ):
+    for inputs in tqdm(train_dl, total=n_data, desc="# Training", file=sys.stdout):
         optimizer.zero_grad()
         reconstructions = model(inputs)
         loss, mse_loss, l1_loss = utils.sparse_loss_function_L1(
@@ -48,9 +46,7 @@ def validate(model, test_dl, test_ds, model_children, reg_param):
     running_loss = 0.0
     n_data = int(len(test_ds) / test_dl.batch_size)
     with torch.no_grad():
-        for inputs in tqdm(
-            test_dl, total=n_data, desc="# Validating", file=sys.stdout
-        ):
+        for inputs in tqdm(test_dl, total=n_data, desc="# Validating", file=sys.stdout):
             reconstructions = model(inputs)
             loss = utils.sparse_loss_function_L1(
                 model_children=model_children,

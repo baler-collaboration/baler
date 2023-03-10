@@ -31,9 +31,7 @@ def perform_training(config, project_path):
     test_set_norm = helper.normalize(test_set, config)
 
     ModelObject = helper.model_init(config=config)
-    model = ModelObject(
-        n_features=number_of_columns, z_dim=config["latent_space_size"]
-    )
+    model = ModelObject(n_features=number_of_columns, z_dim=config["latent_space_size"])
 
     output_path = project_path + "training/"
     test_data_tensor, reconstructed_data_tensor = helper.train(
