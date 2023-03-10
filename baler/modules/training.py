@@ -19,7 +19,6 @@ def fit(model, train_dl, train_ds, model_children, regular_param, optimizer, RHO
     running_loss = 0.0
     counter = 0
     n_data = int(len(train_ds) / train_dl.batch_size)
-
     for inputs in tqdm(train_dl):
         counter += 1
         inputs = inputs.to(model.device)
