@@ -153,9 +153,9 @@ def process(data_path, names_path, custom_norm, test_size, energy_conversion):
     # df = data_processing.load_data(data_path)
     # cleared_col_names = np.load()
 
-    # if energy_conversion:
-    #     print("Converting mass to energy with eta, pt & mass")
-    #     df = convert_mass_to_energy(df, cleared_col_names)
+    if energy_conversion:
+        print("Converting mass to energy with eta, pt & mass")
+        df = convert_mass_to_energy(df, cleared_col_names)
 
     full_pre_norm = data
     normalization_features = data_processing.find_minmax(data)
@@ -208,7 +208,6 @@ def detach(tensor):
 
 
 def compress(model_path, config):
-
     # Give the encoding function the correct input as tensor
     data_before = np.load(config.data_path)
     data = normalize(data_before, config.custom_norm)

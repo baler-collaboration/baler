@@ -3,7 +3,7 @@ def set_config(c):
     c.names_path = "data/example_LHCb/example_LHCb_names.npy"
     c.compression_ratio = 2.0
     c.energy_conversion = False
-    c.epochs = 5
+    c.epochs = 20
     c.early_stopping = True
     c.lr_scheduler = False
     c.patience = 100

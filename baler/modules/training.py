@@ -7,6 +7,7 @@ from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
 
 import modules.utils as utils
+import modules.helper as helper
 
 import random
 import numpy as np
@@ -20,9 +21,7 @@ def fit(model, train_dl, train_ds, model_children, regular_param, optimizer, RHO
     running_loss = 0.0
     counter = 0
     n_data = int(len(train_ds) / train_dl.batch_size)
-    for inputs, labels in tqdm(
-        train_dl, total=n_data, desc="# Training", file=sys.stdout
-    ):
+    for inputs in tqdm(train_dl, total=n_data, desc="# Training", file=sys.stdout):
         counter += 1
         inputs = inputs.to(model.device)
         optimizer.zero_grad()
@@ -53,9 +52,7 @@ def validate(model, test_dl, test_ds, model_children, reg_param):
     running_loss = 0.0
     n_data = int(len(test_ds) / test_dl.batch_size)
     with torch.no_grad():
-        for inputs, labels in tqdm(
-            test_dl, total=n_data, desc="# Validating", file=sys.stdout
-        ):
+        for inputs in tqdm(test_dl):
             counter += 1
             inputs = inputs.to(model.device)
             reconstructions = model(inputs)
@@ -87,6 +84,7 @@ def train(model, variables, train_data, test_data, parent_path, config):
     g = torch.Generator()
     g.manual_seed(0)
 
+    test_size = config.test_size
     learning_rate = config.lr
     bs = config.batch_size
     reg_param = config.reg_param
@@ -97,17 +95,15 @@ def train(model, variables, train_data, test_data, parent_path, config):
 
     model_children = list(model.children())
 
-    # Constructs a tensor object of the data and wraps them in a TensorDataset object.
-    train_ds = TensorDataset(
-        torch.tensor(train_data, dtype=torch.float64),
-        torch.tensor(train_data, dtype=torch.float64),
-    )
-    valid_ds = TensorDataset(
-        torch.tensor(test_data, dtype=torch.float64),
-        torch.tensor(test_data, dtype=torch.float64),
-    )
+    # Initialize model with appropriate device
+    device = helper.get_device()
+    model = model.to(device)
 
-    # Converts the TensorDataset into a DataLoader object and combines into one DataLoaders object (a basic wrapper
+    # Converting data to tensors
+    train_ds = torch.tensor(train_data, dtype=torch.float64, device=device)
+    valid_ds = torch.tensor(train_data, dtype=torch.float64, device=device)
+
+    # Pushing input data into the torch-DataLoader object and combines into one DataLoaders object (a basic wrapper
     # around several DataLoader objects).
     train_dl = DataLoader(
         train_ds, batch_size=bs, shuffle=False, worker_init_fn=seed_worker, generator=g
@@ -150,14 +146,19 @@ def train(model, variables, train_data, test_data, parent_path, config):
 
         train_loss.append(train_epoch_loss)
 
-        val_epoch_loss = validate(
-            model=trained_model,
-            test_dl=valid_dl,
-            test_ds=valid_ds,
-            model_children=model_children,
-            reg_param=reg_param,
-        )
-        val_loss.append(val_epoch_loss)
+        if test_size:
+            val_epoch_loss = validate(
+                model=trained_model,
+                test_dl=valid_dl,
+                test_ds=valid_ds,
+                model_children=model_children,
+                reg_param=reg_param,
+            )
+            val_loss.append(val_epoch_loss)
+        else:
+            val_epoch_loss = train_epoch_loss
+            val_loss.append(val_epoch_loss)
+
         if config.lr_scheduler:
             lr_scheduler(val_epoch_loss)
         if config.early_stopping:

@@ -26,8 +26,8 @@ def main():
 
 def perform_training(config, project_path):
     (
-        train_set,
-        test_set,
+        train_set_norm,
+        test_set_norm,
         number_of_columns,
         normalization_features,
         full_norm,
@@ -40,8 +40,7 @@ def perform_training(config, project_path):
         config.test_size,
         config.energy_conversion,
     )
-    train_set_norm = helper.normalize(train_set, config.custom_norm)
-    test_set_norm = helper.normalize(test_set, config.custom_norm)
+
     try:
         config.latent_space_size = int(number_of_columns // config.compression_ratio)
         config.number_of_columns = number_of_columns
@@ -57,7 +56,7 @@ def perform_training(config, project_path):
 
     output_path = project_path + "training/"
     test_data_tensor, reconstructed_data_tensor, trained_model = helper.train(
-        model, number_of_columns, full_norm, test_set_norm, output_path, config
+        model, number_of_columns, train_set_norm, test_set_norm, output_path, config
     )
     test_data = helper.detach(test_data_tensor)
     reconstructed_data = helper.detach(reconstructed_data_tensor)
