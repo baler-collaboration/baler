@@ -6,6 +6,7 @@ import torch
 from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
 
+import modules.helper as helper
 import modules.utils as utils
 
 import random
@@ -25,6 +26,7 @@ def fit(model, train_dl, train_ds, model_children, regular_param, optimizer, RHO
     ):
         counter += 1
         inputs = inputs.to(model.device)
+
         optimizer.zero_grad()
         reconstructions = model(inputs)
         loss, mse_loss, l1_loss = utils.sparse_loss_function_EMD_L1(
@@ -58,6 +60,7 @@ def validate(model, test_dl, test_ds, model_children, reg_param):
         ):
             counter += 1
             inputs = inputs.to(model.device)
+
             reconstructions = model(inputs)
             loss = utils.sparse_loss_function_EMD_L1(
                 model_children=model_children,
@@ -98,17 +101,15 @@ def train(model, variables, train_data, test_data, parent_path, config):
 
     model_children = list(model.children())
 
-    # Constructs a tensor object of the data and wraps them in a TensorDataset object.
-    train_ds = TensorDataset(
-        torch.tensor(train_data.values, dtype=torch.float64),
-        torch.tensor(train_data.values, dtype=torch.float64),
-    )
-    valid_ds = TensorDataset(
-        torch.tensor(test_data.values, dtype=torch.float64),
-        torch.tensor(test_data.values, dtype=torch.float64),
-    )
+    # Initialize model with appropriate device
+    device = helper.get_device()
+    model = model.to(device)
 
-    # Converts the TensorDataset into a DataLoader object and combines into one DataLoaders object (a basic wrapper
+    # Converting data to tensors
+    train_ds = torch.tensor(train_data.values, dtype=torch.float64, device=device)
+    valid_ds = torch.tensor(train_data.values, dtype=torch.float64, device=device)
+
+    # Pushing input data into the torch-DataLoader object and combines into one DataLoaders object (a basic wrapper
     # around several DataLoader objects).
     train_dl = DataLoader(
         train_ds, batch_size=bs, shuffle=False, worker_init_fn=seed_worker, generator=g
@@ -116,6 +117,7 @@ def train(model, variables, train_data, test_data, parent_path, config):
     valid_dl = DataLoader(
         valid_ds, batch_size=bs, worker_init_fn=seed_worker, generator=g
     )  ## Used to be batch_size = bs * 2
+
 
     ## Select Optimizer
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
@@ -181,5 +183,6 @@ def train(model, variables, train_data, test_data, parent_path, config):
     data_as_tensor = torch.tensor(test_data.values, dtype=torch.float64)
     data_as_tensor = data_as_tensor.to(model.device)
     pred_as_tensor = trained_model(data_as_tensor)
+
 
     return data_as_tensor, pred_as_tensor, trained_model

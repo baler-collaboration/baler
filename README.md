@@ -4,6 +4,10 @@
 # Introduction
 Baler is a tool used to test the feasibility of compressing different types of scientific data using machine learning-based autoencoders.
 
+If you wish to contribute, please see [contributing](https://github.com/baler-compressor/baler/documentation/CONTRIBUTING.md)
+
+---
+
 The main object the user has to produce before using Baler is a configuration file. The configuration primarily contains:
 * The path to the data which is going to be compressed
 * The name of the autoencoder to be used. Either pre-defined or homemade 
@@ -265,6 +269,15 @@ docker://ghcr.io/uomresearchit/baler:latest \
 In order to run Baler on a managed platform may require additional options to be uesd to work with the system wide Apptainer configuration and respect good practice such as writing to appropriate storage areas.
 
 An example implementation has been made on a Univerity of Manchester (UK) GPU equipped cluster, named Blackett.
+
+#### Ensure the Container is **not** written to the home area ####
+
+By default, Apptainer will write to your home area, this is not desirable on Blackett. To control this:
+
+```console
+cd /to/data/dir
+export APPTAINER_CACHEDIR=${PWD} # ensure you are in hard disc area, not shared
+```
 
 #### Create an Apptainer sandbox ####
 
