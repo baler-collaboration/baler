@@ -42,7 +42,7 @@ Baler has three running modes:\n
         importlib.import_module(
             f"projects.{args.project}.{args.project}_config"
         ).set_config(config)
-        return args.mode, args.project
+        return config, args.mode, args.project
 
 
 def create_new_project(project_name: str, base_path: str = "projects") -> None:
@@ -218,7 +218,6 @@ def compress(model_path, config):
     data_before = numpy.array(data)
     data = normalize(data, config.custom_norm, cleared_col_names)
 
-
     # Initialise and load the model correctly.
     ModelObject = data_processing.initialise_model(config.model_name)
     model = data_processing.load_model(
@@ -236,7 +235,6 @@ def compress(model_path, config):
     data = normalize(data, config.custom_norm, cleared_col_names)
     data_tensor = numpy_to_tensor(data).to(model.device)
 
-
     compressed = model.encode(data_tensor)
     return compressed, data_before, cleared_col_names
 
@@ -247,7 +245,6 @@ def decompress(model_path, input_path, model_name):
     latent_space_size = len(data[0])
     modelDict = torch.load(str(model_path))
     number_of_columns = len(modelDict[list(modelDict.keys())[-1]])
-
 
     # Initialise and load the model correctly.
     ModelObject = data_processing.initialise_model(model_name)
@@ -261,7 +258,6 @@ def decompress(model_path, input_path, model_name):
     # Load the data & convert to tensor
     data = data_loader(input_path)
     data_tensor = numpy_to_tensor(data).to(model.device)
-
 
     decompressed = model.decode(data_tensor)
     return decompressed
