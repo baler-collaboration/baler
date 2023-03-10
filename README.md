@@ -139,6 +139,7 @@ Running with Docker requires slight modifications to the above commands. The bas
 
 ```console
 docker run \
+-u ${UID}:${GID} \ 
 --mount type=bind,source=${PWD}/projects/,target=/baler-root/projects \
 --mount type=bind,source=${PWD}/data/,target=/baler-root/data \
 ghcr.io/uomresearchit/baler:latest 
@@ -147,6 +148,7 @@ ghcr.io/uomresearchit/baler:latest
 
 Where:
   * `docker run` invokes docker and specifies the running of a container
+  * `-u ${UID}:${GID}` tells the container to use your username to create files
   * `--mount type=bind,source=${PWD}/projects/,target=/baler-root/projects` mounts the local (host) directory `./projects` to the container at `/projects`
   * `ghcr.io/uomresearchit/baler:latest` specifies the container to run
   
@@ -156,6 +158,7 @@ Therefore the three commands detailed above become:
 
 ```console
 docker run \
+-u ${UID}:${GID} \ 
 --mount type=bind,source=${PWD}/projects/,target=/baler-root/projects \
 --mount type=bind,source=${PWD}/data/,target=/baler-root/data \
 ghcr.io/uomresearchit/baler:latest \
@@ -166,6 +169,7 @@ ghcr.io/uomresearchit/baler:latest \
 ### Compress: ### 
 ```console
 docker run \
+-u ${UID}:${GID} \ 
 --mount type=bind,source=${PWD}/projects/,target=/baler-root/projects \
 --mount type=bind,source=${PWD}/data/,target=/baler-root/data \
 ghcr.io/uomresearchit/baler:latest \
@@ -176,6 +180,7 @@ ghcr.io/uomresearchit/baler:latest \
 ### Decompress: ###
 ```console
 docker run \
+-u ${UID}:${GID} \ 
 --mount type=bind,source=${PWD}/projects/,target=/baler-root/projects \
 --mount type=bind,source=${PWD}/data/,target=/baler-root/data \
 ghcr.io/uomresearchit/baler:latest \
@@ -193,6 +198,7 @@ To allow the Docker image access to the system GPU a modification to the standar
 ```console
 docker run \
 --gpus all \
+-u ${UID}:${GID} \ 
 --mount type=bind,source=${PWD}/projects/,target=/baler-root/projects \
 --mount type=bind,source=${PWD}/data/,target=/baler-root/data \
 ghcr.io/uomresearchit/baler:latest \
@@ -215,6 +221,7 @@ This image may be run using (e.g.):
 
 ```console
 docker run \
+-u ${UID}:${GID} \ 
 --mount type=bind,source=${PWD}/projects/,target=/baler-root/projects \
 --mount type=bind,source=${PWD}/data/,target=/baler-root/data \
 baler:latest \
@@ -232,6 +239,7 @@ An example command is given here:
 
 ```console
 docker run \
+-u ${UID}:${GID} \ 
 --mount type=bind,source=${PWD}/projects/,target=/baler-root/projects \
 --mount type=bind,source=${PWD}/data/,target=/baler-root/data \
 --mount type=bind,source=${PWD}/baler/modules,target=/baler-root/baler/modules \
