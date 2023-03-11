@@ -1,7 +1,7 @@
 def set_config(c):
     c.input_path = "data/example_CMS/example_CMS.pickle"
     c.compression_ratio = 2.0
-    c.epochs = 5
+    c.epochs = 10
     c.early_stopping = False
     c.lr_scheduler = False
     c.patience = 100
