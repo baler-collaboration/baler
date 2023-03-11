@@ -21,9 +21,7 @@ def fit(model, train_dl, train_ds, model_children, regular_param, optimizer, RHO
     running_loss = 0.0
     counter = 0
     n_data = int(len(train_ds) / train_dl.batch_size)
-    for inputs, labels in tqdm(
-        train_dl, total=n_data, desc="# Training", file=sys.stdout
-    ):
+    for inputs in tqdm(train_dl):
         counter += 1
         inputs = inputs.to(model.device)
 
@@ -55,9 +53,7 @@ def validate(model, test_dl, test_ds, model_children, reg_param):
     running_loss = 0.0
     n_data = int(len(test_ds) / test_dl.batch_size)
     with torch.no_grad():
-        for inputs, labels in tqdm(
-            test_dl, total=n_data, desc="# Validating", file=sys.stdout
-        ):
+        for inputs in tqdm(test_dl):
             counter += 1
             inputs = inputs.to(model.device)
 
@@ -117,7 +113,6 @@ def train(model, variables, train_data, test_data, parent_path, config):
     valid_dl = DataLoader(
         valid_ds, batch_size=bs, worker_init_fn=seed_worker, generator=g
     )  ## Used to be batch_size = bs * 2
-
 
     ## Select Optimizer
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
@@ -183,6 +178,5 @@ def train(model, variables, train_data, test_data, parent_path, config):
     data_as_tensor = torch.tensor(test_data.values, dtype=torch.float64)
     data_as_tensor = data_as_tensor.to(model.device)
     pred_as_tensor = trained_model(data_as_tensor)
-
 
     return data_as_tensor, pred_as_tensor, trained_model
