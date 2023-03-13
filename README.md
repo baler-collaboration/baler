@@ -4,7 +4,8 @@
 # Introduction
 Baler is a tool used to test the feasibility of compressing different types of scientific data using machine learning-based autoencoders.
 
-If you wish to contribute, please see [contributing](https://github.com/baler-compressor/baler/documentation/CONTRIBUTING.md)
+If you wish to contribute, please see [contributing](https://github.com/baler-compressor/baler/blob/main/documentation/CONTRIBUTING.md)
+
 
 ---
 
