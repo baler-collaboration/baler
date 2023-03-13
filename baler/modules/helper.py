@@ -219,7 +219,6 @@ def compress(model_path, config):
     except AttributeError:
         assert number_of_columns == config.number_of_columns
 
-
     # Initialise and load the model correctly.
     ModelObject = data_processing.initialise_model(config.model_name)
     model = data_processing.load_model(

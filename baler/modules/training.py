@@ -109,7 +109,6 @@ def train(model, variables, train_data, test_data, parent_path, config):
     )
     valid_dl = DataLoader(
         valid_ds, batch_size=bs, worker_init_fn=seed_worker, generator=g
-
     )  # Used to be batch_size = bs * 2
 
     # Select Optimizer
