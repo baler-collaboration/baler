@@ -50,9 +50,14 @@ def loss_plot(path_to_loss_data, output_path, config):
 
 
 def plot(project_path, config):
+    # names_path = config.names_path
+    # before_path = config.data_path
+    # after_path = project_path + "decompressed_output/decompressed.npy"
+
+    output_path = project_path + "training/"
     names_path = config.names_path
-    before_path = config.data_path
-    after_path = project_path + "decompressed_output/decompressed.npy"
+    before_path = output_path + "before.npy"
+    after_path = output_path + "after.npy"
 
     column_names = np.load(names_path)
     before = pd.DataFrame(np.load(before_path), columns=column_names)

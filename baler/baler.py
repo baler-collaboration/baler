@@ -79,6 +79,8 @@ def perform_training(config, project_path):
     # helper.to_pickle(test_data_renorm, output_path + "before.pickle")
     # helper.to_pickle(reconstructed_data_renorm, output_path + "after.pickle")
     # helper.to_pickle(full_pre_norm, output_path + "fulldata_energy.pickle")
+    np.save(output_path + "before.npy", test_data_renorm)
+    np.save(output_path + "after.npy", reconstructed_data_renorm)
 
     np.save(
         project_path + "compressed_output/normalization_features.npy",
