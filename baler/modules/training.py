@@ -1,16 +1,14 @@
-import sys
+import random
 import time
 
+import numpy as np
 import pandas as pd
 import torch
-from torch.utils.data import DataLoader, TensorDataset
+from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 import modules.utils as utils
 import modules.helper as helper
-
-import random
-import numpy as np
 
 
 def fit(model, train_dl, train_ds, model_children, regular_param, optimizer, RHO, l1):
@@ -21,7 +19,8 @@ def fit(model, train_dl, train_ds, model_children, regular_param, optimizer, RHO
     running_loss = 0.0
     counter = 0
     n_data = int(len(train_ds) / train_dl.batch_size)
-    for inputs in tqdm(train_dl, total=n_data, desc="# Training", file=sys.stdout):
+
+    for inputs in tqdm(train_dl):
         counter += 1
         inputs = inputs.to(model.device)
         optimizer.zero_grad()
@@ -88,7 +87,7 @@ def train(model, variables, train_data, test_data, parent_path, config):
     learning_rate = config.lr
     bs = config.batch_size
     reg_param = config.reg_param
-    RHO = config.RHO
+    rho = config.RHO
     l1 = config.l1
     epochs = config.epochs
     latent_space_size = config.latent_space_size
@@ -110,19 +109,20 @@ def train(model, variables, train_data, test_data, parent_path, config):
     )
     valid_dl = DataLoader(
         valid_ds, batch_size=bs, worker_init_fn=seed_worker, generator=g
-    )  ## Used to be batch_size = bs * 2
 
-    ## Select Optimizer
+    )  # Used to be batch_size = bs * 2
+
+    # Select Optimizer
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
-    ## Activate early stopping
-    if config.early_stopping == True:
+    # Activate early stopping
+    if config.early_stopping:
         early_stopping = utils.EarlyStopping(
             patience=config.patience, min_delta=config.min_delta
         )  # Changes to patience & min_delta can be made in configs
 
-    ## Activate LR Scheduler
-    if config.lr_scheduler == True:
+    # Activate LR Scheduler
+    if config.lr_scheduler:
         lr_scheduler = utils.LRScheduler(optimizer=optimizer, patience=config.patience)
 
     # train and validate the autoencoder neural network
@@ -139,7 +139,7 @@ def train(model, variables, train_data, test_data, parent_path, config):
             train_ds=train_ds,
             model_children=model_children,
             optimizer=optimizer,
-            RHO=RHO,
+            RHO=rho,
             regular_param=reg_param,
             l1=l1,
         )
