@@ -52,8 +52,8 @@ def loss_plot(path_to_loss_data, output_path, config):
 
 def plot(project_path):
     output_path = project_path + "plotting/"
-    before_path = project_path + "training/before_500.pickle"
-    after_path = project_path + "training/after_500.pickle"
+    before_path = project_path + "training/before.pickle"
+    after_path = project_path + "training/after.pickle"
 
     data_path = "data/open_cms_data_axel.pickle"
     decomp_path = project_path + "decompressed_output/decompressed.pickle"
