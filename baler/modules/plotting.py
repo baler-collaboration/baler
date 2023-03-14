@@ -53,7 +53,6 @@ def loss_plot(path_to_loss_data, output_path, config):
 
 
 def plot(project_path, config):
-
     output_path = project_path + "training/"
     names_path = config.names_path
     before_path = output_path + "before.npy"
