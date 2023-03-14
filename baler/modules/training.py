@@ -43,7 +43,7 @@ def fit(model, train_dl, train_ds, model_children, regular_param, optimizer, RHO
 
     epoch_loss = running_loss / counter
     print(f"# Finished. Training Loss: {loss:.6f}")
-    return epoch_loss, mse_loss, l1_loss
+    return epoch_loss, mse_loss, l1_loss, model
 
 
 def validate(model, test_dl, test_ds, model_children, reg_param):
@@ -135,7 +135,7 @@ def train(model, variables, train_data, test_data, parent_path, config):
     for epoch in range(epochs):
         print(f"Epoch {epoch + 1} of {epochs}")
 
-        train_epoch_loss, mse_loss_fit, regularizer_loss_fit = fit(
+        train_epoch_loss, mse_loss_fit, regularizer_loss_fit, trained_model = fit(
             model=model,
             train_dl=train_dl,
             train_ds=train_ds,
@@ -157,9 +157,9 @@ def train(model, variables, train_data, test_data, parent_path, config):
         )
         val_loss.append(val_epoch_loss)
         if config.lr_scheduler is True:
-            lr_scheduler(train_epoch_loss)
+            lr_scheduler(val_epoch_loss)
         if config.early_stopping is True:
-            early_stopping(train_epoch_loss)
+            early_stopping(val_epoch_loss)
             if early_stopping.early_stop:
                 break
         
@@ -188,7 +188,7 @@ def train(model, variables, train_data, test_data, parent_path, config):
     )
 
     data_as_tensor = torch.tensor(test_data.values, dtype=torch.float64)
-    data_as_tensor = data_as_tensor.to(model.device)
-    pred_as_tensor = model(data_as_tensor)
+    data_as_tensor = data_as_tensor.to(trained_model.device)
+    pred_as_tensor = trained_model(data_as_tensor)
 
-    return data_as_tensor, pred_as_tensor
+    return data_as_tensor, pred_as_tensor, trained_model

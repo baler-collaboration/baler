@@ -47,7 +47,7 @@ def perform_training(config, project_path):
     )
 
     output_path = project_path + "training/"
-    test_data_tensor, reconstructed_data_tensor = helper.train(
+    test_data_tensor, reconstructed_data_tensor, trained_model = helper.train(
         model, number_of_columns, train_set, test_set, output_path, config
     )
     test_data = helper.detach(test_data_tensor)
@@ -73,7 +73,7 @@ def perform_training(config, project_path):
     helper.to_pickle(test_data_renorm, output_path + "before_unnorm.pickle")
     helper.to_pickle(reconstructed_data_renorm, output_path + "after_unnorm.pickle")
     normalization_features.to_csv(project_path + "model/cms_normalization_features.csv")
-    helper.model_saver(model, project_path + "model/model.pt")
+    helper.model_saver(trained_model, project_path + "model/model.pt")
 
 
 def perform_plotting(project_path, config):
