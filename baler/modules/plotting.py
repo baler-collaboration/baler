@@ -63,11 +63,6 @@ def plot(project_path, config):
 
     column_names = np.load(names_path)
 
-    test = np.load(before_path)
-    print(np.mean(test[0]))
-
-    # sys.exit()
-
     before = pd.DataFrame(np.load(before_path), columns=column_names)
     after = pd.DataFrame(np.load(after_path), columns=column_names)
 
@@ -161,5 +156,5 @@ def plot(project_path, config):
             ax1.clear()
             ax3.clear()
 
-            if index == 3:
-                break
+            # if index == 3:
+            #    break

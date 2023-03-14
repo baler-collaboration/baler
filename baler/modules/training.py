@@ -100,7 +100,7 @@ def train(model, variables, train_data, test_data, parent_path, config):
 
     # Converting data to tensors
     train_ds = torch.tensor(train_data, dtype=torch.float64, device=device)
-    valid_ds = torch.tensor(train_data, dtype=torch.float64, device=device)
+    valid_ds = torch.tensor(test_data, dtype=torch.float64, device=device)
 
     # Pushing input data into the torch-DataLoader object and combines into one DataLoaders object (a basic wrapper
     # around several DataLoader objects).

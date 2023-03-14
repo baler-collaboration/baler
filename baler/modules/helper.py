@@ -161,7 +161,6 @@ def process(data_path, names_path, custom_norm, test_size, energy_conversion):
         train_set = data
         test_set = train_set
     else:
-        print(test_size)
         train_set, test_set = data_processing.split(
             data, test_size=test_size, random_state=1
         )
