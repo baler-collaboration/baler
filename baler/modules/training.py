@@ -176,7 +176,7 @@ def train(model, variables, train_data, test_data, parent_path, config):
                 path_pred = os.path.join(parent_path, f"before_{epoch}.pickle")
 
                 helper.model_saver(model, path)
-                data_tensor = torch.tensor(test_data.values, dtype=torch.float64).to(
+                data_tensor = torch.tensor(test_data, dtype=torch.float64).to(
                     model.device
                 )
                 pred_tensor = model(data_tensor)
