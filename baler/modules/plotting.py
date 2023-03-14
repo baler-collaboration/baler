@@ -43,6 +43,7 @@ def loss_plot(path_to_loss_data, output_path, config):
     for i in range(len(conf_list)):
         plt.plot([], [], " ", label=str_list[i] + " " + str(conf_list[i]))
     plt.xlabel("Epochs")
+    plt.yscale("log")
     plt.ylabel("Loss")
     plt.legend(loc="best")
     plt.savefig(output_path + "_Loss_plot.pdf")
@@ -54,10 +55,22 @@ def plot(project_path):
     before_path = project_path + "training/before.pickle"
     after_path = project_path + "training/after.pickle"
 
-    with open(before_path, "rb") as handle:
-        before = pickle.load(handle)
-    with open(after_path, "rb") as handle:
-        after = pickle.load(handle)
+    data_path = "data/open_cms_data_axel.pickle"
+    decomp_path = project_path + "decompressed_output/decompressed.pickle"
+
+    norm = True
+
+    if norm:
+        with open(before_path, "rb") as handle:
+            before = pickle.load(handle)
+        with open(after_path, "rb") as handle:
+            after = pickle.load(handle)
+
+    else:
+        with open(data_path, "rb") as handle:
+            before = pickle.load(handle)
+        with open(decomp_path, "rb") as handle:
+            after = pickle.load(handle)
 
     before = np.array(before)
     # Added because plotting is not supported for non-DataFrame objects yet.
@@ -158,3 +171,6 @@ def plot(project_path):
             ax2.clear()
             ax1.clear()
             ax3.clear()
+
+            # if index == 3:
+            #    break

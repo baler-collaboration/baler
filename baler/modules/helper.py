@@ -42,7 +42,7 @@ Baler has three running modes:\n
         importlib.import_module(
             f"projects.{args.project}.{args.project}_config"
         ).set_config(config)
-        return config, args.mode, args.project
+    return config, args.mode, args.project
 
 
 def create_new_project(project_name: str, base_path: str = "projects") -> None:
