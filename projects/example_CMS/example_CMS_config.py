@@ -3,7 +3,7 @@ def set_config(c):
     c.names_path = "data/example_CMS/example_CMS_names.npy"
     c.energy_conversion = False
     c.compression_ratio = 2.0
-    c.epochs = 5
+    c.epochs = 10
     c.early_stopping = False
     c.lr_scheduler = False
     c.patience = 100
