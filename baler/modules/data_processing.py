@@ -92,16 +92,13 @@ def clean_data(df, config):
 
 
 def find_minmax(data):
-    data = np.array(data)
     data = list(data)
     true_max_list = np.apply_along_axis(np.max, axis=0, arr=data)
     true_min_list = np.apply_along_axis(np.min, axis=0, arr=data)
 
     feature_range_list = true_max_list - true_min_list
 
-    normalization_features = pd.DataFrame(
-        {"True min": true_min_list, "Feature Range": feature_range_list}
-    )
+    normalization_features = np.array([true_min_list, feature_range_list])
     return normalization_features
 
 

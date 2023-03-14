@@ -9,6 +9,8 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 import modules.data_processing as data_processing
 import modules.helper as helper
 
+import sys
+
 
 def to_percent(y, position):
     # Ignore the passed in position. This has the effect of scaling the default
@@ -23,11 +25,11 @@ def to_percent(y, position):
 
 
 def loss_plot(path_to_loss_data, output_path, config):
-    loss_data = pd.read_csv(path_to_loss_data)
+    loss_data = np.load(path_to_loss_data)
     str_list = ["Epochs:", "Model Name:", "Reg. Param:", "lr:", "BS:"]
 
-    val_loss = loss_data["Val Loss"]
-    train_loss = loss_data["Train Loss"]
+    train_loss = loss_data[0]
+    val_loss = loss_data[1]
     conf_list = [
         len(train_loss),
         config.model_name,
@@ -43,31 +45,23 @@ def loss_plot(path_to_loss_data, output_path, config):
     for i in range(len(conf_list)):
         plt.plot([], [], " ", label=str_list[i] + " " + str(conf_list[i]))
     plt.xlabel("Epochs")
+    plt.yscale("log")
     plt.ylabel("Loss")
     plt.legend(loc="best")
     plt.savefig(output_path + "_Loss_plot.pdf")
     # plt.show()
 
 
-def plot(project_path):
-    output_path = project_path + "plotting/"
-    before_path = project_path + "training/before.pickle"
-    after_path = project_path + "training/after.pickle"
+def plot(project_path, config):
+    output_path = project_path + "training/"
+    names_path = config.names_path
+    before_path = output_path + "before.npy"
+    after_path = output_path + "after.npy"
 
-    with open(before_path, "rb") as handle:
-        before = pickle.load(handle)
-    with open(after_path, "rb") as handle:
-        after = pickle.load(handle)
+    column_names = np.load(names_path)
 
-    before = np.array(before)
-    # Added because plotting is not supported for non-DataFrame objects yet.
-
-    column_names = helper.from_pickle(
-        project_path + "compressed_output/column_names.pickle"
-    )
-
-    before = pd.DataFrame(before, columns=column_names)
-    after = pd.DataFrame(after, columns=column_names)
+    before = pd.DataFrame(np.load(before_path), columns=column_names)
+    after = pd.DataFrame(np.load(after_path), columns=column_names)
 
     response = (after - before) / before
 
@@ -158,3 +152,6 @@ def plot(project_path):
             ax2.clear()
             ax1.clear()
             ax3.clear()
+
+            # if index == 3:
+            #    break

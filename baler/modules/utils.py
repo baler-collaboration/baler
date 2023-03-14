@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 from tqdm import tqdm
 from scipy.stats import wasserstein_distance
+from torch.nn import functional as F
 
 ###############################################
 factor = 0.5
@@ -45,7 +46,7 @@ def sparse_loss_function_L1(
     values = true_data
     if not validate:
         for i in range(len(model_children)):
-            values = model_children[i](values)
+            values = F.relu(model_children[i](values))
             l1_loss += torch.mean(torch.abs(values))
 
         loss = mse_loss + reg_param * l1_loss
@@ -88,15 +89,15 @@ class EarlyStopping:
         self.best_loss = None
         self.early_stop = False
 
-    def __call__(self, val_loss):
+    def __call__(self, train_loss):
         if self.best_loss is None:
-            self.best_loss = val_loss
+            self.best_loss = train_loss
 
-        elif self.best_loss - val_loss > self.min_delta:
-            self.best_loss = val_loss
+        elif self.best_loss - train_loss > self.min_delta:
+            self.best_loss = train_loss
             self.counter = 0  ## Resets if val_loss improves
 
-        elif self.best_loss - val_loss < self.min_delta:
+        elif self.best_loss - train_loss < self.min_delta:
             self.counter += 1
 
             print(f"Early stopping counter {self.counter} of {self.patience}")
@@ -122,5 +123,5 @@ class LRScheduler:
             verbose=True,
         )
 
-    def __call__(self, val_loss):
-        self.lr_scheduler.step(val_loss)
+    def __call__(self, train_loss):
+        self.lr_scheduler.step(train_loss)
