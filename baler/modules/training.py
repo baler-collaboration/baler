@@ -14,7 +14,6 @@ import os
 import random
 
 
-
 def fit(model, train_dl, train_ds, model_children, regular_param, optimizer, RHO, l1):
     print("### Beginning Training")
 

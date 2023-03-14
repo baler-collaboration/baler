@@ -145,6 +145,7 @@ def normalize(data, custom_norm, cleared_col_names):
     df = data_processing.numpy_to_df(data, cleared_col_names)
     return df
 
+
 def process(data_path, custom_norm, test_size, energy_conversion):
     df = data_processing.load_data(data_path)
     cleared_col_names = data_processing.get_columns(df)
