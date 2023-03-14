@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 from tqdm import tqdm
 from scipy.stats import wasserstein_distance
+from torch.nn import functional as F
 
 ###############################################
 factor = 0.5
@@ -45,7 +46,7 @@ def sparse_loss_function_L1(
     values = true_data
     if not validate:
         for i in range(len(model_children)):
-            values = model_children[i](values)
+            values = F.relu(model_children[i](values))
             l1_loss += torch.mean(torch.abs(values))
 
         loss = mse_loss + reg_param * l1_loss
