@@ -30,9 +30,6 @@ def perform_training(config, project_path):
         test_set_norm,
         number_of_columns,
         normalization_features,
-        full_norm,
-        full_pre_norm,
-        cleared_col_names,
     ) = helper.process(
         config.data_path,
         config.names_path,
@@ -62,6 +59,7 @@ def perform_training(config, project_path):
     reconstructed_data = helper.detach(reconstructed_data_tensor)
 
     print("Un-normalzing...")
+    print(np.mean(test_data[0]))
     start = time.time()
     test_data_renorm = helper.renormalize(
         test_data,

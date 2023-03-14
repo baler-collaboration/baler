@@ -150,20 +150,18 @@ def normalize(data, custom_norm):
 def process(data_path, names_path, custom_norm, test_size, energy_conversion):
     data = np.load(data_path)
     names = np.load(names_path)
-    # df = data_processing.load_data(data_path)
-    # cleared_col_names = np.load()
 
     if energy_conversion:
         print("Converting mass to energy with eta, pt & mass")
         df = convert_mass_to_energy(df, cleared_col_names)
 
-    full_pre_norm = data
     normalization_features = data_processing.find_minmax(data)
-    full_norm = normalize(data, custom_norm)
+    data = normalize(data, custom_norm)
     if not test_size:
         train_set = data
         test_set = train_set
     else:
+        print(test_size)
         train_set, test_set = data_processing.split(
             data, test_size=test_size, random_state=1
         )
@@ -175,9 +173,6 @@ def process(data_path, names_path, custom_norm, test_size, energy_conversion):
         test_set,
         number_of_columns,
         normalization_features,
-        full_norm,
-        full_pre_norm,
-        names,
     )
 
 

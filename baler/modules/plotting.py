@@ -9,6 +9,8 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 import modules.data_processing as data_processing
 import modules.helper as helper
 
+import sys
+
 
 def to_percent(y, position):
     # Ignore the passed in position. This has the effect of scaling the default
@@ -60,6 +62,12 @@ def plot(project_path, config):
     after_path = output_path + "after.npy"
 
     column_names = np.load(names_path)
+
+    test = np.load(before_path)
+    print(np.mean(test[0]))
+
+    # sys.exit()
+
     before = pd.DataFrame(np.load(before_path), columns=column_names)
     after = pd.DataFrame(np.load(after_path), columns=column_names)
 
