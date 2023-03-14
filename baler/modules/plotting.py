@@ -45,6 +45,7 @@ def loss_plot(path_to_loss_data, output_path, config):
     for i in range(len(conf_list)):
         plt.plot([], [], " ", label=str_list[i] + " " + str(conf_list[i]))
     plt.xlabel("Epochs")
+    plt.yscale("log")
     plt.ylabel("Loss")
     plt.legend(loc="best")
     plt.savefig(output_path + "_Loss_plot.pdf")
@@ -52,9 +53,6 @@ def loss_plot(path_to_loss_data, output_path, config):
 
 
 def plot(project_path, config):
-    # names_path = config.names_path
-    # before_path = config.data_path
-    # after_path = project_path + "decompressed_output/decompressed.npy"
 
     output_path = project_path + "training/"
     names_path = config.names_path

@@ -44,6 +44,7 @@ def perform_training(config, project_path):
     except AttributeError:
         print(config.latent_space_size, config.number_of_columns)
         assert number_of_columns == config.number_of_columns
+
     device = helper.get_device()
 
     ModelObject = helper.model_init(config.model_name)
