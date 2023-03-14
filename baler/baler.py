@@ -24,20 +24,22 @@ def main():
     elif mode == "info":
         print_info(project_path)
 
+
 def pre_processing(config):
     config.pre_processing()
 
+
 def perform_training(config, project_path):
-    train_set, test_set, number_of_columns, normalization_features = helper.process(config.input_path, config)
+    train_set, test_set, number_of_columns, normalization_features = helper.process(
+        config.input_path, config
+    )
 
     try:
-        config.latent_space_size = int(number_of_columns//config.compression_ratio)
+        config.latent_space_size = int(number_of_columns // config.compression_ratio)
         config.number_of_columns = number_of_columns
     except AttributeError:
-        print(config.latent_space_size,config.number_of_columns)
-        assert(number_of_columns==config.number_of_columns)
-
-    
+        print(config.latent_space_size, config.number_of_columns)
+        assert number_of_columns == config.number_of_columns
 
     device = helper.get_device()
 
@@ -78,7 +80,9 @@ def perform_training(config, project_path):
 
 def perform_plotting(project_path, config):
     helper.plot(project_path)
-    helper.loss_plotter(project_path + "training/loss_data.csv", project_path + "plotting/", config)
+    helper.loss_plotter(
+        project_path + "training/loss_data.csv", project_path + "plotting/", config
+    )
 
 
 def perform_compression(config, project_path):
@@ -99,12 +103,16 @@ def perform_compression(config, project_path):
     helper.to_pickle(
         data_before, project_path + "compressed_output/cleandata_pre_comp.pickle"
     )
-    helper.to_pickle(config.cleared_col_names,project_path+"compressed_output/column_names.pickle")
+    helper.to_pickle(
+        config.cleared_col_names, project_path + "compressed_output/column_names.pickle"
+    )
 
 
 def perform_decompression(config, project_path):
     print("Decompressing...")
-    config.cleared_col_names = helper.from_pickle(project_path+"compressed_output/column_names.pickle")
+    config.cleared_col_names = helper.from_pickle(
+        project_path + "compressed_output/column_names.pickle"
+    )
     start = time.time()
     decompressed = helper.decompress(
         model_path=project_path + "model/model.pt",

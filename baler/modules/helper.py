@@ -38,9 +38,10 @@ Baler has three running modes:\n
         config = None
     else:
         project_path = f"projects/{args.project}/"
-        #config_path = f"projects/{args.project}/config.py"
+        # config_path = f"projects/{args.project}/config.py"
         sys.path.append(project_path)
         import configClass
+
         config = configClass.Configuration()
     return config, args.mode, args.project
 
@@ -110,8 +111,9 @@ def to_pickle(data, path):
     with open(path, "wb") as handle:
         pickle.dump(data, handle)
 
+
 def from_pickle(path):
-    with open(path, 'rb') as handle:
+    with open(path, "rb") as handle:
         return pickle.load(handle)
 
 
@@ -143,8 +145,8 @@ def normalize(data, config):
 def process(data_path, config):
     print(f"Path to data trained on: {data_path}")
     df = data_processing.load_data(data_path, config)
-    #df = convert_mass_to_energy(df)
-    #df = data_processing.clean_data(df, config)
+    # df = convert_mass_to_energy(df)
+    # df = data_processing.clean_data(df, config)
     normalization_features = data_processing.find_minmax(df)
     config.cleared_col_names = data_processing.get_columns(df)
     number_of_columns = len(data_processing.get_columns(df))
@@ -153,9 +155,9 @@ def process(data_path, config):
     train_set, test_set = data_processing.split(
         df, test_size=config.test_size, random_state=1
     )
-    #assert (
+    # assert (
     #    number_of_columns == config.number_of_columns
-    #), f"The number of columns of dataframe is {number_of_columns}, config states {config.number_of_columns}."
+    # ), f"The number of columns of dataframe is {number_of_columns}, config states {config.number_of_columns}."
     return train_set, test_set, number_of_columns, normalization_features
 
 
@@ -191,14 +193,14 @@ def compress(model_path, input_path, config):
     config.cleared_col_names = data_processing.get_columns(data)
     number_of_columns = len(data_processing.get_columns(data))
     try:
-        config.latent_space_size = int(number_of_columns//config.compression_ratio)
+        config.latent_space_size = int(number_of_columns // config.compression_ratio)
         config.number_of_columns = number_of_columns
     except AttributeError:
-        print(config.latent_space_size,config.number_of_columns)
-        assert(number_of_columns==config.number_of_columns)
+        print(config.latent_space_size, config.number_of_columns)
+        assert number_of_columns == config.number_of_columns
     data_before = numpy.array(data)
     data = normalize(data, config)
-    
+
     # Initialise and load the model correctly.
     ModelObject = data_processing.initialise_model(config=config)
     model = data_processing.load_model(
@@ -214,14 +216,12 @@ def compress(model_path, input_path, config):
 
 
 def decompress(model_path, input_path, config):
-
     # Load the data & convert to tensor
     data = data_loader(input_path, config)
     latent_space_size = len(data[0])
-    #number_of_columns=8
+    # number_of_columns=8
     modelDict = torch.load(str(model_path))
     number_of_columns = len(modelDict[list(modelDict.keys())[-1]])
-
 
     # Initialise and load the model correctly.
     ModelObject = data_processing.initialise_model(config=config)
@@ -266,11 +266,10 @@ def compute_E(mass, eta, pt):
     masspt = pt**2 + mass**2
     cosh = (numpy.cosh(eta)) ** 2
     total = numpy.sqrt(masspt * cosh)
-    return total#pandas.DataFrame({"Energy": total})
+    return total  # pandas.DataFrame({"Energy": total})
 
 
 def convert_mass_to_energy(df):
-
     ## Currently hard-coded. Need to find a nice way to make this work
 
     # Takes df with mass
@@ -282,5 +281,5 @@ def convert_mass_to_energy(df):
     pt = df["recoPFJets_ak5PFJets__RECO.obj.pt_"]
     energy = compute_E(mass=mass, eta=eta, pt=pt)
     df["recoPFJets_ak5PFJets__RECO.obj.mass_"] = energy
-    df.columns = df.columns.str.replace("mass_","energy_")
+    df.columns = df.columns.str.replace("mass_", "energy_")
     return df

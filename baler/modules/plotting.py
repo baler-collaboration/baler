@@ -70,7 +70,7 @@ def plot(project_path):
         with open(data_path, "rb") as handle:
             before = pickle.load(handle)
         with open(decomp_path, "rb") as handle:
-            after = pickle.load(handle)        
+            after = pickle.load(handle)
 
     before = np.array(before)
     # Added because plotting is not supported for non-DataFrame objects yet.
@@ -171,5 +171,5 @@ def plot(project_path):
             ax2.clear()
             ax1.clear()
             ax3.clear()
-            if index == 3: 
+            if index == 3:
                 break

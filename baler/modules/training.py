@@ -73,13 +73,14 @@ def validate(model, test_dl, test_ds, model_children, reg_param):
     print(f"# Finished. Validation Loss: {loss:.6f}")
     return epoch_loss
 
+
 def seed_worker(worker_id):
     worker_seed = torch.initial_seed() % 2**32
     np.random.seed(worker_seed)
     random.seed(worker_seed)
 
-def train(model, variables, train_data, test_data, parent_path, config):
 
+def train(model, variables, train_data, test_data, parent_path, config):
     random.seed(0)
     torch.manual_seed(0)
     np.random.seed(0)
@@ -109,8 +110,12 @@ def train(model, variables, train_data, test_data, parent_path, config):
 
     # Converts the TensorDataset into a DataLoader object and combines into one DataLoaders object (a basic wrapper
     # around several DataLoader objects).
-    train_dl = DataLoader(train_ds, batch_size=bs, shuffle=False, worker_init_fn=seed_worker, generator=g)
-    valid_dl = DataLoader(valid_ds, batch_size=bs, worker_init_fn=seed_worker, generator=g)  ## Used to be batch_size = bs * 2
+    train_dl = DataLoader(
+        train_ds, batch_size=bs, shuffle=False, worker_init_fn=seed_worker, generator=g
+    )
+    valid_dl = DataLoader(
+        valid_ds, batch_size=bs, worker_init_fn=seed_worker, generator=g
+    )  ## Used to be batch_size = bs * 2
 
     ## Select Optimizer
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
@@ -123,9 +128,7 @@ def train(model, variables, train_data, test_data, parent_path, config):
 
     ## Activate LR Scheduler
     if config.lr_scheduler == True:
-        lr_scheduler = utils.LRScheduler(
-            optimizer=optimizer, patience=config.patience
-        )
+        lr_scheduler = utils.LRScheduler(optimizer=optimizer, patience=config.patience)
 
     # train and validate the autoencoder neural network
     train_loss = []
@@ -162,23 +165,25 @@ def train(model, variables, train_data, test_data, parent_path, config):
             early_stopping(val_epoch_loss)
             if early_stopping.early_stop:
                 break
-        
+
         ## Make-shift implementation to save models & values after 100 epochs:
         save_model_and_data = True
-        if save_model_and_data:    
-            if epoch%100 == 0:
-                path = os.path.join(parent_path, f'model_{epoch}.pt')
-                path_data = os.path.join(parent_path, f'after_{epoch}.pickle')
-                path_pred = os.path.join(parent_path, f'before_{epoch}.pickle')
+        if save_model_and_data:
+            if epoch % 100 == 0:
+                path = os.path.join(parent_path, f"model_{epoch}.pt")
+                path_data = os.path.join(parent_path, f"after_{epoch}.pickle")
+                path_pred = os.path.join(parent_path, f"before_{epoch}.pickle")
 
-                helper.model_saver(model,path)
-                data_tensor = torch.tensor(test_data.values, dtype=torch.float64).to(model.device)
+                helper.model_saver(model, path)
+                data_tensor = torch.tensor(test_data.values, dtype=torch.float64).to(
+                    model.device
+                )
                 pred_tensor = model(data_tensor)
                 data = helper.detach(data_tensor)
                 pred = helper.detach(pred_tensor)
 
                 helper.to_pickle(data, path_data)
-                helper.to_pickle(pred,path_pred)
+                helper.to_pickle(pred, path_pred)
 
     end = time.time()
 
