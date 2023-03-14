@@ -1,31 +1,29 @@
 import torch
 import torch.nn as nn
-from tqdm import tqdm
 from scipy.stats import wasserstein_distance
 from torch.nn import functional as F
+from tqdm import tqdm
 
-###############################################
 factor = 0.5
 min_lr = 1e-6
 
 
-###############################################
-def sparse_loss_function_EMD_L1(
+def sparse_loss_function_emd_l1(
     model_children, true_data, reconstructed_data, reg_param, validate
 ):
     mse = nn.MSELoss()
     mse_loss = mse(reconstructed_data, true_data)
-    Wassterstein_distance_list = [
+    wasserstein_distance_list = [
         wasserstein_distance(
             true_data.detach().numpy()[i, :], reconstructed_data.detach().numpy()[i, :]
         )
         for i in range(len(true_data))
     ]
-    emd_loss = sum(Wassterstein_distance_list)
+    emd_loss = sum(wasserstein_distance_list)
 
     l1_loss = 0
     values = true_data
-    if validate == False:
+    if not validate:
         for i in range(len(model_children)):
             values = model_children[i](values)
             l1_loss += torch.mean(torch.abs(values))
@@ -36,7 +34,7 @@ def sparse_loss_function_EMD_L1(
         return emd_loss
 
 
-def sparse_loss_function_L1(
+def sparse_loss_function_l1(
     model_children, true_data, reconstructed_data, reg_param, validate
 ):
     mse = nn.MSELoss()
@@ -95,7 +93,7 @@ class EarlyStopping:
 
         elif self.best_loss - train_loss > self.min_delta:
             self.best_loss = train_loss
-            self.counter = 0  ## Resets if val_loss improves
+            self.counter = 0  # Resets if val_loss improves
 
         elif self.best_loss - train_loss < self.min_delta:
             self.counter += 1

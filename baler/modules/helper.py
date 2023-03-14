@@ -1,14 +1,14 @@
 import argparse
+import importlib
 import os
 import pickle
-import sys
+from dataclasses import dataclass
+
 import numpy as np
-import pandas
 import torch
+from sklearn.model_selection import train_test_split
 
 from modules import training, plotting, data_processing
-from dataclasses import dataclass
-import importlib
 
 
 def get_arguments():
@@ -129,14 +129,7 @@ def model_init(model_name):
     return ModelObject
 
 
-def data_loader(data_path):
-    return data_processing.load_data(data_path)
-
-
 def numpy_to_tensor(data):
-    if isinstance(data, pandas.DataFrame):
-        data = data.to_numpy()
-
     return torch.from_numpy(data)
 
 
@@ -151,9 +144,10 @@ def process(data_path, names_path, custom_norm, test_size, energy_conversion):
     data = np.load(data_path)
     names = np.load(names_path)
 
-    if energy_conversion:
-        print("Converting mass to energy with eta, pt & mass")
-        df = convert_mass_to_energy(df, cleared_col_names)
+    # TODO Fix this
+    # if energy_conversion:
+    #     print("Converting mass to energy with eta, pt & mass")
+    #     df = convert_mass_to_energy(df, cleared_col_names)
 
     normalization_features = data_processing.find_minmax(data)
     data = normalize(data, custom_norm)
@@ -161,12 +155,11 @@ def process(data_path, names_path, custom_norm, test_size, energy_conversion):
         train_set = data
         test_set = train_set
     else:
-        train_set, test_set = data_processing.split(
+        train_set, test_set = train_test_split(
             data, test_size=test_size, random_state=1
         )
         number_of_columns = len(names)
 
-    # train_set, test_set = data_processing.split(df, test_size=test_size, random_state=1)
     return (
         train_set,
         test_set,
@@ -222,7 +215,7 @@ def compress(model_path, config):
         z_dim=config.latent_space_size,
     )
 
-    data_tensor = numpy_to_tensor(data).to(model.device)
+    data_tensor = torch.from_numpy(data).to(model.device)
 
     compressed = model.encode(data_tensor)
     return compressed, data_before, cleared_col_names
@@ -245,24 +238,10 @@ def decompress(model_path, input_path, model_name):
     )
 
     # Load the data & convert to tensor
-    data_tensor = numpy_to_tensor(data).to(model.device)
+    data_tensor = torch.from_numpy(data).to(model.device)
 
     decompressed = model.decode(data_tensor)
     return decompressed
-
-
-def to_root(data_path, cleared_col_names, save_path):
-    if isinstance(data_path, pickle.Pickler):
-        df, Names = data_processing.pickle_to_df(file_path=data_path)
-        return data_processing.df_to_root(df, Names, save_path)
-    elif isinstance(data_path, pandas.DataFrame):
-        return data_processing.df_to_root(
-            data_path, col_names=data_path.columns(), save_path=save_path
-        )
-    elif isinstance(data_path, np.ndarray):
-        df = data_processing.numpy_to_df(data_path, cleared_col_names)
-        df_names = df.columns
-        return data_processing.df_to_root(df, col_names=df_names, save_path=save_path)
 
 
 def get_device():
@@ -284,7 +263,8 @@ def compute_E(mass, eta, pt):
 
 
 def convert_mass_to_energy(df, col_names):
-    ## Find mass, eta & pt:
+    # TODO Not used right now
+
     for i in range(len(col_names)):
         if col_names[i].split(".")[-1] == "pt":
             pt = df.iloc[:, i]
