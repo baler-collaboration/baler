@@ -59,7 +59,7 @@ def validate(model, test_dl, test_ds, model_children, reg_param):
             inputs = inputs.to(model.device)
 
             reconstructions = model(inputs)
-            loss = utils.sparse_loss_function_EMD_L1(
+            loss = utils.sparse_loss_function_L1(
                 model_children=model_children,
                 true_data=inputs,
                 reconstructed_data=reconstructions,
