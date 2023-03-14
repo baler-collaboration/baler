@@ -41,25 +41,19 @@ def test_save_model():
 @pytest.fixture
 def minmax_test_data():
     return [
+        (np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]]), np.array([[1, 2, 3], [6, 6, 6]])),
         (
-            [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
-            pd.DataFrame({"True min": [1, 2, 3], "Feature Range": [6, 6, 6]}),
+            np.array([[-1, -2, -3], [-4, -5, -6], [-7, -8, -9]]),
+            np.array([[-7, -8, -9], [6, 6, 6]]),
         ),
-        (
-            [[-1, -2, -3], [-4, -5, -6], [-7, -8, -9]],
-            pd.DataFrame({"True min": [-7, -8, -9], "Feature Range": [6, 6, 6]}),
-        ),
-        (
-            [[0, 0, 0], [1, 1, 1], [2, 2, 2]],
-            pd.DataFrame({"True min": [0, 0, 0], "Feature Range": [2, 2, 2]}),
-        ),
+        (np.array([[0, 0, 0], [1, 1, 1], [2, 2, 2]]), np.array([[0, 0, 0], [2, 2, 2]])),
     ]
 
 
 def test_find_minmax_success(minmax_test_data):
     for data, expected_result in minmax_test_data:
         result = data_processing.find_minmax(data)
-        assert result.equals(expected_result)
+        assert np.array_equal(result, expected_result)
 
 
 def test_normalize():

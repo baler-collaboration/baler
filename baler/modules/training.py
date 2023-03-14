@@ -7,11 +7,10 @@ import torch
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-import modules.helper as helper
 import modules.utils as utils
 import modules.helper as helper
+
 import os
-import random
 
 
 def fit(model, train_dl, train_ds, model_children, regular_param, optimizer, RHO, l1):
@@ -22,10 +21,10 @@ def fit(model, train_dl, train_ds, model_children, regular_param, optimizer, RHO
     running_loss = 0.0
     counter = 0
     n_data = int(len(train_ds) / train_dl.batch_size)
+
     for inputs in tqdm(train_dl):
         counter += 1
         inputs = inputs.to(model.device)
-
         optimizer.zero_grad()
         reconstructions = model(inputs)
         loss, mse_loss, l1_loss = utils.sparse_loss_function_L1(
@@ -57,7 +56,6 @@ def validate(model, test_dl, test_ds, model_children, reg_param):
         for inputs in tqdm(test_dl):
             counter += 1
             inputs = inputs.to(model.device)
-
             reconstructions = model(inputs)
             loss = utils.sparse_loss_function_L1(
                 model_children=model_children,
@@ -103,8 +101,8 @@ def train(model, variables, train_data, test_data, parent_path, config):
     model = model.to(device)
 
     # Converting data to tensors
-    train_ds = torch.tensor(train_data.values, dtype=torch.float64, device=device)
-    valid_ds = torch.tensor(train_data.values, dtype=torch.float64, device=device)
+    train_ds = torch.tensor(train_data, dtype=torch.float64, device=device)
+    valid_ds = torch.tensor(test_data, dtype=torch.float64, device=device)
 
     # Pushing input data into the torch-DataLoader object and combines into one DataLoaders object (a basic wrapper
     # around several DataLoader objects).
@@ -178,7 +176,7 @@ def train(model, variables, train_data, test_data, parent_path, config):
                 path_pred = os.path.join(parent_path, f"before_{epoch}.pickle")
 
                 helper.model_saver(model, path)
-                data_tensor = torch.tensor(test_data.values, dtype=torch.float64).to(
+                data_tensor = torch.tensor(test_data, dtype=torch.float64).to(
                     model.device
                 )
                 pred_tensor = model(data_tensor)
@@ -191,12 +189,9 @@ def train(model, variables, train_data, test_data, parent_path, config):
     end = time.time()
 
     print(f"{(end - start) / 60:.3} minutes")
-    pd.DataFrame({"Train Loss": train_loss, "Val Loss": val_loss}).to_csv(
-        parent_path + "loss_data.csv"
-    )
+    np.save(parent_path + "loss_data.npy", np.array([train_loss, val_loss]))
 
-    data_as_tensor = torch.tensor(test_data.values, dtype=torch.float64)
-
+    data_as_tensor = torch.tensor(test_data, dtype=torch.float64)
     data_as_tensor = data_as_tensor.to(trained_model.device)
     pred_as_tensor = trained_model(data_as_tensor)
 

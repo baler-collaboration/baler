@@ -2,7 +2,7 @@ import argparse
 import os
 import pickle
 import sys
-import numpy
+import numpy as np
 import pandas
 import torch
 
@@ -90,9 +90,11 @@ class configClass:
 def create_default_config(project_name) -> str:
     return f"""
 def set_config(c):
-    c.input_path          = "data/{project_name}/{project_name}.pickle"
+    c.data_path          = "data/{project_name}/{project_name}_data.npy"
+    c.names_path         = "data/{project_name}/{project_name}_names.npy"
     c.compression_ratio   = 2.0
     c.epochs              = 5
+    c.energy_conversion = False
     c.early_stopping      = True
     c.lr_scheduler        = False
     c.patience            = 100
@@ -138,44 +140,38 @@ def numpy_to_tensor(data):
     return torch.from_numpy(data)
 
 
-def normalize(data, custom_norm, cleared_col_names):
-    data = numpy.apply_along_axis(
+def normalize(data, custom_norm):
+    data = np.apply_along_axis(
         data_processing.normalize, axis=0, arr=data, custom_norm=custom_norm
     )
-    df = data_processing.numpy_to_df(data, cleared_col_names)
-    return df
+    return data
 
 
-def process(data_path, custom_norm, test_size, energy_conversion):
-    df = data_processing.load_data(data_path)
-    cleared_col_names = data_processing.get_columns(df)
+def process(data_path, names_path, custom_norm, test_size, energy_conversion):
+    data = np.load(data_path)
+    names = np.load(names_path)
 
     if energy_conversion:
         print("Converting mass to energy with eta, pt & mass")
         df = convert_mass_to_energy(df, cleared_col_names)
 
-    full_pre_norm = df
-    normalization_features = data_processing.find_minmax(df)
-    df = normalize(df, custom_norm, cleared_col_names)
-    full_norm = df
+    normalization_features = data_processing.find_minmax(data)
+    data = normalize(data, custom_norm)
     if not test_size:
-        train_set = df
+        train_set = data
         test_set = train_set
     else:
         train_set, test_set = data_processing.split(
-            df, test_size=test_size, random_state=1
+            data, test_size=test_size, random_state=1
         )
+        number_of_columns = len(names)
 
-    number_of_columns = len(data_processing.get_columns(df))
-
+    # train_set, test_set = data_processing.split(df, test_size=test_size, random_state=1)
     return (
         train_set,
         test_set,
         number_of_columns,
         normalization_features,
-        full_norm,
-        full_pre_norm,
-        cleared_col_names,
     )
 
 
@@ -189,8 +185,8 @@ def train(model, number_of_columns, train_set, test_set, project_path, config):
     )
 
 
-def plot(project_path):
-    plotting.plot(project_path)
+def plot(project_path, config):
+    plotting.plot(project_path, config)
 
 
 def loss_plotter(path_to_loss_data, output_path, config):
@@ -207,16 +203,15 @@ def detach(tensor):
 
 def compress(model_path, config):
     # Give the encoding function the correct input as tensor
-    data = data_loader(config.input_path)
-    cleared_col_names = data_processing.get_columns(data)
-    number_of_columns = len(data_processing.get_columns(data))
+    data_before = np.load(config.data_path)
+    data = normalize(data_before, config.custom_norm)
+    cleared_col_names = np.load(config.names_path)
+    number_of_columns = len(cleared_col_names)
     try:
         config.latent_space_size = int(number_of_columns // config.compression_ratio)
         config.number_of_columns = number_of_columns
     except AttributeError:
         assert number_of_columns == config.number_of_columns
-    data_before = numpy.array(data)
-    data = normalize(data, config.custom_norm, cleared_col_names)
 
     # Initialise and load the model correctly.
     ModelObject = data_processing.initialise_model(config.model_name)
@@ -227,12 +222,6 @@ def compress(model_path, config):
         z_dim=config.latent_space_size,
     )
 
-    # Give the encoding function the correct input as tensor
-    data = data_loader(config.input_path)
-    # data = data_processing.clean_data(data, config)
-    data_before = numpy.array(data)
-
-    data = normalize(data, config.custom_norm, cleared_col_names)
     data_tensor = numpy_to_tensor(data).to(model.device)
 
     compressed = model.encode(data_tensor)
@@ -241,7 +230,7 @@ def compress(model_path, config):
 
 def decompress(model_path, input_path, model_name):
     # Load the data & convert to tensor
-    data = data_loader(input_path)
+    data = np.load(input_path)
     latent_space_size = len(data[0])
     modelDict = torch.load(str(model_path))
     number_of_columns = len(modelDict[list(modelDict.keys())[-1]])
@@ -256,7 +245,6 @@ def decompress(model_path, input_path, model_name):
     )
 
     # Load the data & convert to tensor
-    data = data_loader(input_path)
     data_tensor = numpy_to_tensor(data).to(model.device)
 
     decompressed = model.decode(data_tensor)
@@ -271,7 +259,7 @@ def to_root(data_path, cleared_col_names, save_path):
         return data_processing.df_to_root(
             data_path, col_names=data_path.columns(), save_path=save_path
         )
-    elif isinstance(data_path, numpy.ndarray):
+    elif isinstance(data_path, np.ndarray):
         df = data_processing.numpy_to_df(data_path, cleared_col_names)
         df_names = df.columns
         return data_processing.df_to_root(df, col_names=df_names, save_path=save_path)
@@ -290,8 +278,8 @@ def get_device():
 
 def compute_E(mass, eta, pt):
     masspt = pt**2 + mass**2
-    cosh = (numpy.cosh(eta)) ** 2
-    total = numpy.sqrt(masspt * cosh)
+    cosh = (np.cosh(eta)) ** 2
+    total = np.sqrt(masspt * cosh)
     return total
 
 
