@@ -28,7 +28,7 @@ def fit(model, train_dl, train_ds, model_children, regular_param, optimizer, RHO
 
         optimizer.zero_grad()
         reconstructions = model(inputs)
-        loss, mse_loss, l1_loss = utils.sparse_loss_function_EMD_L1(
+        loss, mse_loss, l1_loss = utils.sparse_loss_function_L1(
             model_children=model_children,
             true_data=inputs,
             reconstructed_data=reconstructions,
