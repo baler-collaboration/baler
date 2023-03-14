@@ -2,12 +2,13 @@ import argparse
 import os
 import pickle
 import sys
-
 import numpy
 import pandas
 import torch
 
 from modules import training, plotting, data_processing
+from dataclasses import dataclass
+import importlib
 
 
 def get_arguments():
@@ -37,12 +38,10 @@ Baler has three running modes:\n
     if args.mode == "newProject":
         config = None
     else:
-        project_path = f"projects/{args.project}/"
-        # config_path = f"projects/{args.project}/config.py"
-        sys.path.append(project_path)
-        import configClass
-
-        config = configClass.Configuration()
+        config = configClass
+        importlib.import_module(
+            f"projects.{args.project}.{args.project}_config"
+        ).set_config(config)
     return config, args.mode, args.project
 
 
@@ -60,50 +59,55 @@ def create_new_project(project_name: str, base_path: str = "projects") -> None:
         "model",
     ]
     os.makedirs(project_path)
-    with open(os.path.join(project_path, "configClass.py"), "w") as f:
+    with open(os.path.join(project_path, f"{project_name}_config.py"), "w") as f:
         print(project_path)
-        f.write(create_default_config())
+        f.write(create_default_config(project_name))
     for directory in required_directories:
         os.makedirs(os.path.join(project_path, directory))
 
 
-def create_default_config() -> str:
-    return f"""
-class Configuration(object):
-    def __init__(self):
-        self.input_path = "data/firstProject/cms_data.root"
+@dataclass
+class configClass:
+    input_path: str
+    compression_ratio: float
+    epochs: int
+    early_stopping: bool
+    lr_scheduler: bool
+    patience: int
+    min_delta: int
+    model_name: str
+    custom_norm: bool
+    l1: bool
+    reg_param: float
+    RHO: float
+    lr: float
+    batch_size: int
+    save_as_root: bool
+    test_size: float
+    energy_conversion: bool
 
-        self.epochs = 5
-        self.early_stopping = True
-        self.lr_scheduler = False
-        self.patience = 100
-        self.min_delta = 0
-        self.model_name = "george_SAE"
-        self.custom_norm = False
-        self.l1 = True
-        self.reg_param = 0.001
-        self.RHO = 0.05
-        self.lr = 0.001
-        self.batch_size = 512
-        self.save_as_root = True
-        self.cleared_col_names = ["pt","eta","phi","m","EmEnergy","HadEnergy","InvisEnergy","AuxilEnergy"]
-        self.test_size = 0.15
-        self.Branch = "Events"
-        self.Collection = "recoGenJets_slimmedGenJets__PAT."
-        self.Objects = "recoGenJets_slimmedGenJets__PAT.obj"
-        self.number_of_columns = 8
-        self.latent_space_size = 4
-        self.dropped_variables = [
-            "recoGenJets_slimmedGenJets__PAT.obj.m_state.vertex_.fCoordinates.fX",
-            "recoGenJets_slimmedGenJets__PAT.obj.m_state.vertex_.fCoordinates.fY",
-            "recoGenJets_slimmedGenJets__PAT.obj.m_state.vertex_.fCoordinates.fZ",
-            "recoGenJets_slimmedGenJets__PAT.obj.m_state.qx3_",
-            "recoGenJets_slimmedGenJets__PAT.obj.m_state.pdgId_",
-            "recoGenJets_slimmedGenJets__PAT.obj.m_state.status_",
-            "recoGenJets_slimmedGenJets__PAT.obj.mJetArea",
-            "recoGenJets_slimmedGenJets__PAT.obj.mPileupEnergy",
-            "recoGenJets_slimmedGenJets__PAT.obj.mPassNumber"
-        ]
+
+def create_default_config(project_name) -> str:
+    return f"""
+def set_config(c):
+    c.input_path          = "data/{project_name}/{project_name}.pickle"
+    c.compression_ratio   = 2.0
+    c.epochs              = 5
+    c.early_stopping      = True
+    c.lr_scheduler        = False
+    c.patience            = 100
+    c.min_delta           = 0
+    c.model_name          = "george_SAE"
+    c.custom_norm         = False
+    c.l1                  = True
+    c.reg_param             = 0.001
+    c.RHO                 = 0.05
+    c.lr                  = 0.001
+    c.batch_size          = 512
+    c.save_as_root        = True
+    c.test_size           = 0.15
+    c.energy_conversion   = False
+
 """
 
 
@@ -117,14 +121,14 @@ def from_pickle(path):
         return pickle.load(handle)
 
 
-def model_init(config):
+def model_init(model_name):
     # This is used when we don't have saved model parameters.
-    ModelObject = data_processing.initialise_model(config=config)
+    ModelObject = data_processing.initialise_model(model_name)
     return ModelObject
 
 
-def data_loader(data_path, config):
-    return data_processing.load_data(data_path, config)
+def data_loader(data_path):
+    return data_processing.load_data(data_path)
 
 
 def numpy_to_tensor(data):
@@ -134,31 +138,44 @@ def numpy_to_tensor(data):
     return torch.from_numpy(data)
 
 
-def normalize(data, config):
+def normalize(data, custom_norm, cleared_col_names):
     data = numpy.apply_along_axis(
-        data_processing.normalize, axis=0, arr=data, config=config
+        data_processing.normalize, axis=0, arr=data, custom_norm=custom_norm
     )
-    df = data_processing.numpy_to_df(data, config)
+    df = data_processing.numpy_to_df(data, cleared_col_names)
     return df
 
+def process(data_path, custom_norm, test_size, energy_conversion):
+    df = data_processing.load_data(data_path)
+    cleared_col_names = data_processing.get_columns(df)
 
-def process(data_path, config):
-    print(f"Path to data trained on: {data_path}")
-    df = data_processing.load_data(data_path, config)
-    # df = convert_mass_to_energy(df)
-    # df = data_processing.clean_data(df, config)
+    if energy_conversion:
+        print("Converting mass to energy with eta, pt & mass")
+        df = convert_mass_to_energy(df, cleared_col_names)
+
+    full_pre_norm = df
     normalization_features = data_processing.find_minmax(df)
-    config.cleared_col_names = data_processing.get_columns(df)
-    number_of_columns = len(data_processing.get_columns(df))
-    df = normalize(df, config)
+    df = normalize(df, custom_norm, cleared_col_names)
+    full_norm = df
+    if not test_size:
+        train_set = df
+        test_set = train_set
+    else:
+        train_set, test_set = data_processing.split(
+            df, test_size=test_size, random_state=1
+        )
 
-    train_set, test_set = data_processing.split(
-        df, test_size=config.test_size, random_state=1
+    number_of_columns = len(data_processing.get_columns(df))
+
+    return (
+        train_set,
+        test_set,
+        number_of_columns,
+        normalization_features,
+        full_norm,
+        full_pre_norm,
+        cleared_col_names,
     )
-    # assert (
-    #    number_of_columns == config.number_of_columns
-    # ), f"The number of columns of dataframe is {number_of_columns}, config states {config.number_of_columns}."
-    return train_set, test_set, number_of_columns, normalization_features
 
 
 def renormalize(data, true_min_list, feature_range_list):
@@ -187,66 +204,74 @@ def detach(tensor):
     return tensor.cpu().detach().numpy()
 
 
-def compress(model_path, input_path, config):
+def compress(model_path, config):
     # Give the encoding function the correct input as tensor
-    data = data_loader(input_path, config)
-    config.cleared_col_names = data_processing.get_columns(data)
+    data = data_loader(config.input_path)
+    cleared_col_names = data_processing.get_columns(data)
     number_of_columns = len(data_processing.get_columns(data))
     try:
         config.latent_space_size = int(number_of_columns // config.compression_ratio)
         config.number_of_columns = number_of_columns
     except AttributeError:
-        print(config.latent_space_size, config.number_of_columns)
         assert number_of_columns == config.number_of_columns
     data_before = numpy.array(data)
-    data = normalize(data, config)
+    data = normalize(data, config.custom_norm, cleared_col_names)
 
     # Initialise and load the model correctly.
-    ModelObject = data_processing.initialise_model(config=config)
+    ModelObject = data_processing.initialise_model(config.model_name)
     model = data_processing.load_model(
         ModelObject,
         model_path=model_path,
         n_features=number_of_columns,
         z_dim=config.latent_space_size,
     )
+
+    # Give the encoding function the correct input as tensor
+    data = data_loader(config.input_path)
+    # data = data_processing.clean_data(data, config)
+    data_before = numpy.array(data)
+
+    data = normalize(data, config.custom_norm, cleared_col_names)
     data_tensor = numpy_to_tensor(data).to(model.device)
 
     compressed = model.encode(data_tensor)
-    return compressed, data_before
+    return compressed, data_before, cleared_col_names
 
 
-def decompress(model_path, input_path, config):
+def decompress(model_path, input_path, model_name):
     # Load the data & convert to tensor
-    data = data_loader(input_path, config)
+    data = data_loader(input_path)
     latent_space_size = len(data[0])
-    # number_of_columns=8
     modelDict = torch.load(str(model_path))
     number_of_columns = len(modelDict[list(modelDict.keys())[-1]])
 
     # Initialise and load the model correctly.
-    ModelObject = data_processing.initialise_model(config=config)
+    ModelObject = data_processing.initialise_model(model_name)
     model = data_processing.load_model(
         ModelObject,
         model_path=model_path,
         n_features=number_of_columns,
         z_dim=latent_space_size,
     )
+
+    # Load the data & convert to tensor
+    data = data_loader(input_path)
     data_tensor = numpy_to_tensor(data).to(model.device)
+
     decompressed = model.decode(data_tensor)
     return decompressed
 
 
-def to_root(data_path, config, save_path):
-    # if '.pickle' in data_path[-8:]:
+def to_root(data_path, cleared_col_names, save_path):
     if isinstance(data_path, pickle.Pickler):
-        df, Names = data_processing.pickle_to_df(file_path=data_path, config=config)
+        df, Names = data_processing.pickle_to_df(file_path=data_path)
         return data_processing.df_to_root(df, Names, save_path)
     elif isinstance(data_path, pandas.DataFrame):
         return data_processing.df_to_root(
             data_path, col_names=data_path.columns(), save_path=save_path
         )
     elif isinstance(data_path, numpy.ndarray):
-        df = data_processing.numpy_to_df(data_path, config)
+        df = data_processing.numpy_to_df(data_path, cleared_col_names)
         df_names = df.columns
         return data_processing.df_to_root(df, col_names=df_names, save_path=save_path)
 
@@ -266,20 +291,39 @@ def compute_E(mass, eta, pt):
     masspt = pt**2 + mass**2
     cosh = (numpy.cosh(eta)) ** 2
     total = numpy.sqrt(masspt * cosh)
-    return total  # pandas.DataFrame({"Energy": total})
+    return total
 
 
-def convert_mass_to_energy(df):
-    ## Currently hard-coded. Need to find a nice way to make this work
+def convert_mass_to_energy(df, col_names):
+    ## Find mass, eta & pt:
+    for i in range(len(col_names)):
+        if col_names[i].split(".")[-1] == "pt":
+            pt = df.iloc[:, i]
 
-    # Takes df with mass
-    # mass_col_name = [col for col in df.columns if ".fM" in col]
-    # pt_col_name = [col for col in df.columns if ".fPt" in col]
-    # eta_col_name = [col for col in df.columns if ".fEta" in col]
-    mass = df["recoPFJets_ak5PFJets__RECO.obj.mass_"]
-    eta = df["recoPFJets_ak5PFJets__RECO.obj.eta_"]
-    pt = df["recoPFJets_ak5PFJets__RECO.obj.pt_"]
+        if col_names[i].split(".")[-1] == "mass_":
+            mass = df.iloc[:, i]
+
+            # Store name to rename & replace mass in df:
+            mass_name = str(col_names[i])
+
+        if col_names[i].split(".")[-1] == "99":
+            eta = df.iloc[:, i]
+
+        else:
+            print(
+                "Can't convert to energy. Please turn off `energy_conversion` in the config to continue"
+            )
+            exit(1)
+
+    # Compute mass
     energy = compute_E(mass=mass, eta=eta, pt=pt)
-    df["recoPFJets_ak5PFJets__RECO.obj.mass_"] = energy
-    df.columns = df.columns.str.replace("mass_", "energy_")
+
+    # Get correct new column name
+    energy_name = mass_name.replace("mass_", "energy_")
+
+    # Replace mass with energy
+    df[mass_name] = energy
+
+    # Replace column name
+    df.columns = df.columns.str.replace(mass_name, energy_name, regex=True)
     return df

@@ -84,7 +84,7 @@ def plot(project_path):
 
     response = (after - before) / before
 
-    with PdfPages(project_path + "/plotting/comparison_full.pdf") as pdf:
+    with PdfPages(project_path + "/plotting/comparison.pdf") as pdf:
         fig = plt.figure(constrained_layout=True, figsize=(10, 4))
         subfigs = fig.subfigures(1, 2, wspace=0.07, width_ratios=[1, 1])
 
@@ -171,5 +171,6 @@ def plot(project_path):
             ax2.clear()
             ax1.clear()
             ax3.clear()
-            if index == 3:
-                break
+            
+            # if index == 3:
+            #    break
