@@ -51,6 +51,11 @@ def loss_plot(path_to_loss_data, output_path, config):
     # plt.show()
 
 
+def get_index_to_cut(column_index, cut, array):
+    indices_to_cut = np.argwhere(array[column_index] < cut).flatten()
+    return indices_to_cut
+
+
 def plot(project_path, config):
     output_path = project_path + "training/"
     names_path = config.names_path
@@ -60,6 +65,10 @@ def plot(project_path, config):
     before = np.transpose(np.load(before_path))
     after = np.transpose(np.load(after_path))
     names = np.load(names_path)
+
+    index_to_cut = get_index_to_cut(3, 1e-6, before)
+    before = np.delete(before, index_to_cut, axis=1)
+    after = np.delete(after, index_to_cut, axis=1)
 
     response = np.divide(np.subtract(after, before), before) * 100
 
