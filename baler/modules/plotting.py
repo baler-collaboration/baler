@@ -7,6 +7,8 @@ import modules.data_processing as data_processing
 import modules.helper as helper
 
 import sys
+import scipy
+from scipy import constants
 
 
 def to_percent(y, position):
@@ -59,9 +61,7 @@ def plot(project_path, config):
     after = np.transpose(np.load(after_path))
     names = np.load(names_path)
 
-    response = np.divide(np.subtract(after, before), before)
-    # response = response[(response < -20) | (response > 20)]
-    # response = response.fromfunction(lambda p: -20 < p < 20)
+    response = np.divide(np.subtract(after, before), before) * 100
 
     with PdfPages(project_path + "/plotting/comparison.pdf") as pdf:
         fig = plt.figure(constrained_layout=True, figsize=(10, 4))
@@ -75,10 +75,15 @@ def plot(project_path, config):
 
         number_of_columns = len(names)
         for index, column in enumerate(names):
-            response_list = list(filter(lambda p: -20 < p < 20, response[index]))
+            response_list = list(
+                filter(
+                    lambda p: -1 * 1000000 <= p <= 1000000,
+                    response[index],
+                )
+            )
             column_name = column.split(".")[-1]
             print(f"Plotting: {column_name} ({index+1} of {number_of_columns})")
-            rms = np.sqrt(np.mean(np.square(response[index])))
+            rms = np.sqrt(np.mean(np.square(response_list)))
 
             x_min = min(before[index] + after[index])
             x_max = max(before[index] + after[index])
@@ -110,6 +115,7 @@ def plot(project_path, config):
             ax1.set_yscale("log")
             ax1.legend(loc="best")
             ax1.set_xlim(x_min - 0.1 * x_diff, x_max + 0.1 * x_diff)
+            ax1.set_ylim(ymin=1)
 
             data_bin_centers = bins_after[:-1] + (bins_after[1:] - bins_after[:-1]) / 2
             ax3.scatter(
@@ -122,7 +128,7 @@ def plot(project_path, config):
 
             # Response Histogram
             counts_response, bins_response = np.histogram(
-                response[index], bins=np.arange(-0.1, 0.1, 0.001)
+                response_list, bins=np.arange(-20, 20, 0.1)
             )
             ax2.hist(
                 bins_response[:-1],
@@ -131,22 +137,22 @@ def plot(project_path, config):
                 label="Response",
             )
             ax2.axvline(
-                np.mean(response),
+                np.mean(response_list),
                 color="k",
                 linestyle="dashed",
                 linewidth=1,
-                label=f"Mean {round(np.mean(response[index]),4)}",
+                label=f"Mean {round(np.mean(response_list),4)} %",
             )
-            ax2.plot([], [], " ", label=f"RMS: {round(rms,8)}")
+            ax2.plot([], [], " ", label=f"RMS: {round(rms,4)} %")
 
-            ax2.set_xlabel(f"{column_name} Response", ha="right", x=1.0)
+            ax2.set_xlabel(f"{column_name} Response [%]", ha="right", x=1.0)
             ax2.set_ylabel("Counts", ha="right", y=1.0)
-            ax2.legend(loc="best", title=f"RMS: {round(rms,4)}")
+            ax2.legend(loc="best")
 
             pdf.savefig()
             ax2.clear()
             ax1.clear()
             ax3.clear()
 
-            # if index == 0:
-            #    break
+            if index == 3:
+                break
