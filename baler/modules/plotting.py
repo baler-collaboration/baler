@@ -84,15 +84,9 @@ def plot(project_path, config):
 
         number_of_columns = len(names)
         for index, column in enumerate(names):
-            response_list = list(
-                filter(
-                    lambda p: -1 * 1000000 <= p <= 1000000,
-                    response[index],
-                )
-            )
             column_name = column.split(".")[-1]
             print(f"Plotting: {column_name} ({index+1} of {number_of_columns})")
-            rms = np.sqrt(np.mean(np.square(response_list)))
+            rms = np.sqrt(np.mean(np.square(response[index])))
 
             x_min = min(before[index] + after[index])
             x_max = max(before[index] + after[index])
@@ -137,7 +131,7 @@ def plot(project_path, config):
 
             # Response Histogram
             counts_response, bins_response = np.histogram(
-                response_list, bins=np.arange(-20, 20, 0.1)
+                response[index], bins=np.arange(-20, 20, 0.1)
             )
             ax2.hist(
                 bins_response[:-1],
@@ -146,11 +140,11 @@ def plot(project_path, config):
                 label="Response",
             )
             ax2.axvline(
-                np.mean(response_list),
+                np.mean(response[index]),
                 color="k",
                 linestyle="dashed",
                 linewidth=1,
-                label=f"Mean {round(np.mean(response_list),4)} %",
+                label=f"Mean {round(np.mean(response[index]),4)} %",
             )
             ax2.plot([], [], " ", label=f"RMS: {round(rms,4)} %")
 
@@ -163,5 +157,5 @@ def plot(project_path, config):
             ax1.clear()
             ax3.clear()
 
-            # if index == 3:
-            #     break
+            if index == 3:
+                break
