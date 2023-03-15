@@ -154,5 +154,5 @@ def plot(project_path, config):
             ax1.clear()
             ax3.clear()
 
-            if index == 3:
-                break
+            # if index == 3:
+            #     break
