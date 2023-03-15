@@ -1,15 +1,14 @@
-import pickle
-
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 from matplotlib.backends.backend_pdf import PdfPages
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import modules.data_processing as data_processing
 import modules.helper as helper
 
 import sys
+import scipy
+from scipy import constants
 
 
 def to_percent(y, position):
@@ -52,18 +51,26 @@ def loss_plot(path_to_loss_data, output_path, config):
     # plt.show()
 
 
+def get_index_to_cut(column_index, cut, array):
+    indices_to_cut = np.argwhere(array[column_index] < cut).flatten()
+    return indices_to_cut
+
+
 def plot(project_path, config):
     output_path = project_path + "training/"
     names_path = config.names_path
     before_path = output_path + "before.npy"
     after_path = output_path + "after.npy"
 
-    column_names = np.load(names_path)
+    before = np.transpose(np.load(before_path))
+    after = np.transpose(np.load(after_path))
+    names = np.load(names_path)
 
-    before = pd.DataFrame(np.load(before_path), columns=column_names)
-    after = pd.DataFrame(np.load(after_path), columns=column_names)
+    index_to_cut = get_index_to_cut(3, 1e-6, before)
+    before = np.delete(before, index_to_cut, axis=1)
+    after = np.delete(after, index_to_cut, axis=1)
 
-    response = (after - before) / before
+    response = np.divide(np.subtract(after, before), before) * 100
 
     with PdfPages(project_path + "/plotting/comparison.pdf") as pdf:
         fig = plt.figure(constrained_layout=True, figsize=(10, 4))
@@ -75,23 +82,19 @@ def plot(project_path, config):
         axsRight = subfigs[1].subplots()
         ax2 = axsRight
 
-        columns = list(before.columns)
-        number_of_columns = len(columns)
-        for index, column in enumerate(columns):
+        number_of_columns = len(names)
+        for index, column in enumerate(names):
             column_name = column.split(".")[-1]
             print(f"Plotting: {column_name} ({index+1} of {number_of_columns})")
-            response_list = list(filter(lambda p: -20 <= p <= 20, response[column]))
-            square = np.square(response_list)
-            MS = square.mean()
-            response_RMS = np.sqrt(MS)
+            rms = np.sqrt(np.mean(np.square(response[index])))
 
-            x_min = min(before[column] + after[column])
-            x_max = max(before[column] + after[column])
+            x_min = min(before[index] + after[index])
+            x_max = max(before[index] + after[index])
             x_diff = abs(x_max - x_min)
 
             # Before Histogram
             counts_before, bins_before = np.histogram(
-                before[column],
+                before[index],
                 bins=np.linspace(x_min - 0.1 * x_diff, x_max + 0.1 * x_diff, 200),
             )
             ax1.hist(
@@ -100,7 +103,7 @@ def plot(project_path, config):
 
             # After Histogram
             counts_after, bins_after = np.histogram(
-                after[column],
+                after[index],
                 bins=np.linspace(x_min - 0.1 * x_diff, x_max + 0.1 * x_diff, 200),
             )
             ax1.hist(
@@ -115,6 +118,7 @@ def plot(project_path, config):
             ax1.set_yscale("log")
             ax1.legend(loc="best")
             ax1.set_xlim(x_min - 0.1 * x_diff, x_max + 0.1 * x_diff)
+            ax1.set_ylim(ymin=1)
 
             data_bin_centers = bins_after[:-1] + (bins_after[1:] - bins_after[:-1]) / 2
             ax3.scatter(
@@ -127,7 +131,7 @@ def plot(project_path, config):
 
             # Response Histogram
             counts_response, bins_response = np.histogram(
-                response[column], bins=np.arange(-2, 2, 0.01)
+                response[index], bins=np.arange(-20, 20, 0.1)
             )
             ax2.hist(
                 bins_response[:-1],
@@ -136,22 +140,22 @@ def plot(project_path, config):
                 label="Response",
             )
             ax2.axvline(
-                np.mean(response_list),
+                np.mean(response[index]),
                 color="k",
                 linestyle="dashed",
                 linewidth=1,
-                label=f"Mean {round(np.mean(response_list),4)}",
+                label=f"Mean {round(np.mean(response[index]),4)} %",
             )
-            ax2.plot([], [], " ", label=f"RMS: {round(response_RMS,8)}")
+            ax2.plot([], [], " ", label=f"RMS: {round(rms,4)} %")
 
-            ax2.set_xlabel(f"{column_name} Response", ha="right", x=1.0)
+            ax2.set_xlabel(f"{column_name} Response [%]", ha="right", x=1.0)
             ax2.set_ylabel("Counts", ha="right", y=1.0)
-            ax2.legend(loc="best", title=f"RMS: {round(response_RMS,4)}")
+            ax2.legend(loc="best")
 
             pdf.savefig()
             ax2.clear()
             ax1.clear()
             ax3.clear()
 
-            # if index == 3:
-            #    break
+            if index == 3:
+                break

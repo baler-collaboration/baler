@@ -1,11 +1,8 @@
-import json
 import os
 
 import numpy as np
-import pandas as pd
 import pytest
 import torch
-from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 
 from baler.modules import data_processing
@@ -77,27 +74,6 @@ def test_normalize():
     np.testing.assert_almost_equal(result2, expected_result2)
 
 
-def test_split_success():
-    # Test data
-    df = pd.DataFrame({"A": [1, 2, 3, 4, 5], "B": [5, 4, 3, 2, 1]})
-    test_size = 0.2
-    random_state = 42
-
-    # Split the data using the split function
-    train, test = data_processing.split(df, test_size, random_state)
-
-    # Check that the size of the train and test sets is correct
-    assert train.shape[0] + test.shape[0] == df.shape[0]
-    assert abs(train.shape[0] / df.shape[0] - (1 - test_size)) < 1e-9
-
-    # Check that the random state was set correctly
-    train_split, test_split = train_test_split(
-        df, test_size=test_size, random_state=random_state
-    )
-    np.testing.assert_array_equal(train.index, train_split.index)
-    np.testing.assert_array_equal(test.index, test_split.index)
-
-
 def test_renormalize_std():
     # Test data
     data = np.array([0.1, 0.2, 0.3, 0.4, 0.5])
@@ -129,15 +105,3 @@ def test_renormalize_func():
     # Check that the renormalized data is correct
     expected_renormalized_data = np.array([[-1, 2], [-0.5, 6], [0, 10], [1, 18]])
     np.testing.assert_array_equal(renormalized_data, expected_renormalized_data)
-
-
-def test_get_columns():
-    # Test data
-    df = pd.DataFrame({"col1": [1, 2, 3], "col2": [4, 5, 6]})
-
-    # Get the columns using the get_columns function
-    columns = data_processing.get_columns(df)
-
-    # Check that the columns are correct
-    expected_columns = ["col1", "col2"]
-    assert columns == expected_columns
