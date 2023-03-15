@@ -53,10 +53,9 @@ def plot(project_path, config):
     before_path = output_path + "before.npy"
     after_path = output_path + "after.npy"
 
-    column_names = np.load(names_path)
-
-    before = pd.DataFrame(np.load(before_path), columns=column_names)
-    after = pd.DataFrame(np.load(after_path), columns=column_names)
+    before = np.transpose(np.load(before_path))
+    after = np.transpose(np.load(after_path))
+    names = np.load(names_path)
 
     response = (after - before) / before
 
@@ -70,23 +69,22 @@ def plot(project_path, config):
         axsRight = subfigs[1].subplots()
         ax2 = axsRight
 
-        columns = list(before.columns)
-        number_of_columns = len(columns)
-        for index, column in enumerate(columns):
+        number_of_columns = len(names)
+        for index, column in enumerate(names):
             column_name = column.split(".")[-1]
             print(f"Plotting: {column_name} ({index+1} of {number_of_columns})")
-            response_list = list(filter(lambda p: -20 <= p <= 20, response[column]))
-            square = np.square(response_list)
+            # response_list = list(filter(lambda p: -20 <= p <= 20, response[column]))
+            square = np.square(response)
             MS = square.mean()
             response_RMS = np.sqrt(MS)
 
-            x_min = min(before[column] + after[column])
-            x_max = max(before[column] + after[column])
+            x_min = min(before[index] + after[index])
+            x_max = max(before[index] + after[index])
             x_diff = abs(x_max - x_min)
 
             # Before Histogram
             counts_before, bins_before = np.histogram(
-                before[column],
+                before[index],
                 bins=np.linspace(x_min - 0.1 * x_diff, x_max + 0.1 * x_diff, 200),
             )
             ax1.hist(
@@ -95,7 +93,7 @@ def plot(project_path, config):
 
             # After Histogram
             counts_after, bins_after = np.histogram(
-                after[column],
+                after[index],
                 bins=np.linspace(x_min - 0.1 * x_diff, x_max + 0.1 * x_diff, 200),
             )
             ax1.hist(
@@ -122,7 +120,7 @@ def plot(project_path, config):
 
             # Response Histogram
             counts_response, bins_response = np.histogram(
-                response[column], bins=np.arange(-2, 2, 0.01)
+                response[index], bins=np.arange(-0.1, 0.1, 0.001)
             )
             ax2.hist(
                 bins_response[:-1],
@@ -131,11 +129,11 @@ def plot(project_path, config):
                 label="Response",
             )
             ax2.axvline(
-                np.mean(response_list),
+                np.mean(response),
                 color="k",
                 linestyle="dashed",
                 linewidth=1,
-                label=f"Mean {round(np.mean(response_list),4)}",
+                label=f"Mean {round(np.mean(response),4)}",
             )
             ax2.plot([], [], " ", label=f"RMS: {round(response_RMS,8)}")
 
@@ -148,5 +146,5 @@ def plot(project_path, config):
             ax1.clear()
             ax3.clear()
 
-            # if index == 3:
-            #    break
+            if index == 0:
+                break
