@@ -6,6 +6,8 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 import modules.data_processing as data_processing
 import modules.helper as helper
 
+import sys
+
 
 def to_percent(y, position):
     # Ignore the passed in position. This has the effect of scaling the default
@@ -57,7 +59,9 @@ def plot(project_path, config):
     after = np.transpose(np.load(after_path))
     names = np.load(names_path)
 
-    response = (after - before) / before
+    response = np.divide(np.subtract(after, before), before)
+    # response = response[(response < -20) | (response > 20)]
+    # response = response.fromfunction(lambda p: -20 < p < 20)
 
     with PdfPages(project_path + "/plotting/comparison.pdf") as pdf:
         fig = plt.figure(constrained_layout=True, figsize=(10, 4))
@@ -71,12 +75,10 @@ def plot(project_path, config):
 
         number_of_columns = len(names)
         for index, column in enumerate(names):
+            response_list = list(filter(lambda p: -20 < p < 20, response[index]))
             column_name = column.split(".")[-1]
             print(f"Plotting: {column_name} ({index+1} of {number_of_columns})")
-            # response_list = list(filter(lambda p: -20 <= p <= 20, response[column]))
-            square = np.square(response)
-            MS = square.mean()
-            response_RMS = np.sqrt(MS)
+            rms = np.sqrt(np.mean(np.square(response[index])))
 
             x_min = min(before[index] + after[index])
             x_max = max(before[index] + after[index])
@@ -133,18 +135,18 @@ def plot(project_path, config):
                 color="k",
                 linestyle="dashed",
                 linewidth=1,
-                label=f"Mean {round(np.mean(response),4)}",
+                label=f"Mean {round(np.mean(response[index]),4)}",
             )
-            ax2.plot([], [], " ", label=f"RMS: {round(response_RMS,8)}")
+            ax2.plot([], [], " ", label=f"RMS: {round(rms,8)}")
 
             ax2.set_xlabel(f"{column_name} Response", ha="right", x=1.0)
             ax2.set_ylabel("Counts", ha="right", y=1.0)
-            ax2.legend(loc="best", title=f"RMS: {round(response_RMS,4)}")
+            ax2.legend(loc="best", title=f"RMS: {round(rms,4)}")
 
             pdf.savefig()
             ax2.clear()
             ax1.clear()
             ax3.clear()
 
-            if index == 0:
-                break
+            # if index == 0:
+            #    break
