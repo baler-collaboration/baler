@@ -140,9 +140,10 @@ def normalize(data, custom_norm):
     return data
 
 
-def process(data_path, names_path, custom_norm, test_size, energy_conversion):
-    data = np.load(data_path)
-    names = np.load(names_path)
+def process(input_path, custom_norm, test_size, energy_conversion):
+    loaded = np.load(input_path)
+    data = loaded["data"]
+    names = loaded["names"]
 
     # TODO Fix this
     # if energy_conversion:
@@ -196,10 +197,11 @@ def detach(tensor):
 
 def compress(model_path, config):
     # Give the encoding function the correct input as tensor
-    data_before = np.load(config.data_path)
+    loaded = np.load(config.input_path)
+    data_before = loaded["data"]
     data = normalize(data_before, config.custom_norm)
-    cleared_col_names = np.load(config.names_path)
-    number_of_columns = len(cleared_col_names)
+    names = loaded["names"]
+    number_of_columns = len(names)
     try:
         config.latent_space_size = int(number_of_columns // config.compression_ratio)
         config.number_of_columns = number_of_columns
@@ -218,12 +220,15 @@ def compress(model_path, config):
     data_tensor = torch.from_numpy(data).to(model.device)
 
     compressed = model.encode(data_tensor)
-    return compressed, data_before, cleared_col_names
+    return compressed, data_before, names
 
 
 def decompress(model_path, input_path, model_name):
     # Load the data & convert to tensor
-    data = np.load(input_path)
+    loaded = np.load(input_path)
+    data = loaded["data"]
+    names = loaded["names"]
+    normalization_features = loaded["normalization_features"]
     latent_space_size = len(data[0])
     modelDict = torch.load(str(model_path))
     number_of_columns = len(modelDict[list(modelDict.keys())[-1]])
@@ -241,7 +246,7 @@ def decompress(model_path, input_path, model_name):
     data_tensor = torch.from_numpy(data).to(model.device)
 
     decompressed = model.decode(data_tensor)
-    return decompressed
+    return decompressed, names, normalization_features
 
 
 def get_device():

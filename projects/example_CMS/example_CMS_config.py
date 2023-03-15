@@ -1,12 +1,11 @@
 def set_config(c):
-    c.data_path = "data/example_CMS/example_CMS_data.npy"
-    c.names_path = "data/example_CMS/example_CMS_names.npy"
-    c.energy_conversion = False
-    c.compression_ratio = 2.0
-    c.epochs = 10
+    c.input_path = "data/example_CMS/example_CMS.npz"
+    c.latent_space_size = 15
+    c.number_of_columns = 24
+    c.epochs = 2
     c.early_stopping = False
-    c.lr_scheduler = False
-    c.patience = 100
+    c.lr_scheduler = True
+    c.patience = 50
     c.min_delta = 0
     c.model_name = "george_SAE"
     c.custom_norm = False

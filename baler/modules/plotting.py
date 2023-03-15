@@ -58,13 +58,12 @@ def get_index_to_cut(column_index, cut, array):
 
 def plot(project_path, config):
     output_path = project_path + "training/"
-    names_path = config.names_path
     before_path = output_path + "before.npy"
     after_path = output_path + "after.npy"
 
     before = np.transpose(np.load(before_path))
     after = np.transpose(np.load(after_path))
-    names = np.load(names_path)
+    names = np.load(config.input_path)["names"]
 
     index_to_cut = get_index_to_cut(3, 1e-6, before)
     before = np.delete(before, index_to_cut, axis=1)
