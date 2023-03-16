@@ -18,3 +18,29 @@ def set_config(c):
     c.save_as_root = True
     c.test_size = 0.15
     c.energy_conversion = False
+    c.type_list = [
+        "float64",
+        "float64",
+        "float64",
+        "float64",
+        "float64",
+        "float64",
+        "float64",
+        "float64",
+        "float64",
+        "float64",
+        "float64",
+        "float64",
+        "int",
+        "int",
+        "int",
+        "int",
+        "int",
+        "int",
+        "int",
+        "float64",
+        "float64",
+        "float64",
+        "int",
+        "int",
+    ]
