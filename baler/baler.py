@@ -137,7 +137,6 @@ def perform_decompression(save_as_root, model_name, project_path, config):
     try:
         type_list = config.type_list
         decompressed = np.transpose(decompressed)
-        print(decompressed)
         for index, column in enumerate(decompressed):
             decompressed[index] = decompressed[index].astype(type_list[index])
         decompressed = np.transpose(decompressed)
