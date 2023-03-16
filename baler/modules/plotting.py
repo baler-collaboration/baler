@@ -59,8 +59,8 @@ def get_index_to_cut(column_index, cut, array):
 def plot(project_path, config):
     output_path = project_path + "training/"
     names_path = config.names_path
-    before_path = output_path + "before.npy"
-    after_path = output_path + "after.npy"
+    before_path = config.data_path
+    after_path = project_path + "decompressed_output/decompressed.npy"
 
     before = np.transpose(np.load(before_path))
     after = np.transpose(np.load(after_path))
