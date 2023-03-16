@@ -223,11 +223,22 @@ def perform_decompression(model_name, project_path, config):
         normalization_features = np.load(
             project_path + "training/normalization_features.npy"
         )
-        decompressed = helper.renormalize(
-            decompressed,
-            normalization_features[0],
-            normalization_features[1],
-        )
+
+    decompressed = helper.renormalize(
+        decompressed,
+        normalization_features[0],
+        normalization_features[1],
+    )
+
+    try:
+        type_list = config.type_list
+        decompressed = np.transpose(decompressed)
+        for index, column in enumerate(decompressed):
+            decompressed[index] = decompressed[index].astype(type_list[index])
+        decompressed = np.transpose(decompressed)
+    except AttributeError:
+        pass
+
     end = time.time()
     print("Decompression took:", f"{(end - start) / 60:.3} minutes")
 

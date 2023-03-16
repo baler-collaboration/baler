@@ -4,7 +4,7 @@ def set_config(c):
     c.compression_ratio = 1.6
     c.apply_normalization = True
     c.model_name = "AE"
-    c.epochs = 2
+    c.epochs = 5
     c.lr = 0.001
     c.batch_size = 512
     c.early_stopping = True
@@ -32,3 +32,30 @@ def set_config(c):
     c.emd = False
     c.l1 = True
     c.activation_extraction = True
+
+    c.type_list = [
+        "float64",
+        "float64",
+        "float64",
+        "float64",
+        "float64",
+        "float64",
+        "float64",
+        "float64",
+        "float64",
+        "float64",
+        "float64",
+        "float64",
+        "int",
+        "int",
+        "int",
+        "int",
+        "int",
+        "int",
+        "int",
+        "float64",
+        "float64",
+        "float64",
+        "int",
+        "int",
+    ]
