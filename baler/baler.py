@@ -18,7 +18,9 @@ def main():
     elif mode == "compress":
         perform_compression(config, project_path)
     elif mode == "decompress":
-        perform_decompression(config.save_as_root, config.model_name, project_path)
+        perform_decompression(
+            config.save_as_root, config.model_name, project_path, config
+        )
     elif mode == "info":
         print_info(project_path)
 
@@ -110,7 +112,7 @@ def perform_compression(config, project_path):
     np.save(project_path + "compressed_output/names.npy", cleared_col_names)
 
 
-def perform_decompression(save_as_root, model_name, project_path):
+def perform_decompression(save_as_root, model_name, project_path, config):
     print("Decompressing...")
     cleared_col_names = np.load(project_path + "compressed_output/names.npy")
     start = time.time()
@@ -131,6 +133,18 @@ def perform_decompression(save_as_root, model_name, project_path):
         normalization_features[0],
         normalization_features[1],
     )
+
+    try:
+        type_list = config.type_list
+        decompressed = np.transpose(decompressed)
+        print(decompressed)
+        for index, column in enumerate(decompressed):
+            decompressed[index] = decompressed[index].astype(type_list[index])
+        decompressed = np.transpose(decompressed)
+        print(decompressed)
+    except AttributeError:
+        pass
+
     end = time.time()
     print("Decompression took:", f"{(end - start) / 60:.3} minutes")
     np.save(project_path + "decompressed_output/decompressed.npy", decompressed)

@@ -58,9 +58,9 @@ def get_index_to_cut(column_index, cut, array):
 
 def plot(project_path, config):
     output_path = project_path + "training/"
-    names_path = "data/cms_data_axel_names.npy"
-    before_path = "data/cms_data_axel.npy"
-    after_path = project_path + "decompressed_output/decompressed.npy"
+    names_path = config.names_path
+    before_path = output_path + "before.npy"
+    after_path = output_path + "after.npy"
 
     before = np.transpose(np.load(before_path))
     after = np.transpose(np.load(after_path))
@@ -71,7 +71,6 @@ def plot(project_path, config):
     after = np.delete(after, index_to_cut, axis=1)
 
     response = np.divide(np.subtract(after, before), before) * 100
-    residual = np.subtract(after,before)
 
     with PdfPages(project_path + "/plotting/comparison.pdf") as pdf:
         fig = plt.figure(constrained_layout=True, figsize=(10, 4))
@@ -80,17 +79,14 @@ def plot(project_path, config):
         axsLeft = subfigs[0].subplots(2, 1, sharex=True)
         ax1 = axsLeft[0]
         ax3 = axsLeft[1]
-        axsRight = subfigs[1].subplots(2,1, sharex=False)
-        ax2 = axsRight[0]
-        ax4 = axsRight[1]
+        axsRight = subfigs[1].subplots()
+        ax2 = axsRight
 
         number_of_columns = len(names)
         for index, column in enumerate(names):
             column_name = column.split(".")[-1]
             print(f"Plotting: {column_name} ({index+1} of {number_of_columns})")
             rms = np.sqrt(np.mean(np.square(response[index])))
-            residual_RMS = np.sqrt(np.mean(np.square(residual[index])))
-
 
             x_min = min(before[index] + after[index])
             x_max = max(before[index] + after[index])
@@ -130,12 +126,12 @@ def plot(project_path, config):
             )  # FIXME: Dividing by zero
             ax3.axhline(y=0, linewidth=0.2, color="black")
             ax3.set_xlabel(f"{column_name}", ha="right", x=1.0)
-            ax3.set_ylim(-max(counts_after - counts_before)-0.05*max(counts_after - counts_before),max(counts_after - counts_before)+0.05*max(counts_after - counts_before))
+            ax3.set_ylim(-200, 200)
             ax3.set_ylabel("Residual")
 
             # Response Histogram
             counts_response, bins_response = np.histogram(
-                response[index], bins=np.arange(-20, 20, 0.2)
+                response[index], bins=np.arange(-20, 20, 0.1)
             )
             ax2.hist(
                 bins_response[:-1],
@@ -154,41 +150,12 @@ def plot(project_path, config):
 
             ax2.set_xlabel(f"{column_name} Response [%]", ha="right", x=1.0)
             ax2.set_ylabel("Counts", ha="right", y=1.0)
-            ax2.legend(loc="best", bbox_to_anchor=(1, 1.05))
-
-
-            # Residual Histogram
-            counts_residual, bins_residual = np.histogram(
-                residual[index], bins=np.arange(-1, 1, 0.01)
-            )
-            ax4.hist(
-                bins_residual[:-1],
-                bins_residual,
-                weights=counts_residual,
-                label="Residual",
-            )
-            ax4.axvline(
-                np.mean(residual[index]),
-                color="k",
-                linestyle="dashed",
-                linewidth=1,
-                label=f"Mean {round(np.mean(residual[index]),6)}",
-            )
-            ax4.plot([], [], " ", label=f"RMS: {round(residual_RMS,6)}")
-            ax4.plot([], [], " ", label=f"Max: {round(max(residual[index]),6)}")
-            ax4.plot([], [], " ", label=f"Min: {round(min(residual[index]),6)}")
-            
-
-            ax4.set_xlabel(f"{column_name} Residual", ha="right", x=1.0)
-            ax4.set_ylabel("Counts", ha="right", y=1.0)
-            ax4.set_xlim(-1,1)
-            ax4.legend(loc='best', bbox_to_anchor=(1, 1.05))
+            ax2.legend(loc="best")
 
             pdf.savefig()
             ax2.clear()
             ax1.clear()
             ax3.clear()
-            ax4.clear()
 
-            #if index == 3:
+            # if index == 3:
             #    break
