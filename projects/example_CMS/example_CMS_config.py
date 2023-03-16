@@ -17,3 +17,4 @@ def set_config(c):
     c.save_as_root = True
     c.test_size = 0.15
     c.energy_conversion = False
+    c.extra_compression = False

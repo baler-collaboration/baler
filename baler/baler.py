@@ -18,7 +18,9 @@ def main():
     elif mode == "compress":
         perform_compression(config, project_path)
     elif mode == "decompress":
-        perform_decompression(config.save_as_root, config.model_name, project_path)
+        perform_decompression(
+            config.save_as_root, config.model_name, project_path, config
+        )
     elif mode == "info":
         print_info(project_path)
 
@@ -110,15 +112,23 @@ def perform_compression(config, project_path):
 
     print("Compression took:", f"{(end - start) / 60:.3} minutes")
 
-    np.savez_compressed(
-        project_path + "compressed_output/compressed.npz",
-        data=compressed,
-        names=names,
-        normalization_features=normalization_features,
-    )
+    if config.extra_compression:
+        np.savez_compressed(
+            project_path + "compressed_output/compressed.npz",
+            data=compressed,
+            names=names,
+            normalization_features=normalization_features,
+        )
+    else:
+        np.savez(
+            project_path + "compressed_output/compressed.npz",
+            data=compressed,
+            names=names,
+            normalization_features=normalization_features,
+        )
 
 
-def perform_decompression(save_as_root, model_name, project_path):
+def perform_decompression(save_as_root, model_name, project_path, config):
     print("Decompressing...")
     start = time.time()
     decompressed, names, normalization_features = helper.decompress(
@@ -137,11 +147,19 @@ def perform_decompression(save_as_root, model_name, project_path):
     )
     end = time.time()
     print("Decompression took:", f"{(end - start) / 60:.3} minutes")
-    np.savez_compressed(
-        project_path + "decompressed_output/decompressed.npz",
-        data=decompressed,
-        names=names,
-    )
+
+    if config.extra_compression:
+        np.savez_compressed(
+            project_path + "decompressed_output/decompressed.npz",
+            data=decompressed,
+            names=names,
+        )
+    else:
+        np.savez(
+            project_path + "decompressed_output/decompressed.npz",
+            data=decompressed,
+            names=names,
+        )
 
 
 def print_info(project_path):
