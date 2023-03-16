@@ -140,7 +140,6 @@ def perform_decompression(save_as_root, model_name, project_path, config):
         for index, column in enumerate(decompressed):
             decompressed[index] = decompressed[index].astype(type_list[index])
         decompressed = np.transpose(decompressed)
-        print(decompressed)
     except AttributeError:
         pass
 
