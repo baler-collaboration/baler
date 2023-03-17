@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# This script servers as a wrapper around docker build to build the docker image
+# And is run in the GitHub Actions workflow
+
 DOCKERFILE="Dockerfile"
 ARCH="amd64"
 
