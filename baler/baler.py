@@ -38,8 +38,12 @@ def perform_training(config, project_path):
     )
 
     try:
-        config.latent_space_size = int(number_of_columns // config.compression_ratio)
-        config.number_of_columns = number_of_columns
+        if config.names_path:
+            config.latent_space_size = int(number_of_columns // config.compression_ratio)
+            config.number_of_columns = number_of_columns
+        else:
+            config.latent_space_size = int((number_of_columns*number_of_columns)// config.compression_ratio)
+            config.number_of_columns = number_of_columns
     except AttributeError:
         print(config.latent_space_size, config.number_of_columns)
         assert number_of_columns == config.number_of_columns

@@ -226,8 +226,11 @@ class george_SAE_Dropout(nn.Module):
         return loss
         
 class Conv_AE(nn.Module):
-        def __init__(self, n_features, z_dim, *args, **kwargs):
+        def __init__(self, device, n_features, z_dim, *args, **kwargs):
             super(Conv_AE, self).__init__(*args, **kwargs)
+            
+            self.device = device
+
             self.q_z_mid_dim = 2000
             self.q_z_output_dim = 72128
             # Encoder
@@ -251,7 +254,7 @@ class Conv_AE(nn.Module):
                   nn.ReLU(), 
                   # nn.BatchNorm1d(self.q_z_output_dim),
                   nn.Linear(self.q_z_mid_dim, z_dim),
-                  nn.ReLU(),
+                  nn.ReLU()
                   )
 
             # Decoder
@@ -260,7 +263,7 @@ class Conv_AE(nn.Module):
                   nn.ReLU(),
                   # nn.BatchNorm1d(self.q_z_output_dim),
                   nn.Linear(self.q_z_mid_dim, self.q_z_output_dim),
-                  nn.ReLU(),
+                  nn.ReLU()
                   # nn.BatchNorm1d(42720) 
                   )
             # Conv Layers
@@ -271,7 +274,7 @@ class Conv_AE(nn.Module):
                   nn.ConvTranspose2d(16, 8, kernel_size=(3), stride=(1), padding=(1)),
                   nn.BatchNorm2d(8),
                   nn.ReLU(),
-                  nn.ConvTranspose2d(8, 1, kernel_size=(2,5), stride=(1), padding=(1))
+                  nn.ConvTranspose2d(8, 1, kernel_size=(2,5), stride=(1), padding=(1)),
                   ) 
     
         def encode(self, x):

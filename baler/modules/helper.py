@@ -39,9 +39,11 @@ Baler has three running modes:\n
         config = None
     else:
         config = configClass
-        importlib.import_module(
-            f"projects.{args.project}.{args.project}_config"
-        ).set_config(config)
+        importlib.import_module(name = f".",
+        package=f"{args.project}_config").set_config(config)
+        #importlib.import_module(
+        #    f"projects.{args.project}.{args.project}_config"
+        #).set_config(config)
     return config, args.mode, args.project
 
 
@@ -142,7 +144,12 @@ def normalize(data, custom_norm):
 
 def process(data_path, names_path, custom_norm, test_size, energy_conversion):
     data = np.load(data_path)
-    names = np.load(names_path)
+    if names_path:
+        names = np.load(names_path)
+        number_of_columns = len(names)
+    else:
+        names = ''
+        number_of_columns = len(data)
 
     # TODO Fix this
     # if energy_conversion:
@@ -158,7 +165,7 @@ def process(data_path, names_path, custom_norm, test_size, energy_conversion):
         train_set, test_set = train_test_split(
             data, test_size=test_size, random_state=1
         )
-        number_of_columns = len(names)
+    
 
     return (
         train_set,

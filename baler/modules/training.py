@@ -31,7 +31,7 @@ def fit(model, train_dl, train_ds, model_children, regular_param, optimizer, RHO
             true_data=inputs,
             reconstructed_data=reconstructions,
             reg_param=regular_param,
-            validate=False,
+            validate=True,
         )
 
         loss.backward()
@@ -100,16 +100,17 @@ def train(model, variables, train_data, test_data, parent_path, config):
     model = model.to(device)
 
     # Converting data to tensors
-    train_ds = torch.tensor(train_data, dtype=torch.float64, device=device)
-    valid_ds = torch.tensor(test_data, dtype=torch.float64, device=device)
+    train_ds = torch.tensor(train_data, dtype=torch.float32, device=device).view(1,1,len(test_data), len(test_data))
+    valid_ds = torch.tensor(test_data, dtype=torch.float32, device=device).view(1,1,len(test_data), len(test_data))
+
 
     # Pushing input data into the torch-DataLoader object and combines into one DataLoaders object (a basic wrapper
     # around several DataLoader objects).
     train_dl = DataLoader(
-        train_ds, batch_size=bs, shuffle=False, worker_init_fn=seed_worker, generator=g
+        train_ds, batch_size=bs, shuffle=False, worker_init_fn=seed_worker, generator=g, drop_last=False
     )
     valid_dl = DataLoader(
-        valid_ds, batch_size=bs, worker_init_fn=seed_worker, generator=g
+        valid_ds, batch_size=bs, worker_init_fn=seed_worker, generator=g, drop_last=False
     )  # Used to be batch_size = bs * 2
 
     # Select Optimizer
@@ -167,7 +168,7 @@ def train(model, variables, train_data, test_data, parent_path, config):
                 break
 
         ## Make-shift implementation to save models & values after 100 epochs:
-        save_model_and_data = True
+        save_model_and_data = False
         if save_model_and_data:
             if epoch % 100 == 0:
                 path = os.path.join(parent_path, f"model_{epoch}.pt")
@@ -190,7 +191,7 @@ def train(model, variables, train_data, test_data, parent_path, config):
     print(f"{(end - start) / 60:.3} minutes")
     np.save(parent_path + "loss_data.npy", np.array([train_loss, val_loss]))
 
-    data_as_tensor = torch.tensor(test_data, dtype=torch.float64)
+    data_as_tensor = torch.tensor(test_data, dtype=torch.float32)
     data_as_tensor = data_as_tensor.to(trained_model.device)
     pred_as_tensor = trained_model(data_as_tensor)
 
