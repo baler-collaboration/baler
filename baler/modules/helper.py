@@ -3,6 +3,8 @@ import importlib
 import os
 import pickle
 from dataclasses import dataclass
+import sys
+sys.path.append(os.getcwd())
 
 import numpy as np
 import torch
@@ -42,12 +44,9 @@ def get_arguments():
         config = None
     else:
         config = Config
-        importlib.import_module(name=f".", package=f"{args.project}_config").set_config(
-            config
-        )
-        # importlib.import_module(
-        #    f"projects.{args.project}.{args.project}_config"
-        # ).set_config(config)
+        importlib.import_module(
+           f"projects.{args.project}.{args.project}_config"
+        ).set_config(config)
     return config, args.mode, args.project
 
 
