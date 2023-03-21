@@ -3,7 +3,8 @@ import importlib
 import os
 import pickle
 from dataclasses import dataclass
-
+import sys
+sys.path.append(os.getcwd())
 import numpy as np
 import torch
 from sklearn.model_selection import train_test_split
