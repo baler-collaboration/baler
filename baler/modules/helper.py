@@ -14,11 +14,14 @@ from modules import training, plotting, data_processing
 def get_arguments():
     parser = argparse.ArgumentParser(
         prog="baler.py",
-        description="""Baler is a machine learning based compression tool for big data.\n
-Baler has three running modes:\n
-\t1. Derivation: Using a configuration file and a "small" input dataset, Baler derives a machine learning model optimized to compress and decompress your data.\n
-\t2. Compression: Using a previously derived model and a large input dataset, Baler compresses your data and outputs a smaller compressed file.\n
-\t3. Decompression: Using a previously compressed file as input and a model, Baler decompresses your data into a larger file.""",
+        description=("Baler is a machine learning based compression tool for big data.\n\n"
+                     "Baler has three running modes:\n\n"
+                     "\t1. Derivation: Using a configuration file and a \"small\" input dataset, Baler derives a "
+                     "machine learning model optimized to compress and decompress your data.\n\n"
+                     "\t2. Compression: Using a previously derived model and a large input dataset, Baler compresses "
+                     "your data and outputs a smaller compressed file.\n\n"
+                     "\t3. Decompression: Using a previously compressed file as input and a model, Baler decompresses "
+                     "your data into a larger file."),
         epilog="Enjoy!",
     )
     parser.add_argument(
@@ -38,7 +41,7 @@ Baler has three running modes:\n
     if args.mode == "newProject":
         config = None
     else:
-        config = configClass
+        config = Config
         importlib.import_module(
             f"projects.{args.project}.{args.project}_config"
         ).set_config(config)
@@ -67,7 +70,7 @@ def create_new_project(project_name: str, base_path: str = "projects") -> None:
 
 
 @dataclass
-class configClass:
+class Config:
     input_path: str
     compression_ratio: float
     epochs: int
@@ -87,7 +90,7 @@ class configClass:
     energy_conversion: bool
 
 
-def create_default_config(project_name) -> str:
+def create_default_config(project_name: str) -> str:
     return f"""
 def set_config(c):
     c.data_path          = "data/{project_name}/{project_name}_data.npy"
@@ -125,8 +128,8 @@ def from_pickle(path):
 
 def model_init(model_name):
     # This is used when we don't have saved model parameters.
-    ModelObject = data_processing.initialise_model(model_name)
-    return ModelObject
+    model_object = data_processing.initialise_model(model_name)
+    return model_object
 
 
 def numpy_to_tensor(data):
@@ -143,6 +146,7 @@ def normalize(data, custom_norm):
 def process(data_path, names_path, custom_norm, test_size, energy_conversion):
     data = np.load(data_path)
     names = np.load(names_path)
+    number_of_columns = len(names)
 
     # TODO Fix this
     # if energy_conversion:
@@ -158,7 +162,6 @@ def process(data_path, names_path, custom_norm, test_size, energy_conversion):
         train_set, test_set = train_test_split(
             data, test_size=test_size, random_state=1
         )
-        number_of_columns = len(names)
 
     return (
         train_set,
@@ -207,9 +210,9 @@ def compress(model_path, config):
         assert number_of_columns == config.number_of_columns
 
     # Initialise and load the model correctly.
-    ModelObject = data_processing.initialise_model(config.model_name)
+    model_object = data_processing.initialise_model(config.model_name)
     model = data_processing.load_model(
-        ModelObject,
+        model_object,
         model_path=model_path,
         n_features=number_of_columns,
         z_dim=config.latent_space_size,
@@ -225,13 +228,13 @@ def decompress(model_path, input_path, model_name):
     # Load the data & convert to tensor
     data = np.load(input_path)
     latent_space_size = len(data[0])
-    modelDict = torch.load(str(model_path))
-    number_of_columns = len(modelDict[list(modelDict.keys())[-1]])
+    model_dict = torch.load(str(model_path))
+    number_of_columns = len(model_dict[list(model_dict.keys())[-1]])
 
     # Initialise and load the model correctly.
-    ModelObject = data_processing.initialise_model(model_name)
+    model_object = data_processing.initialise_model(model_name)
     model = data_processing.load_model(
-        ModelObject,
+        model_object,
         model_path=model_path,
         n_features=number_of_columns,
         z_dim=latent_space_size,
@@ -255,7 +258,7 @@ def get_device():
     return device
 
 
-def compute_E(mass, eta, pt):
+def compute_e(mass, eta, pt):
     masspt = pt**2 + mass**2
     cosh = (np.cosh(eta)) ** 2
     total = np.sqrt(masspt * cosh)
@@ -273,7 +276,7 @@ def convert_mass_to_energy(df, col_names):
             mass = df.iloc[:, i]
 
             # Store name to rename & replace mass in df:
-            mass_name = str(col_names[i])
+            mass_name: str = str(col_names[i])
 
         if col_names[i].split(".")[-1] == "99":
             eta = df.iloc[:, i]
@@ -285,7 +288,7 @@ def convert_mass_to_energy(df, col_names):
             exit(1)
 
     # Compute mass
-    energy = compute_E(mass=mass, eta=eta, pt=pt)
+    energy = compute_e(mass=mass, eta=eta, pt=pt)
 
     # Get correct new column name
     energy_name = mass_name.replace("mass_", "energy_")

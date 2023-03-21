@@ -46,8 +46,8 @@ def perform_training(config, project_path):
 
     device = helper.get_device()
 
-    ModelObject = helper.model_init(config.model_name)
-    model = ModelObject(
+    model_object = helper.model_init(config.model_name)
+    model = model_object(
         device=device, n_features=number_of_columns, z_dim=config.latent_space_size
     )
 
