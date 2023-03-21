@@ -51,7 +51,6 @@ def pickle_to_df(file):
 def plot(project_path, config):
 
     data = np.load(config.data_path)
-    print(data)
 
     data_decompressed = np.load(
         project_path + "/decompressed_output/decompressed.npy"

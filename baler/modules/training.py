@@ -12,14 +12,13 @@ import modules.helper as helper
 import os
 
 
-def fit(model, train_dl, train_ds, model_children, regular_param, optimizer, RHO, l1):
+def fit(model, train_dl, model_children, regular_param, optimizer, RHO, l1):
     print("### Beginning Training")
 
     model.train()
 
     running_loss = 0.0
     counter = 0
-    n_data = int(len(train_ds) / train_dl.batch_size)
 
     for inputs in tqdm(train_dl):
         counter += 1
@@ -44,13 +43,13 @@ def fit(model, train_dl, train_ds, model_children, regular_param, optimizer, RHO
     return epoch_loss, mse_loss, l1_loss, model
 
 
-def validate(model, test_dl, test_ds, model_children, reg_param):
+def validate(model, test_dl, model_children, reg_param):
     print("### Beginning Validating")
 
     model.eval()
     counter = 0
     running_loss = 0.0
-    n_data = int(len(test_ds) / test_dl.batch_size)
+
     with torch.no_grad():
         for inputs in tqdm(test_dl):
             counter += 1
@@ -149,7 +148,6 @@ def train(model, variables, train_data, test_data, parent_path, config):
         train_epoch_loss, mse_loss_fit, regularizer_loss_fit, trained_model = fit(
             model=model,
             train_dl=train_dl,
-            train_ds=train_ds,
             model_children=model_children,
             optimizer=optimizer,
             RHO=rho,
@@ -163,7 +161,6 @@ def train(model, variables, train_data, test_data, parent_path, config):
             val_epoch_loss = validate(
                 model=trained_model,
                 test_dl=valid_dl,
-                test_ds=valid_ds,
                 model_children=model_children,
                 reg_param=reg_param,
             )
