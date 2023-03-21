@@ -100,17 +100,29 @@ def train(model, variables, train_data, test_data, parent_path, config):
     model = model.to(device)
 
     # Converting data to tensors
-    train_ds = torch.tensor(train_data, dtype=torch.float32, device=device).view(1,1,len(test_data), len(test_data))
-    valid_ds = torch.tensor(test_data, dtype=torch.float32, device=device).view(1,1,len(test_data), len(test_data))
-
+    train_ds = torch.tensor(train_data, dtype=torch.float32, device=device).view(
+        1, 1, len(test_data), len(test_data)
+    )
+    valid_ds = torch.tensor(test_data, dtype=torch.float32, device=device).view(
+        1, 1, len(test_data), len(test_data)
+    )
 
     # Pushing input data into the torch-DataLoader object and combines into one DataLoaders object (a basic wrapper
     # around several DataLoader objects).
     train_dl = DataLoader(
-        train_ds, batch_size=bs, shuffle=False, worker_init_fn=seed_worker, generator=g, drop_last=False
+        train_ds,
+        batch_size=bs,
+        shuffle=False,
+        worker_init_fn=seed_worker,
+        generator=g,
+        drop_last=False,
     )
     valid_dl = DataLoader(
-        valid_ds, batch_size=bs, worker_init_fn=seed_worker, generator=g, drop_last=False
+        valid_ds,
+        batch_size=bs,
+        worker_init_fn=seed_worker,
+        generator=g,
+        drop_last=False,
     )  # Used to be batch_size = bs * 2
 
     # Select Optimizer
@@ -191,8 +203,13 @@ def train(model, variables, train_data, test_data, parent_path, config):
     print(f"{(end - start) / 60:.3} minutes")
     np.save(parent_path + "loss_data.npy", np.array([train_loss, val_loss]))
 
-    data_as_tensor = torch.tensor(test_data, dtype=torch.float32)
-    data_as_tensor = data_as_tensor.to(trained_model.device)
-    pred_as_tensor = trained_model(data_as_tensor)
+    # print("1")
+    # data_as_tensor = torch.tensor(test_data, dtype=torch.float32)
+    # print("2")
+    # print(test_data.shape, data_as_tensor.shape)
+    # data_as_tensor = data_as_tensor.to(trained_model.device)
+    # print("3")
+    # print(test_data.shape, data_as_tensor.shape)
+    # pred_as_tensor = trained_model(data_as_tensor)
 
-    return data_as_tensor, pred_as_tensor, trained_model
+    return trained_model

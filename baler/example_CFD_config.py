@@ -9,7 +9,7 @@ def set_config(c):
     c.patience = 100
     c.min_delta = 0
     c.model_name = "Conv_AE"
-    c.custom_norm = False
+    c.custom_norm = True
     c.l1 = True
     c.reg_param = 0.001
     c.RHO = 0.05
@@ -17,15 +17,3 @@ def set_config(c):
     c.batch_size = 1
     c.save_as_root = False
     c.test_size = 0
-
-    
-
-
-
-
-
-
-
-
-
-

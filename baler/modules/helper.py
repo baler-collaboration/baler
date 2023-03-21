@@ -39,11 +39,12 @@ Baler has three running modes:\n
         config = None
     else:
         config = configClass
-        importlib.import_module(name = f".",
-        package=f"{args.project}_config").set_config(config)
-        #importlib.import_module(
+        importlib.import_module(name=f".", package=f"{args.project}_config").set_config(
+            config
+        )
+        # importlib.import_module(
         #    f"projects.{args.project}.{args.project}_config"
-        #).set_config(config)
+        # ).set_config(config)
     return config, args.mode, args.project
 
 
@@ -148,7 +149,7 @@ def process(data_path, names_path, custom_norm, test_size, energy_conversion):
         names = np.load(names_path)
         number_of_columns = len(names)
     else:
-        names = ''
+        names = ""
         number_of_columns = len(data)
 
     # TODO Fix this
@@ -165,7 +166,6 @@ def process(data_path, names_path, custom_norm, test_size, energy_conversion):
         train_set, test_set = train_test_split(
             data, test_size=test_size, random_state=1
         )
-    
 
     return (
         train_set,
@@ -205,11 +205,15 @@ def compress(model_path, config):
     # Give the encoding function the correct input as tensor
     data_before = np.load(config.data_path)
     data = normalize(data_before, config.custom_norm)
-    cleared_col_names = np.load(config.names_path)
-    number_of_columns = len(cleared_col_names)
     try:
-        config.latent_space_size = int(number_of_columns // config.compression_ratio)
-        config.number_of_columns = number_of_columns
+        if config.names_path:
+            config.latent_space_size = int(
+                number_of_columns // config.compression_ratio
+            )
+            config.number_of_columns = number_of_columns
+        else:
+            number_of_columns = 50
+            config.latent_space_size = 250
     except AttributeError:
         assert number_of_columns == config.number_of_columns
 
@@ -222,10 +226,10 @@ def compress(model_path, config):
         z_dim=config.latent_space_size,
     )
 
-    data_tensor = torch.from_numpy(data).to(model.device)
+    data_tensor = torch.from_numpy(data).to(model.device).view(1, 1, 50, 50)
 
     compressed = model.encode(data_tensor)
-    return compressed, data_before, cleared_col_names
+    return compressed, data_before
 
 
 def decompress(model_path, input_path, model_name):
