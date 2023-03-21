@@ -210,13 +210,16 @@ def compress(model_path, config):
     data = normalize(data_before, config.custom_norm)
     try:
         if config.names_path:
+            column_names = np.load(config.names_path)
+            number_of_columns = len(column_names)
             config.latent_space_size = int(
                 number_of_columns // config.compression_ratio
             )
             config.number_of_columns = number_of_columns
         else:
-            number_of_columns = 50
-            config.latent_space_size = 250
+            data = np.load(config.data_path)
+            number_of_columns = len(data)
+            config.latent_space_size = int((number_of_columns*number_of_columns) // config.compression_ratio)
     except AttributeError:
         assert number_of_columns == config.number_of_columns
 
