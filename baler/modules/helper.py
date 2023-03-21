@@ -90,6 +90,7 @@ class Config:
     save_as_root: bool
     test_size: float
     energy_conversion: bool
+    data_dimension: int
 
 
 def create_default_config(project_name: str) -> str:
@@ -114,6 +115,7 @@ def set_config(c):
     c.save_as_root        = True
     c.test_size           = 0.15
     c.energy_conversion   = False
+    c.data_dimension      = 1
 
 """
 
@@ -208,18 +210,21 @@ def compress(model_path, config):
     # Give the encoding function the correct input as tensor
     data_before = np.load(config.data_path)
     data = normalize(data_before, config.custom_norm)
+    number_of_columns = 0
     try:
-        if config.names_path:
+        if config.data_dimension==1:
             column_names = np.load(config.names_path)
             number_of_columns = len(column_names)
             config.latent_space_size = int(
                 number_of_columns // config.compression_ratio
             )
             config.number_of_columns = number_of_columns
-        else:
+        elif config.data_dimension==2:
             data = np.load(config.data_path)
             number_of_columns = len(data)
             config.latent_space_size = int((number_of_columns*number_of_columns) // config.compression_ratio)
+        else:
+            raise NameError("Data dimension can only be 1 or 2. Introduced value = " + str(config.data_dimension))
     except AttributeError:
         assert number_of_columns == config.number_of_columns
 

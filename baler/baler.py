@@ -40,16 +40,18 @@ def perform_training(config, project_path):
     )
 
     try:
-        if config.names_path:
+        if config.data_dimension==1:
             config.latent_space_size = int(
                 number_of_columns // config.compression_ratio
             )
             config.number_of_columns = number_of_columns
-        else:
+        elif config.data_dimension==2:
             config.latent_space_size = int(
                 (number_of_columns * number_of_columns) // config.compression_ratio
             )
             config.number_of_columns = number_of_columns
+        else:
+            raise NameError("Data dimension can only be 1 or 2. Introduced value = " + str(config.data_dimension))
     except AttributeError:
         print(config.latent_space_size, config.number_of_columns)
         assert number_of_columns == config.number_of_columns
