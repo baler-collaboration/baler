@@ -149,7 +149,7 @@ def normalize(data, custom_norm):
     return data
 
 
-def process(input_path, custom_norm, test_size, energy_conversion):
+def process(input_path, custom_norm, test_size, energy_conversion, apply_normalization):
     loaded = np.load(input_path)
     data = loaded["data"]
     names = loaded["names"]
@@ -158,9 +158,10 @@ def process(input_path, custom_norm, test_size, energy_conversion):
     # if energy_conversion:
     #     print("Converting mass to energy with eta, pt & mass")
     #     df = convert_mass_to_energy(df, cleared_col_names)
-
-    normalization_features = data_processing.find_minmax(data)
-    data = normalize(data, custom_norm)
+    if apply_normalization:
+        print("Normalizing the data...")
+        normalization_features = data_processing.find_minmax(data)
+        data = normalize(data, custom_norm)
     if not test_size:
         train_set = data
         test_set = train_set
@@ -206,8 +207,12 @@ def compress(model_path, config):
     # Give the encoding function the correct input as tensor
     loaded = np.load(config.input_path)
     data_before = loaded["data"]
-    data = normalize(data_before, config.custom_norm)
-
+    if config.apply_normalization:
+        print("Normalizing...")
+        data = normalize(data_before, config.custom_norm)
+    else:
+        data = data_before
+    number_of_columns = 0
     try:
         print("compression ratio:", config.compression_ratio)
         if config.data_dimension == 1:

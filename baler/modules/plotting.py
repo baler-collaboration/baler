@@ -1,5 +1,4 @@
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import pickle
@@ -15,17 +14,17 @@ from matplotlib.backends.backend_pdf import PdfPages
 
 
 def loss_plot(path_to_loss_data, output_path, config):
-    loss_data = pd.read_csv(path_to_loss_data)
+    loss_data = np.load(path_to_loss_data)
     str_list = ["Epochs:", "Model Name:", "Reg. Param:", "lr:", "BS:"]
 
-    val_loss = loss_data["Val Loss"]
-    train_loss = loss_data["Train Loss"]
+    train_loss = loss_data[0]
+    val_loss = loss_data[1]
     conf_list = [
         len(train_loss),
-        config["model_name"],
-        config["reg_param"],
-        config["lr"],
-        config["batch_size"],
+        config.model_name,
+        config.reg_param,
+        config.lr,
+        config.batch_size,
     ]
 
     plt.figure(figsize=(10, 7))
@@ -35,6 +34,7 @@ def loss_plot(path_to_loss_data, output_path, config):
     for i in range(len(conf_list)):
         plt.plot([], [], " ", label=str_list[i] + " " + str(conf_list[i]))
     plt.xlabel("Epochs")
+    plt.yscale("log")
     plt.ylabel("Loss")
     plt.legend(loc="best")
     plt.savefig(output_path + "_Loss_plot.pdf")

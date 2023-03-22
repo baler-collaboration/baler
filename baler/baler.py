@@ -31,6 +31,7 @@ def perform_training(config, project_path):
         config.custom_norm,
         config.test_size,
         config.energy_conversion,
+        config.apply_normalization,
     )
 
     try:
@@ -52,7 +53,7 @@ def perform_training(config, project_path):
                 + str(config.data_dimension)
             )
     except AttributeError:
-        print(config.latent_space_size, config.number_of_columns)
+        print(f"{config.number_of_columns} -> {config.latent_space_size} dimensions")
         assert number_of_columns == config.number_of_columns
 
     device = helper.get_device()
@@ -66,42 +67,19 @@ def perform_training(config, project_path):
     trained_model = helper.train(
         model, number_of_columns, train_set_norm, test_set_norm, output_path, config
     )
-    # test_data = helper.detach(test_data_tensor)
-    # reconstructed_data = helper.detach(reconstructed_data_tensor)
 
-    print("Un-normalzing...")
-    # print(np.mean(test_data[0]))
-    start = time.time()
-    # test_data_renorm = helper.renormalize(
-    #     test_data,
-    #     normalization_features[0],
-    #     normalization_features[1],
-    # )
-    # reconstructed_data_renorm = helper.renormalize(
-    #     reconstructed_data,
-    #     normalization_features[0],
-    #     normalization_features[1],
-    # )
-    end = time.time()
-    print("Un-normalization took:", f"{(end - start) / 60:.3} minutes")
-
-    # helper.to_pickle(test_data_renorm, output_path + "before.pickle")
-    # helper.to_pickle(reconstructed_data_renorm, output_path + "after.pickle")
-    # helper.to_pickle(full_pre_norm, output_path + "fulldata_energy.pickle")
-    # np.save(output_path + "before.npy", test_data_renorm)
-    # np.save(output_path + "after.npy", reconstructed_data_renorm)
-
-    np.save(
-        output_path + "normalization_features.npy",
-        normalization_features,
-    )
+    if config.apply_normalization:
+        np.save(
+            project_path + "training/normalization_features.npy",
+            normalization_features,
+        )
     helper.model_saver(trained_model, project_path + "compressed_output/model.pt")
 
 
 def perform_plotting(project_path, config):
     output_path = project_path + "plotting/"
     helper.plot(project_path, config)
-    # helper.loss_plotter(project_path + "training/loss_data.npy", output_path, config)
+    helper.loss_plotter(project_path + "training/loss_data.npy", output_path, config)
 
 
 def perform_compression(config, project_path):
@@ -153,11 +131,16 @@ def perform_decompression(save_as_root, model_name, project_path, config):
     # Converting back to numpyarray
     decompressed = helper.detach(decompressed)
 
-    decompressed = helper.renormalize(
-        decompressed,
-        normalization_features[0],
-        normalization_features[1],
-    )
+    if config.apply_normalization:
+        print("Un-normalizing...")
+        normalization_features = np.load(
+            project_path + "training/normalization_features.npy"
+        )
+        decompressed = helper.renormalize(
+            decompressed,
+            normalization_features[0],
+            normalization_features[1],
+        )
     end = time.time()
     print("Decompression took:", f"{(end - start) / 60:.3} minutes")
 
