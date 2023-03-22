@@ -86,9 +86,12 @@ def perform_compression(config, project_path):
     print("Compressing...")
     start = time.time()
 
-    normalization_features = np.load(
-        project_path + "training/normalization_features.npy"
-    )
+    if config.apply_normalization:
+        normalization_features = np.load(
+            project_path + "training/normalization_features.npy"
+        )
+    else:
+        normalization_features = []
 
     compressed = helper.compress(
         model_path=project_path + "compressed_output/model.pt",
