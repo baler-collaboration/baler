@@ -40,7 +40,7 @@ md5sum data/firstProject/cms_data.root
 #### Create New Project ####
 Start by creating a new project directory. This will create the standardized directory structure needed, and create a blank config and output directories. In this example, these will live under `./projects/firstProject/config.json`.\
 ```console
-poetry run python baler --mode=newProject --project=firstProject
+poetry run python baler --project=firstProject --mode=newProject
 ```
 
 #### Training ####
