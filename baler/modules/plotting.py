@@ -197,14 +197,10 @@ def plot_2D(project_path, config):
     data = np.load(config.input_path)["data"]
     data_decompressed = np.load(project_path + "/decompressed_output/decompressed.npz")["data"]
 
-    print(data_decompressed.shape)
-
     if data.shape[0] > 1 :
         num_tiles = data.shape[0]
     else:
         num_tiles = 0
-
-    print(num_tiles)
 
     for ind in range(0, num_tiles):
 
@@ -248,5 +244,4 @@ def plot(project_path, config):
     if config.data_dimension == 1:
         plot_1D(project_path, config)
     elif config.data_dimension == 2:
-        print("hey")
         plot_2D(project_path, config)
