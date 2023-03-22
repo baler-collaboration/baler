@@ -222,9 +222,10 @@ def compress(model_path, config):
             config.number_of_columns = number_of_columns
         elif config.data_dimension == 2:
             data = np.load(config.input_path)["data"]
-            number_of_columns = len(data)
-            latent_space_size = int(
-                (number_of_columns * number_of_columns) // config.compression_ratio
+            number_of_rows = data.shape[1]
+            number_of_columns = data.shape[2]
+            config.latent_space_size = int(
+                (number_of_rows * number_of_columns) // config.compression_ratio
             )
         else:
             raise NameError(
