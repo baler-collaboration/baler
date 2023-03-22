@@ -27,7 +27,7 @@ def fit(
         inputs = inputs.to(model.device)
         optimizer.zero_grad()
         reconstructions = model(inputs)
-        loss, mse_loss, l1_loss = utils.sparse_loss_function_l1(
+        loss, mse_loss, l1_loss = utils.sparse_SumLoss_function_l1(
             model_children=model_children,
             true_data=inputs,
             reconstructed_data=reconstructions,
@@ -57,6 +57,7 @@ def validate(model, test_dl, model_children, reg_param):
             counter += 1
             inputs = inputs.to(model.device)
             reconstructions = model(inputs)
+
             loss, _, _ = utils.sparse_loss_function_l1(
                 model_children=model_children,
                 true_data=inputs,
