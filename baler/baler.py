@@ -26,12 +26,7 @@ def main():
 
 
 def perform_training(config, project_path):
-    (
-        train_set_norm,
-        test_set_norm,
-        number_of_columns,
-        normalization_features,
-    ) = helper.process(
+    (train_set_norm, test_set_norm, normalization_features,) = helper.process(
         config.input_path,
         config.custom_norm,
         config.test_size,
@@ -40,11 +35,13 @@ def perform_training(config, project_path):
 
     try:
         if config.data_dimension == 1:
+            number_of_columns = len(train_set_norm[0])
             config.latent_space_size = int(
                 number_of_columns // config.compression_ratio
             )
             config.number_of_columns = number_of_columns
         elif config.data_dimension == 2:
+            number_of_columns = len(train_set_norm[0])
             config.latent_space_size = int(
                 (number_of_columns * number_of_columns) // config.compression_ratio
             )
@@ -115,7 +112,7 @@ def perform_compression(config, project_path):
         project_path + "training/normalization_features.npy"
     )
 
-    compressed, data_before, names = helper.compress(
+    compressed = helper.compress(
         model_path=project_path + "compressed_output/model.pt",
         config=config,
     )
@@ -124,6 +121,8 @@ def perform_compression(config, project_path):
     end = time.time()
 
     print("Compression took:", f"{(end - start) / 60:.3} minutes")
+
+    names = np.load(config.input_path)["names"]
 
     if config.extra_compression:
         np.savez_compressed(

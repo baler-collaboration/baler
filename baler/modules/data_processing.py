@@ -61,6 +61,7 @@ def renormalize_std(data, true_min, feature_range):
 
 def renormalize_func(norm_data, min_list, range_list):
     norm_data = np.array(norm_data)
+    print(norm_data)
     renormalized = [
         renormalize_std(norm_data, min_list[i], range_list[i])
         for i in range(len(min_list))
