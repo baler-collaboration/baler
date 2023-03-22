@@ -238,6 +238,7 @@ def compress(model_path, config):
         print(number_of_columns, latent_space_size)
 
     # Initialise and load the model correctly.
+    latent_space_size = config.latent_space_size
     model_object = data_processing.initialise_model(config.model_name)
     model = data_processing.load_model(
         model_object,
