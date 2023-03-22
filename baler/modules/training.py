@@ -12,7 +12,9 @@ import modules.helper as helper
 import os
 
 
-def fit(model, train_dl, model_children, regular_param, optimizer, RHO, l1):
+def fit(
+    model, train_dl, model_children, regular_param, optimizer, RHO, l1, n_dimensions
+):
     print("### Beginning Training")
 
     model.train()
@@ -55,7 +57,7 @@ def validate(model, test_dl, model_children, reg_param):
             counter += 1
             inputs = inputs.to(model.device)
             reconstructions = model(inputs)
-            loss = utils.sparse_loss_function_l1(
+            loss, _, _ = utils.sparse_loss_function_l1(
                 model_children=model_children,
                 true_data=inputs,
                 reconstructed_data=reconstructions,
@@ -99,12 +101,16 @@ def train(model, variables, train_data, test_data, parent_path, config):
     model = model.to(device)
 
     # Converting data to tensors
-    train_ds = torch.tensor(train_data, dtype=torch.float32, device=device).view(
-        1, 1, len(test_data), len(test_data)
-    )
-    valid_ds = torch.tensor(test_data, dtype=torch.float32, device=device).view(
-        1, 1, len(test_data), len(test_data)
-    )
+    if config.data_dimension == 2:
+        train_ds = torch.tensor(train_data, dtype=torch.float32, device=device).view(
+            1, 1, len(test_data), len(test_data)
+        )
+        valid_ds = torch.tensor(test_data, dtype=torch.float32, device=device).view(
+            1, 1, len(test_data), len(test_data)
+        )
+    elif config.data_dimension == 1:
+        train_ds = torch.tensor(train_data, dtype=torch.float64, device=device)
+        valid_ds = torch.tensor(test_data, dtype=torch.float64, device=device)
 
     # Pushing input data into the torch-DataLoader object and combines into one DataLoaders object (a basic wrapper
     # around several DataLoader objects).
@@ -153,6 +159,7 @@ def train(model, variables, train_data, test_data, parent_path, config):
             RHO=rho,
             regular_param=reg_param,
             l1=l1,
+            n_dimensions=config.data_dimension,
         )
 
         train_loss.append(train_epoch_loss)
