@@ -117,6 +117,7 @@ def set_config(c):
     c.test_size           = 0.15
     c.energy_conversion   = False
     c.data_dimension      = 1
+    c.apply_normalization = True
 
 """
 
