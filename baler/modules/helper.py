@@ -98,8 +98,7 @@ class Config:
 def create_default_config(project_name: str) -> str:
     return f"""
 def set_config(c):
-    c.data_path          = "data/{project_name}/{project_name}_data.npy"
-    c.names_path         = "data/{project_name}/{project_name}_names.npy"
+    c.input_path          = "data/{project_name}/{project_name}_data.npz"
     c.compression_ratio   = 2.0
     c.epochs              = 5
     c.energy_conversion = False
@@ -118,6 +117,7 @@ def set_config(c):
     c.test_size           = 0.15
     c.energy_conversion   = False
     c.data_dimension      = 1
+    c.apply_normalization = True
 
 """
 
