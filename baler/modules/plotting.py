@@ -200,7 +200,7 @@ def plot_2D(project_path, config):
     if data.shape[0] > 1 :
         num_tiles = data.shape[0]
     else:
-        num_tiles = 0
+        num_tiles = 1
 
     for ind in range(0, num_tiles):
 
@@ -235,7 +235,7 @@ def plot_2D(project_path, config):
             y=0.9,
             fontsize=16,
         )
-        # fig.suptitle('Compressed file is 10% the size of original,\n500 epochs (20 min)',y=0.9, fontsize=16)
+        fig.suptitle('Compressed file is 10% the size of original,\n500 epochs (20 min)',y=0.9, fontsize=16)
 
         fig.savefig(project_path + "/plotting/" + "tiled_CFD"+str(ind)+".jpg", bbox_inches="tight")
 
