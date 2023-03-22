@@ -56,13 +56,12 @@ def get_index_to_cut(column_index, cut, array):
 
 def plot_1D(project_path, config):
     output_path = project_path + "training/"
-    names_path = config.names_path
-    before_path = config.data_path
-    after_path = project_path + "decompressed_output/decompressed.npy"
+    before_path = config.input_path
+    after_path = project_path + "decompressed_output/decompressed.npz"
 
-    before = np.transpose(np.load(before_path))
-    after = np.transpose(np.load(after_path))
-    names = np.load(names_path)
+    before = np.transpose(np.load(before_path)["data"])
+    after = np.transpose(np.load(after_path)["data"])
+    names = np.load(config.input_path)["names"]
 
     index_to_cut = get_index_to_cut(3, 1e-6, before)
     before = np.delete(before, index_to_cut, axis=1)
@@ -195,11 +194,11 @@ def plot_1D(project_path, config):
 
 
 def plot_2D(project_path, config):
-    data = np.load(config.data_path)
+    data = np.load(config.input_path)["data"]
 
-    data_decompressed = np.load(
-        project_path + "/decompressed_output/decompressed.npy"
-    ).reshape(50, 50)
+    data_decompressed = np.load(project_path + "/decompressed_output/decompressed.npz")[
+        "data"
+    ].reshape(50, 50)
 
     diff = ((data_decompressed - data) / data) * 100
 

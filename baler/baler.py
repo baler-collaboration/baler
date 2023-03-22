@@ -26,14 +26,8 @@ def main():
 
 
 def perform_training(config, project_path):
-    (
-        train_set_norm,
-        test_set_norm,
-        number_of_columns,
-        normalization_features,
-    ) = helper.process(
-        config.data_path,
-        config.names_path,
+    (train_set_norm, test_set_norm, normalization_features,) = helper.process(
+        config.input_path,
         config.custom_norm,
         config.test_size,
         config.energy_conversion,
@@ -42,11 +36,13 @@ def perform_training(config, project_path):
 
     try:
         if config.data_dimension == 1:
+            number_of_columns = len(train_set_norm[0])
             config.latent_space_size = int(
                 number_of_columns // config.compression_ratio
             )
             config.number_of_columns = number_of_columns
         elif config.data_dimension == 2:
+            number_of_columns = len(train_set_norm[0])
             config.latent_space_size = int(
                 (number_of_columns * number_of_columns) // config.compression_ratio
             )
@@ -57,7 +53,7 @@ def perform_training(config, project_path):
                 + str(config.data_dimension)
             )
     except AttributeError:
-        print(f"{config.number_of_columns} -> {config.latent_space_size} dimensions" )
+        print(f"{config.number_of_columns} -> {config.latent_space_size} dimensions")
         assert number_of_columns == config.number_of_columns
 
     device = helper.get_device()
@@ -74,7 +70,7 @@ def perform_training(config, project_path):
 
     if config.apply_normalization:
         np.save(
-            project_path + "compressed_output/normalization_features.npy",
+            project_path + "training/normalization_features.npy",
             normalization_features,
         )
     helper.model_saver(trained_model, project_path + "compressed_output/model.pt")
@@ -89,7 +85,12 @@ def perform_plotting(project_path, config):
 def perform_compression(config, project_path):
     print("Compressing...")
     start = time.time()
-    compressed, data_before = helper.compress(
+
+    normalization_features = np.load(
+        project_path + "training/normalization_features.npy"
+    )
+
+    compressed = helper.compress(
         model_path=project_path + "compressed_output/model.pt",
         config=config,
     )
@@ -99,26 +100,41 @@ def perform_compression(config, project_path):
 
     print("Compression took:", f"{(end - start) / 60:.3} minutes")
 
-    np.save(project_path + "compressed_output/compressed.npy", compressed)
-    # np.save(project_path + "compressed_output/names.npy", cleared_col_names)
+    names = np.load(config.input_path)["names"]
+
+    if config.extra_compression:
+        np.savez_compressed(
+            project_path + "compressed_output/compressed.npz",
+            data=compressed,
+            names=names,
+            normalization_features=normalization_features,
+        )
+    else:
+        np.savez(
+            project_path + "compressed_output/compressed.npz",
+            data=compressed,
+            names=names,
+            normalization_features=normalization_features,
+        )
 
 
 def perform_decompression(save_as_root, model_name, project_path, config):
     print("Decompressing...")
 
     start = time.time()
-    decompressed = helper.decompress(
+    decompressed, names, normalization_features = helper.decompress(
         model_path=project_path + "compressed_output/model.pt",
-        input_path=project_path + "compressed_output/compressed.npy",
+        input_path=project_path + "compressed_output/compressed.npz",
         model_name=model_name,
     )
 
     # Converting back to numpyarray
     decompressed = helper.detach(decompressed)
+
     if config.apply_normalization:
         print("Un-normalizing...")
         normalization_features = np.load(
-            project_path + "compressed_output/normalization_features.npy"
+            project_path + "training/normalization_features.npy"
         )
         decompressed = helper.renormalize(
             decompressed,
@@ -127,7 +143,19 @@ def perform_decompression(save_as_root, model_name, project_path, config):
         )
     end = time.time()
     print("Decompression took:", f"{(end - start) / 60:.3} minutes")
-    np.save(project_path + "decompressed_output/decompressed.npy", decompressed)
+
+    if config.extra_compression:
+        np.savez_compressed(
+            project_path + "decompressed_output/decompressed.npz",
+            data=decompressed,
+            names=names,
+        )
+    else:
+        np.savez(
+            project_path + "decompressed_output/decompressed.npz",
+            data=decompressed,
+            names=names,
+        )
 
 
 def print_info(project_path):
