@@ -118,6 +118,7 @@ def set_config(c):
     c.energy_conversion   = False
     c.data_dimension      = 1
     c.apply_normalization = True
+    c.extra_compression   = False
 
 """
 
