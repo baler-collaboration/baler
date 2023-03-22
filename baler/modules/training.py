@@ -12,26 +12,27 @@ import modules.helper as helper
 import os
 
 
-def fit(model, train_dl, train_ds, model_children, regular_param, optimizer, RHO, l1):
+def fit(
+    model, train_dl, model_children, regular_param, optimizer, RHO, l1, n_dimensions
+):
     print("### Beginning Training")
 
     model.train()
 
     running_loss = 0.0
     counter = 0
-    n_data = int(len(train_ds) / train_dl.batch_size)
 
     for inputs in tqdm(train_dl):
         counter += 1
         inputs = inputs.to(model.device)
         optimizer.zero_grad()
         reconstructions = model(inputs)
-        loss, mse_loss, l1_loss = utils.sparse_loss_function_l1(
+        loss, mse_loss, l1_loss = utils.sparse_SumLoss_function_l1(
             model_children=model_children,
             true_data=inputs,
             reconstructed_data=reconstructions,
             reg_param=regular_param,
-            validate=False,
+            validate=True,
         )
 
         loss.backward()
@@ -44,19 +45,20 @@ def fit(model, train_dl, train_ds, model_children, regular_param, optimizer, RHO
     return epoch_loss, mse_loss, l1_loss, model
 
 
-def validate(model, test_dl, test_ds, model_children, reg_param):
+def validate(model, test_dl, model_children, reg_param):
     print("### Beginning Validating")
 
     model.eval()
     counter = 0
     running_loss = 0.0
-    n_data = int(len(test_ds) / test_dl.batch_size)
+
     with torch.no_grad():
         for inputs in tqdm(test_dl):
             counter += 1
             inputs = inputs.to(model.device)
             reconstructions = model(inputs)
-            loss = utils.sparse_loss_function_l1(
+
+            loss, _, _ = utils.sparse_loss_function_l1(
                 model_children=model_children,
                 true_data=inputs,
                 reconstructed_data=reconstructions,
@@ -100,16 +102,33 @@ def train(model, variables, train_data, test_data, parent_path, config):
     model = model.to(device)
 
     # Converting data to tensors
-    train_ds = torch.tensor(train_data, dtype=torch.float64, device=device)
-    valid_ds = torch.tensor(test_data, dtype=torch.float64, device=device)
+    if config.data_dimension == 2:
+        train_ds = torch.tensor(train_data, dtype=torch.float32, device=device).view(
+            1, 1, len(test_data), len(test_data)
+        )
+        valid_ds = torch.tensor(test_data, dtype=torch.float32, device=device).view(
+            1, 1, len(test_data), len(test_data)
+        )
+    elif config.data_dimension == 1:
+        train_ds = torch.tensor(train_data, dtype=torch.float64, device=device)
+        valid_ds = torch.tensor(test_data, dtype=torch.float64, device=device)
 
     # Pushing input data into the torch-DataLoader object and combines into one DataLoaders object (a basic wrapper
     # around several DataLoader objects).
     train_dl = DataLoader(
-        train_ds, batch_size=bs, shuffle=False, worker_init_fn=seed_worker, generator=g
+        train_ds,
+        batch_size=bs,
+        shuffle=False,
+        worker_init_fn=seed_worker,
+        generator=g,
+        drop_last=False,
     )
     valid_dl = DataLoader(
-        valid_ds, batch_size=bs, worker_init_fn=seed_worker, generator=g
+        valid_ds,
+        batch_size=bs,
+        worker_init_fn=seed_worker,
+        generator=g,
+        drop_last=False,
     )  # Used to be batch_size = bs * 2
 
     # Select Optimizer
@@ -136,12 +155,12 @@ def train(model, variables, train_data, test_data, parent_path, config):
         train_epoch_loss, mse_loss_fit, regularizer_loss_fit, trained_model = fit(
             model=model,
             train_dl=train_dl,
-            train_ds=train_ds,
             model_children=model_children,
             optimizer=optimizer,
             RHO=rho,
             regular_param=reg_param,
             l1=l1,
+            n_dimensions=config.data_dimension,
         )
 
         train_loss.append(train_epoch_loss)
@@ -150,7 +169,6 @@ def train(model, variables, train_data, test_data, parent_path, config):
             val_epoch_loss = validate(
                 model=trained_model,
                 test_dl=valid_dl,
-                test_ds=valid_ds,
                 model_children=model_children,
                 reg_param=reg_param,
             )
@@ -167,7 +185,7 @@ def train(model, variables, train_data, test_data, parent_path, config):
                 break
 
         ## Make-shift implementation to save models & values after 100 epochs:
-        save_model_and_data = True
+        save_model_and_data = False
         if save_model_and_data:
             if epoch % 100 == 0:
                 path = os.path.join(parent_path, f"model_{epoch}.pt")
@@ -190,8 +208,13 @@ def train(model, variables, train_data, test_data, parent_path, config):
     print(f"{(end - start) / 60:.3} minutes")
     np.save(parent_path + "loss_data.npy", np.array([train_loss, val_loss]))
 
-    data_as_tensor = torch.tensor(test_data, dtype=torch.float64)
-    data_as_tensor = data_as_tensor.to(trained_model.device)
-    pred_as_tensor = trained_model(data_as_tensor)
+    # print("1")
+    # data_as_tensor = torch.tensor(test_data, dtype=torch.float32)
+    # print("2")
+    # print(test_data.shape, data_as_tensor.shape)
+    # data_as_tensor = data_as_tensor.to(trained_model.device)
+    # print("3")
+    # print(test_data.shape, data_as_tensor.shape)
+    # pred_as_tensor = trained_model(data_as_tensor)
 
-    return data_as_tensor, pred_as_tensor, trained_model
+    return trained_model
