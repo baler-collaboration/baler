@@ -4,6 +4,7 @@ import os
 import pickle
 from dataclasses import dataclass
 import sys
+
 sys.path.append(os.getcwd())
 
 import numpy as np
@@ -16,14 +17,16 @@ from modules import training, plotting, data_processing
 def get_arguments():
     parser = argparse.ArgumentParser(
         prog="baler.py",
-        description=("Baler is a machine learning based compression tool for big data.\n\n"
-                     "Baler has three running modes:\n\n"
-                     "\t1. Derivation: Using a configuration file and a \"small\" input dataset, Baler derives a "
-                     "machine learning model optimized to compress and decompress your data.\n\n"
-                     "\t2. Compression: Using a previously derived model and a large input dataset, Baler compresses "
-                     "your data and outputs a smaller compressed file.\n\n"
-                     "\t3. Decompression: Using a previously compressed file as input and a model, Baler decompresses "
-                     "your data into a larger file."),
+        description=(
+            "Baler is a machine learning based compression tool for big data.\n\n"
+            "Baler has three running modes:\n\n"
+            '\t1. Derivation: Using a configuration file and a "small" input dataset, Baler derives a '
+            "machine learning model optimized to compress and decompress your data.\n\n"
+            "\t2. Compression: Using a previously derived model and a large input dataset, Baler compresses "
+            "your data and outputs a smaller compressed file.\n\n"
+            "\t3. Decompression: Using a previously compressed file as input and a model, Baler decompresses "
+            "your data into a larger file."
+        ),
         epilog="Enjoy!",
     )
     parser.add_argument(
@@ -45,7 +48,7 @@ def get_arguments():
     else:
         config = Config
         importlib.import_module(
-           f"projects.{args.project}.{args.project}_config"
+            f"projects.{args.project}.{args.project}_config"
         ).set_config(config)
     return config, args.mode, args.project
 
@@ -212,19 +215,24 @@ def compress(model_path, config):
     data = normalize(data_before, config.custom_norm)
     number_of_columns = 0
     try:
-        if config.data_dimension==1:
+        if config.data_dimension == 1:
             column_names = np.load(config.names_path)
             number_of_columns = len(column_names)
             config.latent_space_size = int(
                 number_of_columns // config.compression_ratio
             )
             config.number_of_columns = number_of_columns
-        elif config.data_dimension==2:
+        elif config.data_dimension == 2:
             data = np.load(config.data_path)
             number_of_columns = len(data)
-            config.latent_space_size = int((number_of_columns*number_of_columns) // config.compression_ratio)
+            config.latent_space_size = int(
+                (number_of_columns * number_of_columns) // config.compression_ratio
+            )
         else:
-            raise NameError("Data dimension can only be 1 or 2. Introduced value = " + str(config.data_dimension))
+            raise NameError(
+                "Data dimension can only be 1 or 2. Introduced value = "
+                + str(config.data_dimension)
+            )
     except AttributeError:
         assert number_of_columns == config.number_of_columns
 
@@ -237,7 +245,10 @@ def compress(model_path, config):
         z_dim=config.latent_space_size,
     )
 
-    data_tensor = torch.from_numpy(data).to(model.device).view(1, 1, 50, 50)
+    if config.data_dimension == 2:
+        data_tensor = torch.from_numpy(data).to(model.device).view(1, 1, 50, 50)
+    elif config.data_dimension == 1:
+        data_tensor = torch.from_numpy(data).to(model.device)
 
     compressed = model.encode(data_tensor)
     return compressed, data_before
