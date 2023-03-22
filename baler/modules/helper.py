@@ -159,9 +159,9 @@ def process(input_path, custom_norm, test_size, energy_conversion, apply_normali
     # if energy_conversion:
     #     print("Converting mass to energy with eta, pt & mass")
     #     df = convert_mass_to_energy(df, cleared_col_names)
+    normalization_features = data_processing.find_minmax(data)
     if apply_normalization:
         print("Normalizing the data...")
-        normalization_features = data_processing.find_minmax(data)
         data = normalize(data, custom_norm)
     if not test_size:
         train_set = data
