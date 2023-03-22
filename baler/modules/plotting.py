@@ -194,11 +194,11 @@ def plot_1D(project_path, config):
 
 
 def plot_2D(project_path, config):
-    data = np.load(config.data_path)
+    data = np.load(config.input_path)["data"]
 
-    data_decompressed = np.load(
-        project_path + "/decompressed_output/decompressed.npy"
-    ).reshape(50, 50)
+    data_decompressed = np.load(project_path + "/decompressed_output/decompressed.npz")[
+        "data"
+    ].reshape(50, 50)
 
     diff = ((data_decompressed - data) / data) * 100
 
