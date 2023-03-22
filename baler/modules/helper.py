@@ -248,7 +248,7 @@ def compress(model_path, config):
     )
 
     if config.data_dimension == 2:
-        data_tensor = torch.from_numpy(data).to(model.device).view(data.shape[0], 1, data.shape[1], data.shape[2])
+        data_tensor = torch.from_numpy(data.astype(float32, casting='same_kind')).to(model.device).view(data.shape[0], 1, data.shape[1], data.shape[2])
     elif config.data_dimension == 1:
         data_tensor = torch.from_numpy(data).to(model.device)
 
