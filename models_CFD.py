@@ -4,21 +4,19 @@ from torch.nn import functional as F
 
 
 class george_SAE(nn.Module):
-    def __init__(self, device, n_features, z_dim, *args, **kwargs):
+    def __init__(self, n_features, z_dim, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.device = device
-
         # encoder
-        self.en1 = nn.Linear(n_features, 200, dtype=torch.float64, device=device)
-        self.en2 = nn.Linear(200, 100, dtype=torch.float64, device=device)
-        self.en3 = nn.Linear(100, 50, dtype=torch.float64, device=device)
-        self.en4 = nn.Linear(50, z_dim, dtype=torch.float64, device=device)
+        self.en1 = nn.Linear(n_features, 200, dtype=torch.float64)
+        self.en2 = nn.Linear(200, 100, dtype=torch.float64)
+        self.en3 = nn.Linear(100, 50, dtype=torch.float64)
+        self.en4 = nn.Linear(50, z_dim, dtype=torch.float64)
         # decoder
-        self.de1 = nn.Linear(z_dim, 50, dtype=torch.float64, device=device)
-        self.de2 = nn.Linear(50, 100, dtype=torch.float64, device=device)
-        self.de3 = nn.Linear(100, 200, dtype=torch.float64, device=device)
-        self.de4 = nn.Linear(200, n_features, dtype=torch.float64, device=device)
+        self.de1 = nn.Linear(z_dim, 50, dtype=torch.float64)
+        self.de2 = nn.Linear(50, 100, dtype=torch.float64)
+        self.de3 = nn.Linear(100, 200, dtype=torch.float64)
+        self.de4 = nn.Linear(200, n_features, dtype=torch.float64)
 
         self.n_features = n_features
         self.z_dim = z_dim
@@ -42,46 +40,44 @@ class george_SAE(nn.Module):
 
 
 class george_SAE_BN(nn.Module):
-    def __init__(self, device, n_features, z_dim):
+    def __init__(self, n_features, z_dim):
         super(george_SAE_BN, self).__init__()
-
-        self.device = device
 
         # encoder
         self.enc_nn = nn.Sequential(
-            nn.Linear(n_features, 200, dtype=torch.float64, device=device),
+            nn.Linear(n_features, 200, dtype=torch.float64),
             # nn.Dropout(p=0.5),
             nn.LeakyReLU(),
-            nn.BatchNorm1d(200, dtype=torch.float64, device=device),
-            nn.Linear(200, 100, dtype=torch.float64, device=device),
+            nn.BatchNorm1d(200, dtype=torch.float64),
+            nn.Linear(200, 100, dtype=torch.float64),
             # nn.Dropout(p=0.4),
             nn.LeakyReLU(),
-            nn.BatchNorm1d(100, dtype=torch.float64, device=device),
-            nn.Linear(100, 50, dtype=torch.float64, device=device),
+            nn.BatchNorm1d(100, dtype=torch.float64),
+            nn.Linear(100, 50, dtype=torch.float64),
             # nn.Dropout(p=0.3),
             nn.LeakyReLU(),
-            nn.BatchNorm1d(50, dtype=torch.float64, device=device),
-            nn.Linear(50, z_dim, dtype=torch.float64, device=device),
+            nn.BatchNorm1d(50, dtype=torch.float64),
+            nn.Linear(50, z_dim, dtype=torch.float64),
             # nn.Dropout(p=0.2),
             nn.LeakyReLU(),
-            nn.BatchNorm1d(z_dim, dtype=torch.float64, device=device),
+            nn.BatchNorm1d(z_dim, dtype=torch.float64),
         )
 
         # decoder
         self.dec_nn = nn.Sequential(
-            nn.Linear(z_dim, 50, dtype=torch.float64, device=device),
+            nn.Linear(z_dim, 50, dtype=torch.float64),
             # nn.Dropout(p=0.2),
             nn.LeakyReLU(),
             # nn.BatchNorm1d(50,dtype=torch.float64),
-            nn.Linear(50, 100, dtype=torch.float64, device=device),
+            nn.Linear(50, 100, dtype=torch.float64),
             # nn.Dropout(p=0.3),
             nn.LeakyReLU(),
             # nn.BatchNorm1d(100,dtype=torch.float64),
-            nn.Linear(100, 200, dtype=torch.float64, device=device),
+            nn.Linear(100, 200, dtype=torch.float64),
             # nn.Dropout(p=0.4),
             nn.LeakyReLU(),
             # nn.BatchNorm1d(200,dtype=torch.float64),
-            nn.Linear(200, n_features, dtype=torch.float64, device=device),
+            nn.Linear(200, n_features, dtype=torch.float64),
             # nn.Dropout(p=0.5),
             # nn.BatchNorm1d(n_features,dtype=torch.float64),
             nn.ReLU(),
@@ -224,13 +220,11 @@ class george_SAE_Dropout(nn.Module):
             l1_loss += torch.mean(torch.abs(values))
         loss = mse_loss + reg_param * l1_loss
         return loss
-        
-class Conv_AE(nn.Module):
-        def __init__(self, device, n_features, z_dim, *args, **kwargs):
-            super(Conv_AE, self).__init__(*args, **kwargs)
-            
-            self.device = device
 
+
+class Conv_AE(nn.Module):
+        def __init__(self, n_features, z_dim, *args, **kwargs):
+            super(Conv_AE, self).__init__(*args, **kwargs)
             self.q_z_mid_dim = 2000
             self.q_z_output_dim = 72128
             # Encoder
@@ -254,7 +248,7 @@ class Conv_AE(nn.Module):
                   nn.ReLU(), 
                   # nn.BatchNorm1d(self.q_z_output_dim),
                   nn.Linear(self.q_z_mid_dim, z_dim),
-                  nn.ReLU()
+                  nn.ReLU(),
                   )
 
             # Decoder
@@ -263,7 +257,7 @@ class Conv_AE(nn.Module):
                   nn.ReLU(),
                   # nn.BatchNorm1d(self.q_z_output_dim),
                   nn.Linear(self.q_z_mid_dim, self.q_z_output_dim),
-                  nn.ReLU()
+                  nn.ReLU(),
                   # nn.BatchNorm1d(42720) 
                   )
             # Conv Layers
@@ -274,7 +268,7 @@ class Conv_AE(nn.Module):
                   nn.ConvTranspose2d(16, 8, kernel_size=(3), stride=(1), padding=(1)),
                   nn.BatchNorm2d(8),
                   nn.ReLU(),
-                  nn.ConvTranspose2d(8, 1, kernel_size=(2,5), stride=(1), padding=(1)),
+                  nn.ConvTranspose2d(8, 1, kernel_size=(2,5), stride=(1), padding=(1))
                   ) 
     
         def encode(self, x):
@@ -300,4 +294,3 @@ class Conv_AE(nn.Module):
             z = self.encode(x)
             out = self.decode(z)
             return out
-

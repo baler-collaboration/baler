@@ -18,7 +18,9 @@ def main():
     elif mode == "compress":
         perform_compression(config, project_path)
     elif mode == "decompress":
-        perform_decompression(config.save_as_root, config.model_name, project_path)
+        perform_decompression(
+            config.save_as_root, config.model_name, project_path, config
+        )
     elif mode == "info":
         print_info(project_path)
 
@@ -38,8 +40,18 @@ def perform_training(config, project_path):
     )
 
     try:
-        config.latent_space_size = int(number_of_columns // config.compression_ratio)
-        config.number_of_columns = number_of_columns
+        if config.data_dimension==1:
+            config.latent_space_size = int(
+                number_of_columns // config.compression_ratio
+            )
+            config.number_of_columns = number_of_columns
+        elif config.data_dimension==2:
+            config.latent_space_size = int(
+                (number_of_columns * number_of_columns) // config.compression_ratio
+            )
+            config.number_of_columns = number_of_columns
+        else:
+            raise NameError("Data dimension can only be 1 or 2. Introduced value = " + str(config.data_dimension))
     except AttributeError:
         print(config.latent_space_size, config.number_of_columns)
         assert number_of_columns == config.number_of_columns
@@ -52,51 +64,51 @@ def perform_training(config, project_path):
     )
 
     output_path = project_path + "training/"
-    test_data_tensor, reconstructed_data_tensor, trained_model = helper.train(
+    trained_model = helper.train(
         model, number_of_columns, train_set_norm, test_set_norm, output_path, config
     )
-    test_data = helper.detach(test_data_tensor)
-    reconstructed_data = helper.detach(reconstructed_data_tensor)
+    # test_data = helper.detach(test_data_tensor)
+    # reconstructed_data = helper.detach(reconstructed_data_tensor)
 
     print("Un-normalzing...")
-    print(np.mean(test_data[0]))
+    # print(np.mean(test_data[0]))
     start = time.time()
-    test_data_renorm = helper.renormalize(
-        test_data,
-        normalization_features[0],
-        normalization_features[1],
-    )
-    reconstructed_data_renorm = helper.renormalize(
-        reconstructed_data,
-        normalization_features[0],
-        normalization_features[1],
-    )
+    # test_data_renorm = helper.renormalize(
+    #     test_data,
+    #     normalization_features[0],
+    #     normalization_features[1],
+    # )
+    # reconstructed_data_renorm = helper.renormalize(
+    #     reconstructed_data,
+    #     normalization_features[0],
+    #     normalization_features[1],
+    # )
     end = time.time()
     print("Un-normalization took:", f"{(end - start) / 60:.3} minutes")
 
     # helper.to_pickle(test_data_renorm, output_path + "before.pickle")
     # helper.to_pickle(reconstructed_data_renorm, output_path + "after.pickle")
     # helper.to_pickle(full_pre_norm, output_path + "fulldata_energy.pickle")
-    np.save(output_path + "before.npy", test_data_renorm)
-    np.save(output_path + "after.npy", reconstructed_data_renorm)
+    # np.save(output_path + "before.npy", test_data_renorm)
+    # np.save(output_path + "after.npy", reconstructed_data_renorm)
 
-    np.save(
-        project_path + "compressed_output/normalization_features.npy",
-        normalization_features,
-    )
+    # np.save(
+    #    project_path + "compressed_output/normalization_features.npy",
+    #    normalization_features,
+    # )
     helper.model_saver(trained_model, project_path + "compressed_output/model.pt")
 
 
 def perform_plotting(project_path, config):
     output_path = project_path + "plotting/"
     helper.plot(project_path, config)
-    helper.loss_plotter(project_path + "training/loss_data.npy", output_path, config)
+    # helper.loss_plotter(project_path + "training/loss_data.npy", output_path, config)
 
 
 def perform_compression(config, project_path):
     print("Compressing...")
     start = time.time()
-    compressed, data_before, cleared_col_names = helper.compress(
+    compressed, data_before = helper.compress(
         model_path=project_path + "compressed_output/model.pt",
         config=config,
     )
@@ -107,12 +119,12 @@ def perform_compression(config, project_path):
     print("Compression took:", f"{(end - start) / 60:.3} minutes")
 
     np.save(project_path + "compressed_output/compressed.npy", compressed)
-    np.save(project_path + "compressed_output/names.npy", cleared_col_names)
+    # np.save(project_path + "compressed_output/names.npy", cleared_col_names)
 
 
-def perform_decompression(save_as_root, model_name, project_path):
+def perform_decompression(save_as_root, model_name, project_path, config):
     print("Decompressing...")
-    cleared_col_names = np.load(project_path + "compressed_output/names.npy")
+
     start = time.time()
     decompressed = helper.decompress(
         model_path=project_path + "compressed_output/model.pt",
@@ -122,15 +134,15 @@ def perform_decompression(save_as_root, model_name, project_path):
 
     # Converting back to numpyarray
     decompressed = helper.detach(decompressed)
-    normalization_features = np.load(
-        project_path + "compressed_output/normalization_features.npy"
-    )
+    # normalization_features = np.load(
+    #    project_path + "compressed_output/normalization_features.npy"
+    # )
 
-    decompressed = helper.renormalize(
-        decompressed,
-        normalization_features[0],
-        normalization_features[1],
-    )
+    # decompressed = helper.renormalize(
+    #    decompressed,
+    #    normalization_features[0],
+    #    normalization_features[1],
+    # )
     end = time.time()
     print("Decompression took:", f"{(end - start) / 60:.3} minutes")
     np.save(project_path + "decompressed_output/decompressed.npy", decompressed)
