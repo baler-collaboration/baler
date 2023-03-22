@@ -50,7 +50,7 @@ def sparse_loss_function_l1(
         loss = mse_loss + reg_param * l1_loss
         return loss, mse_loss, l1_loss
     else:
-        return mse_loss
+        return mse_loss, 0, 0
 
 
 def sparse_SumLoss_function_l1(
@@ -72,7 +72,7 @@ def sparse_SumLoss_function_l1(
         loss = mse_sum_loss + reg_param * l1_loss
         return loss, mse_sum_loss, l1_loss
     else:
-        return mse_sum_loss
+        return mse_sum_loss, 0, 0
 
 
 # Accuracy function still WIP. Not working properly.
