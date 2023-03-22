@@ -153,6 +153,7 @@ def process(input_path, custom_norm, test_size, energy_conversion, apply_normali
     loaded = np.load(input_path)
     data = loaded["data"]
     names = loaded["names"]
+    normalization_features = 0
 
     # TODO Fix this
     # if energy_conversion:
