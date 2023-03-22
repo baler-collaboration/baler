@@ -53,6 +53,28 @@ def sparse_loss_function_l1(
         return mse_loss
 
 
+def sparse_SumLoss_function_l1(
+    model_children, true_data, reconstructed_data, reg_param, validate
+):
+    mse_sum = nn.MSELoss(reduction="sum")
+    mse_loss = mse_sum(reconstructed_data, true_data)
+    number_of_columns = true_data.shape[1]
+
+    mse_sum_loss = mse_loss / number_of_columns
+
+    l1_loss = 0
+    values = true_data
+    if not validate:
+        for i in range(len(model_children)):
+            values = F.relu(model_children[i](values))
+            l1_loss += torch.mean(torch.abs(values))
+
+        loss = mse_sum_loss + reg_param * l1_loss
+        return loss, mse_sum_loss, l1_loss
+    else:
+        return mse_sum_loss
+
+
 # Accuracy function still WIP. Not working properly.
 # Probably has to do with total_correct counter.
 
