@@ -57,10 +57,10 @@ def get_index_to_cut(column_index, cut, array):
 def plot_1D(project_path, config):
     output_path = project_path + "training/"
     before_path = config.input_path
-    after_path = project_path + "decompressed_output/decompressed.npy"
+    after_path = project_path + "decompressed_output/decompressed.npz"
 
     before = np.transpose(np.load(before_path)["data"])
-    after = np.transpose(np.load(after_path))
+    after = np.transpose(np.load(after_path)["data"])
     names = np.load(config.input_path)["names"]
 
     index_to_cut = get_index_to_cut(3, 1e-6, before)
