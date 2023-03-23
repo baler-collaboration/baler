@@ -26,7 +26,5 @@ jobs:
       run: poetry run pytest
 
     - name: "run black"
-      uses: psf/black@stable
-      with:
-        options: "--check"
-        src: "./baler"
+      run: |
+        black --check baler
