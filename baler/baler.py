@@ -19,7 +19,7 @@ def main():
         perform_compression(config, project_path)
     elif mode == "decompress":
         perform_decompression(
-            config.save_as_root, config.model_name, project_path, config
+            config.model_name, project_path, config
         )
     elif mode == "info":
         print_info(project_path)
@@ -27,7 +27,16 @@ def main():
         raise NameError("Baler mode " + mode + " not recognised. Use baler --help to see available modes.")
 
 
-def perform_training(config, project_path):
+def perform_training(project_path,config):
+    """ Main function calling the training functions, ran when --mode=train is selected.
+        The three main functions this calls are: `helper.process`, `helper.mode_init` and `helper.training`.
+    Args:
+        project_path (string): Selects base path for determining output path
+        config (dataClass): Base function selecting user inputs
+
+    Raises:
+        NameError: Baler currently only supports 1D (e.g. HEP) or 2D (e.g. CFD) data as inputs. 
+    """
     (train_set_norm, test_set_norm, normalization_features,) = helper.process(
         config.input_path,
         config.custom_norm,
@@ -80,12 +89,35 @@ def perform_training(config, project_path):
 
 
 def perform_plotting(project_path, config):
+    """ Main function calling the two plotting functions, ran when --mode=plot is selected.
+       The two main functions this calls are: `helper.plotter` and `helper.loss_plotter`
+
+    Args:
+        project_path (string): Selects base path for determining output path
+        config (dataClass): Base function selecting user inputs
+    """
     output_path = project_path + "plotting/"
     helper.plot(project_path, config)
     helper.loss_plotter(project_path + "training/loss_data.npy", output_path, config)
 
 
-def perform_compression(config, project_path):
+def perform_compression(project_path,config):
+    """ Main function calling the compression functions, ran when --mode=compress is selected.
+       The main function being called here is: `helper.compress`
+
+        If `config.extra_compression` is selected, the compressed file is further compressed via zip
+        Else, the function returns a compressed file of `.npz`, only compressed by Baler.
+
+    Args:
+        project_path (string): Selects base path for determining output path
+        config (dataClass): Base function selecting user inputs
+    
+    Outputs:
+        An `.npz` file which includes:
+        - The compressed data
+        - The data headers
+        - Normalization features if `config.apply_normalization=True`
+    """
     print("Compressing...")
     start = time.time()
 
@@ -124,7 +156,17 @@ def perform_compression(config, project_path):
         )
 
 
-def perform_decompression(save_as_root, model_name, project_path, config):
+def perform_decompression(model_name, project_path, config):
+    """ Main function calling the decompression functions, ran when --mode=decompress is selected.
+       The main function being called here is: `helper.decompress`
+
+        If `config.apply_normalization=True` the output is un-normalized with the same normalization features saved from `perform_training()`.
+
+    Args:
+        model_name (string): Name of the model you want to use for decompression
+        project_path (string): Selects base path for determining output path
+        config (dataClass): Base function selecting user inputs
+    """
     print("Decompressing...")
 
     start = time.time()
