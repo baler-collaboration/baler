@@ -257,7 +257,7 @@ def plotter(project_path, config):
     """
 
     plotting.plot(project_path, config)
-    print("### Done ###")
+    print("=== Done ===")
     print("Your plots are available in:", project_path + "plotting/")
 
 
