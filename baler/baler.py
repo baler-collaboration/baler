@@ -24,11 +24,11 @@ def main():
     if mode == "newProject":
         helper.create_new_project(project_name)
     elif mode == "train":
-        perform_training(config, project_path)
+        perform_training(project_path,config)
     elif mode == "plot":
         perform_plotting(project_path, config)
     elif mode == "compress":
-        perform_compression(config, project_path)
+        perform_compression(project_path,config)
     elif mode == "decompress":
         perform_decompression(
             config.model_name, project_path, config
