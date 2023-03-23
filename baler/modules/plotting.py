@@ -1,5 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
+from tqdm import tqdm
+from tqdm import trange
 from matplotlib.backends.backend_pdf import PdfPages
 
 
@@ -91,9 +93,11 @@ def plot_1D(project_path, config):
         ax4 = axsRight[1]
 
         number_of_columns = len(names)
-        for index, column in enumerate(names):
+
+        print("=== Plotting ===")
+
+        for index, column in enumerate(tqdm(names)):
             column_name = column.split(".")[-1]
-            print(f"Plotting: {column_name} ({index+1} of {number_of_columns})")
             rms = np.sqrt(np.mean(np.square(response[index])))
             residual_RMS = np.sqrt(np.mean(np.square(residual[index])))
 
@@ -220,7 +224,9 @@ def plot_2D(project_path, config):
     else:
         num_tiles = 1
 
-    for ind in range(0, num_tiles):
+    print("=== Plotting ===")
+
+    for ind in trange(num_tiles):
         tile_data_decompressed = data_decompressed[ind].reshape(
             data_decompressed.shape[2], data_decompressed.shape[3]
         )
