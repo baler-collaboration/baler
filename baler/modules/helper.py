@@ -346,11 +346,11 @@ def compress(model_path, config):
             )
             config.number_of_columns = number_of_columns
         elif config.data_dimension == 2:
-            data = np.load(config.input_path)["data"]
+            data = data_before
             number_of_rows = data.shape[1]
             config.number_of_columns = data.shape[2]
             config.latent_space_size = int(
-                (number_of_rows * number_of_columns) // config.compression_ratio
+                (number_of_rows * config.number_of_columns) // config.compression_ratio
             )
         else:
             raise NameError(
@@ -369,8 +369,8 @@ def compress(model_path, config):
     model = data_processing.load_model(
         model_object,
         model_path=model_path,
-        n_features=number_of_columns,
-        z_dim=latent_space_size,
+        n_features=config.number_of_columns,
+        z_dim=config.latent_space_size,
     )
 
     # Give the encoding function the correct input as tensor
