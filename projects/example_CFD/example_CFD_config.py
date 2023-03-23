@@ -3,7 +3,7 @@ def set_config(c):
     c.compression_ratio = 10.0
     # c.number_of_columns = 24
     # c.latent_space_size = 15
-    c.epochs = 2
+    c.epochs = 25
     c.early_stopping = True
     c.early_stopping_patience = 100
     c.min_delta = 0
