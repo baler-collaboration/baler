@@ -195,16 +195,20 @@ def plot_1D(project_path, config):
 
 def plot_2D(project_path, config):
     data = np.load(config.input_path)["data"]
-    data_decompressed = np.load(project_path + "/decompressed_output/decompressed.npz")["data"]
+    data_decompressed = np.load(project_path + "/decompressed_output/decompressed.npz")[
+        "data"
+    ]
 
-    if data.shape[0] > 1 :
+    if data.shape[0] > 1:
         num_tiles = data.shape[0]
     else:
         num_tiles = 1
 
     for ind in range(0, num_tiles):
 
-        tile_data_decompressed = data_decompressed[ind].reshape(data_decompressed.shape[2], data_decompressed.shape[3])
+        tile_data_decompressed = data_decompressed[ind].reshape(
+            data_decompressed.shape[2], data_decompressed.shape[3]
+        )
         tile_data = data[ind].reshape(data.shape[1], data.shape[2])
 
         diff = ((tile_data_decompressed - tile_data) / tile_data) * 100
@@ -220,12 +224,18 @@ def plot_2D(project_path, config):
 
         axs[1].set_title("Decompressed", fontsize=11, y=-0.2)
         im2 = axs[1].imshow(
-            tile_data_decompressed, vmin=-0.01, vmax=0.07, cmap="CMRmap", interpolation="nearest"
+            tile_data_decompressed,
+            vmin=-0.01,
+            vmax=0.07,
+            cmap="CMRmap",
+            interpolation="nearest",
         )
         cb2 = plt.colorbar(im2, ax=[axs[1]], location="top")
 
         axs[2].set_title("Relative Diff. [%]", fontsize=11, y=-0.2)
-        im3 = axs[2].imshow(diff, vmin=-10, vmax=10, cmap="cool_r", interpolation="nearest")
+        im3 = axs[2].imshow(
+            diff, vmin=-10, vmax=10, cmap="cool_r", interpolation="nearest"
+        )
         cb2 = plt.colorbar(im3, ax=[axs[2]], location="top")
 
         plt.ylim(0, 50)
@@ -235,9 +245,15 @@ def plot_2D(project_path, config):
             y=0.9,
             fontsize=16,
         )
-        fig.suptitle('Compressed file is 10% the size of original,\n500 epochs (20 min)',y=0.9, fontsize=16)
+        fig.suptitle(
+            "Compressed file is 10% the size of original,\n500 epochs (20 min)",
+            y=0.9,
+            fontsize=16,
+        )
 
-        fig.savefig(project_path + "/plotting/CFD"+str(ind)+".jpg", bbox_inches="tight")
+        fig.savefig(
+            project_path + "/plotting/CFD" + str(ind) + ".jpg", bbox_inches="tight"
+        )
 
 
 def plot(project_path, config):
