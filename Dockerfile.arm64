@@ -50,7 +50,7 @@ COPY --from=python-base /baler-root/baler/dist/*.whl ./
 # Install wheel
 RUN pip install *.whl
 
-# Copy source 
+# Copy source
 COPY --from=python-base /baler-root/baler/modules/ ./modules
 COPY --from=python-base /baler-root/baler/*.py /baler-root/baler/README.md ./
 

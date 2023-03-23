@@ -18,7 +18,7 @@ Baler will support 4 running modes:
 - Compressing: A larger original dataset can be compressed with a model derived from an earlier smaller dataset.
 - Decompressing. Decompressing of compressed data using the model which originally compressed the data.
 
-After phase 1, baler will be a collection of python modules and a run script, where the running parameters is defined by a user configuration file. It will not be deliered as a complete python pacakge. Phase 1 will only have native support for .root and .csv file formats. 
+After phase 1, baler will be a collection of python modules and a run script, where the running parameters is defined by a user configuration file. It will not be deliered as a complete python pacakge. Phase 1 will only have native support for .root and .csv file formats.
 
 ## System user
 The large demand for this kind of compression has been expressed form multiple researchers outside of particle physics, and baler therefore  aims to make baler compatible with multiple different types of data, and easy to use. In its first phase, baler is aimed towards other researchers, and some deeper understanding of data science and python is assumed.

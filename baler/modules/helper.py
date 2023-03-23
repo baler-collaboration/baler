@@ -1,8 +1,8 @@
 import argparse
 import importlib
 import os
-from dataclasses import dataclass
 import sys
+from dataclasses import dataclass
 
 sys.path.append(os.getcwd())
 import numpy as np
