@@ -1,15 +1,15 @@
 Baler
-Copyright 2022 Alexander Ekman
-Copyright 2022 Axel Gallén
-Copyright 2022 Oliver Woolland
-Copyright 2023 Fritjof Bengtsson
-Copyright 2023 Caterina Doglioni
-Copyright 2023 Pratik Jawahar
-Copyright 2023 Marta Camps Santasmasas
-Copyright 2023 Nicole Skidmore
-Copyright 2023 Alma Orucevic-Alagic
-Copyright 2023 Radek Skaroupka
-Copyright 2023 Shaoxuan Xu
+Copyright 2022, Alexander Ekman
+Copyright 2022, Axel Gallén
+Copyright 2022, Oliver Woolland
+Copyright 2023, Fritjof Bengtsson
+Copyright 2023, Caterina Doglioni
+Copyright 2023, Pratik Jawahar
+Copyright 2023, Marta Camps Santasmasas
+Copyright 2023, Nicole Skidmore
+Copyright 2023, Alma Orucevic-Alagic
+Copyright 2023, Radek Skaroupka
+Copyright 2023, Shaoxuan Xu
 
 This work includes functions based on previous work by George Dialektakis (https://github.com/Autoencoders-compression-anomaly/Deep-Autoencoders-Data-Compression-GSoC-2021). Specifically the functions marked as with their copyright notice in baler/modules/models.py and baler/modules/utils.py.
 Their work is released under the Apache License 2.0 found at https://www.apache.org/licenses/LICENSE-2.0.txt
