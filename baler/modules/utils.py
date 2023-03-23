@@ -8,7 +8,7 @@ factor = 0.5
 min_lr = 1e-6
 
 
-def sparse_loss_function_emd_l1(
+def mse_loss_emd_l1(
     model_children, true_data, reconstructed_data, reg_param, validate
 ):
     mse = nn.MSELoss()
@@ -34,7 +34,7 @@ def sparse_loss_function_emd_l1(
         return emd_loss
 
 
-def sparse_loss_function_l1(
+def mse_loss_l1(
     model_children, true_data, reconstructed_data, reg_param, validate
 ):
     mse = nn.MSELoss()
@@ -53,7 +53,7 @@ def sparse_loss_function_l1(
         return mse_loss, 0, 0
 
 
-def sparse_SumLoss_function_l1(
+def mse_sum_loss_l1(
     model_children, true_data, reconstructed_data, reg_param, validate
 ):
     mse_sum = nn.MSELoss(reduction="sum")
