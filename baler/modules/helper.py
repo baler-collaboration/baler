@@ -126,7 +126,7 @@ def set_config(c):
     c.RHO                          = 0.05
     c.lr                           = 0.001
     c.batch_size                   = 512
-    c.test_size                    = 0.15
+    c.test_size                    = 0
     c.data_dimension               = 1
     c.apply_normalization          = True
     c.extra_compression            = False
