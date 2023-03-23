@@ -209,7 +209,7 @@ def plot_2D(project_path, config):
         project_path (string): The path to the project directory
         config (dataclass): The config class containing attributes set in the config file
     """
-    
+
     data = np.load(config.input_path)["data"]
     data_decompressed = np.load(project_path + "/decompressed_output/decompressed.npz")[
         "data"

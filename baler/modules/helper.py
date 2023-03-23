@@ -13,7 +13,7 @@ from modules import training, plotting, data_processing
 
 
 def get_arguments():
-    """ Determines the arguments one is able to apply in the command line when running Baler. Use `--help` to see what options are avaliable.
+    """Determines the arguments one is able to apply in the command line when running Baler. Use `--help` to see what options are avaliable.
 
     Returns:
         .py, string, folder: `.py` file containing the config options, string determining what mode to run, projects directory where outputs go.
@@ -57,10 +57,10 @@ def get_arguments():
 
 
 def create_new_project(project_name: str, base_path: str = "projects") -> None:
-    """ Creates a new project directory with all necessary sub-directories and config files.
+    """Creates a new project directory with all necessary sub-directories and config files.
 
     Args:
-        project_name (str): Determines what you want to call your new project as. 
+        project_name (str): Determines what you want to call your new project as.
         base_path (str, optional): Defaults to "projects"
     """
     project_path = os.path.join(base_path, project_name)
@@ -137,7 +137,7 @@ def set_config(c):
 
 
 def model_init(model_name):
-    """ Calls `data_processing.initialise_model`.
+    """Calls `data_processing.initialise_model`.
 
     Args:
         model_name (string): The name of the model you wish to initialize
@@ -151,7 +151,7 @@ def model_init(model_name):
 
 
 def numpy_to_tensor(data):
-    """ Converts ndarrays to torch.Tensors.
+    """Converts ndarrays to torch.Tensors.
 
     Args:
         data (ndarray): The data you wish to convert from ndarray to torch.Tensor.
@@ -163,7 +163,7 @@ def numpy_to_tensor(data):
 
 
 def normalize(data, custom_norm):
-    """ Applies `data_processing.normalize()` along every axis of given data
+    """Applies `data_processing.normalize()` along every axis of given data
 
     Args:
         data (ndarray): Data you wish to normalize
@@ -179,7 +179,7 @@ def normalize(data, custom_norm):
 
 
 def process(input_path, custom_norm, test_size, apply_normalization):
-    """ Loads the input data into an ndarray, splits it into train/test splits and normalizes if chosen. 
+    """Loads the input data into an ndarray, splits it into train/test splits and normalizes if chosen.
 
     Args:
         input_path (string): Path to input data
@@ -229,7 +229,7 @@ def renormalize(data, true_min_list, feature_range_list):
 
 
 def train(model, number_of_columns, train_set, test_set, project_path, config):
-    """ Calls `training.train()`
+    """Calls `training.train()`
 
     Args:
         model (modelObject): The model you wish to train
@@ -248,7 +248,7 @@ def train(model, number_of_columns, train_set, test_set, project_path, config):
 
 
 def plotter(project_path, config):
-    """ Calls `plotting.plot()`
+    """Calls `plotting.plot()`
 
     Args:
         project_path (string): Path to the project directory
@@ -258,11 +258,11 @@ def plotter(project_path, config):
 
     plotting.plot(project_path, config)
     print("### Done ###")
-    print("Your plots are available in    :", project_path + "plotting/")
+    print("Your plots are available in:", project_path + "plotting/")
 
 
 def loss_plotter(path_to_loss_data, output_path, config):
-    """ Calls `plotting.loss_plot()`
+    """Calls `plotting.loss_plot()`
 
     Args:
         path_to_loss_data (string): Path to the values for the loss plot
@@ -276,7 +276,7 @@ def loss_plotter(path_to_loss_data, output_path, config):
 
 
 def model_saver(model, model_path):
-    """ Calls `data_processing.save_model()` 
+    """Calls `data_processing.save_model()`
 
     Args:
         model (nn.Module): The PyTorch model to save.
@@ -289,7 +289,7 @@ def model_saver(model, model_path):
 
 
 def detacher(tensor):
-    """ Detaches a given tensor to ndarray
+    """Detaches a given tensor to ndarray
 
     Args:
         tensor (torch.Tensor): The PyTorch tensor one wants to convert to a ndarray
@@ -314,14 +314,14 @@ def get_device():
 def compress(model_path, config):
     """Function which performs the compression of the input file. In order to compress, you must have a dataset whose path is
         determined by `input_path` in the `config`. You also need a trained model from path `model_path`. The model path is then used to initialize the model
-        used for compression. The data is then converted into a `torch.tensor` and then passed through `model.encode`. 
+        used for compression. The data is then converted into a `torch.tensor` and then passed through `model.encode`.
 
     Args:
         model_path (string): Path to where the model is located
         config (dataClass): Base class selecting user inputs
 
     Raises:
-        NameError: Baler currently only supports 1D (e.g. HEP) or 2D (e.g. CFD) data as inputs. 
+        NameError: Baler currently only supports 1D (e.g. HEP) or 2D (e.g. CFD) data as inputs.
 
     Returns:
         torch.Tensor: Compressed data as PyTorch tensor
@@ -388,9 +388,9 @@ def compress(model_path, config):
 
 
 def decompress(model_path, input_path, model_name):
-    """ Function which performs the decompression of the compressed file. In order to decompress, you must have a compressed file, whose path is
+    """Function which performs the decompression of the compressed file. In order to decompress, you must have a compressed file, whose path is
         determined by `input_path`, a model from path `model_path` and a model_name. The model path and model names are used to initialize the model
-        used for decompression. The data is then converted into a `torch.tensor` and then passed through `model.decode`. 
+        used for decompression. The data is then converted into a `torch.tensor` and then passed through `model.decode`.
 
     Args:
         model_path (string): Path to where the model is located

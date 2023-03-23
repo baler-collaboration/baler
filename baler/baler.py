@@ -24,13 +24,11 @@ def main():
     if mode == "newProject":
         helper.create_new_project(project_name)
     elif mode == "train":
-        perform_training(project_path,config)
+        perform_training(project_path, config)
     elif mode == "compress":
-        perform_compression(project_path,config)
+        perform_compression(project_path, config)
     elif mode == "decompress":
-        perform_decompression(
-            config.model_name, project_path, config
-        )
+        perform_decompression(config.model_name, project_path, config)
     elif mode == "plot":
         perform_plotting(project_path, config)
     elif mode == "info":
@@ -43,18 +41,18 @@ def main():
         )
 
 
-def perform_training(project_path,config):
-    """ Main function calling the training functions, ran when --mode=train is selected.
+def perform_training(project_path, config):
+    """Main function calling the training functions, ran when --mode=train is selected.
         The three main functions this calls are: `helper.process`, `helper.mode_init` and `helper.training`.
 
-        Depending on `config.data_dimensions`, the calculated latent space size will differ. 
+        Depending on `config.data_dimensions`, the calculated latent space size will differ.
 
     Args:
         project_path (string): Selects base path for determining output path
         config (dataClass): Base class selecting user inputs
 
     Raises:
-        NameError: Baler currently only supports 1D (e.g. HEP) or 2D (e.g. CFD) data as inputs. 
+        NameError: Baler currently only supports 1D (e.g. HEP) or 2D (e.g. CFD) data as inputs.
     """
     train_set_norm, test_set_norm, normalization_features = helper.process(
         config.input_path,
@@ -106,7 +104,7 @@ def perform_training(project_path,config):
 
 
 def perform_plotting(project_path, config):
-    """ Main function calling the two plotting functions, ran when --mode=plot is selected.
+    """Main function calling the two plotting functions, ran when --mode=plot is selected.
        The two main functions this calls are: `helper.plotter` and `helper.loss_plotter`
 
     Args:
@@ -118,8 +116,8 @@ def perform_plotting(project_path, config):
     helper.plotter(project_path, config)
 
 
-def perform_compression(project_path,config):
-    """ Main function calling the compression functions, ran when --mode=compress is selected.
+def perform_compression(project_path, config):
+    """Main function calling the compression functions, ran when --mode=compress is selected.
        The main function being called here is: `helper.compress`
 
         If `config.extra_compression` is selected, the compressed file is further compressed via zip
@@ -128,7 +126,7 @@ def perform_compression(project_path,config):
     Args:
         project_path (string): Selects base path for determining output path
         config (dataClass): Base class selecting user inputs
-    
+
     Outputs:
         An `.npz` file which includes:
         - The compressed data
@@ -173,7 +171,7 @@ def perform_compression(project_path,config):
 
 
 def perform_decompression(model_name, project_path, config):
-    """ Main function calling the decompression functions, ran when --mode=decompress is selected.
+    """Main function calling the decompression functions, ran when --mode=decompress is selected.
        The main function being called here is: `helper.decompress`
 
         If `config.apply_normalization=True` the output is un-normalized with the same normalization features saved from `perform_training()`.

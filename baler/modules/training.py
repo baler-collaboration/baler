@@ -14,7 +14,7 @@ import modules.utils as utils
 def fit(
     model, train_dl, model_children, regular_param, optimizer, RHO, l1, n_dimensions
 ):
-    """ This function trains the model on the train set. It computes the losses and does the backwards propagation, and updates the optimizer as well.  
+    """This function trains the model on the train set. It computes the losses and does the backwards propagation, and updates the optimizer as well.
 
     Args:
         model (modelObject): The model you wish to train
@@ -59,7 +59,7 @@ def fit(
 
 
 def validate(model, test_dl, model_children, reg_param):
-    """ Function used to validate the training. Not necessary for doing compression, but gives a good indication of wether the model selected is a good fit or not.
+    """Function used to validate the training. Not necessary for doing compression, but gives a good indication of wether the model selected is a good fit or not.
 
     Args:
         model (modelObject): Defines the model one wants to validate. The model used here is passed directly from `fit()`.
@@ -103,7 +103,7 @@ def seed_worker(worker_id):
 
 
 def train(model, variables, train_data, test_data, project_path, config):
-    """ Calls the `fit()` and `validate()` functions in a loop, which defines how many "times" the network should be trained. 
+    """Calls the `fit()` and `validate()` functions in a loop, which defines how many "times" the network should be trained.
 
     Args:
         model (modelObject): The model you wish to train
