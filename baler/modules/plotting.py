@@ -237,7 +237,7 @@ def plot_2D(project_path, config):
         )
         fig.suptitle('Compressed file is 10% the size of original,\n500 epochs (20 min)',y=0.9, fontsize=16)
 
-        fig.savefig(project_path + "/plotting/" + "tiled_CFD"+str(ind)+".jpg", bbox_inches="tight")
+        fig.savefig(project_path + "/plotting/CFD"+str(ind)+".jpg", bbox_inches="tight")
 
 
 def plot(project_path, config):
