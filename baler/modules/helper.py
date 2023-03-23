@@ -100,8 +100,8 @@ def create_default_config(project_name: str) -> str:
 def set_config(c):
     c.input_path                   = "data/{project_name}/{project_name}_data.npz"
     c.compression_ratio            = 2.0
-    # c.number_of_columns           = 24
-    # c.latent_space_size           = 12
+    # c.number_of_columns            = 24
+    # c.latent_space_size            = 12
     c.epochs                       = 5
     c.early_stopping               = True
     c.early_stopping_patience      = 100

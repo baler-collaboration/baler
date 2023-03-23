@@ -77,7 +77,7 @@ def seed_worker(worker_id):
     random.seed(worker_seed)
 
 
-def train(model, variables, train_data, test_data, parent_path, config):
+def train(model, variables, train_data, test_data, project_path, config):
     # Fix the random seed - TODO: add flag to make this optional
     random.seed(0)
     torch.manual_seed(0)
@@ -191,12 +191,12 @@ def train(model, variables, train_data, test_data, parent_path, config):
         ## Implementation to save models & values after every N epochs, where N is stored in 'intermittent_saving_patience':
         if intermittent_model_saving:
             if epoch % intermittent_saving_patience == 0:
-                path = os.path.join(parent_path, f"model_{epoch}.pt")
+                path = os.path.join(project_path, f"model_{epoch}.pt")
                 helper.model_saver(model, path)
 
     end = time.time()
 
     print(f"{(end - start) / 60:.3} minutes")
-    np.save(parent_path + "loss_data.npy", np.array([train_loss, val_loss]))
+    np.save(project_path + "loss_data.npy", np.array([train_loss, val_loss]))
 
     return trained_model
