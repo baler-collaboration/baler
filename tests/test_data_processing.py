@@ -11,7 +11,7 @@ from baler.modules import helper
 
 def test_import_config_success():
     # Call the import_config function with the sample config file path
-    config = helper.configClass
+    config = helper.Config
     config.Foo = "Bar"
     config.Baz = 10
 
