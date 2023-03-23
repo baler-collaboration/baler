@@ -22,3 +22,4 @@ TAG="baler-${ARCH}:latest"
 
 # Build the docker image
 docker build -t ${TAG} -f "${DOCKERFILE}" .
+echo "Successfully built ${TAG}..."

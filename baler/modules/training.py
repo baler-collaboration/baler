@@ -14,6 +14,7 @@ import modules.utils as utils
 def fit(
     model, train_dl, model_children, regular_param, optimizer, RHO, l1, n_dimensions
 ):
+
     """This function trains the model on the train set. It computes the losses and does the backwards propagation, and updates the optimizer as well.
 
     Args:
@@ -29,6 +30,7 @@ def fit(
     Returns:
         list, model object: Losses and trained model
     """
+
     print("### Beginning Training")
 
     model.train()
@@ -103,6 +105,7 @@ def seed_worker(worker_id):
 
 
 def train(model, variables, train_data, test_data, project_path, config):
+
     """Calls the `fit()` and `validate()` functions in a loop, which defines how many "times" the network should be trained.
 
     Args:
@@ -117,6 +120,7 @@ def train(model, variables, train_data, test_data, project_path, config):
         modelObject: fully trained model ready to perform compression and decompression
     """
     # Fix the random seed - TODO: add flag to make this optional
+
     random.seed(0)
     torch.manual_seed(0)
     np.random.seed(0)

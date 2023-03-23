@@ -52,6 +52,12 @@ def mse_loss_emd_l1(model_children, true_data, reconstructed_data, reg_param, va
 
 
 def mse_loss_l1(model_children, true_data, reconstructed_data, reg_param, validate):
+
+    # This function is a modified version of the original function by George Dialektakis found at
+    # https://github.com/Autoencoders-compression-anomaly/Deep-Autoencoders-Data-Compression-GSoC-2021
+    # Released under the Apache License 2.0 found at https://www.apache.org/licenses/LICENSE-2.0.txt
+    # Copyright 2021 George Dialektakis
+
     """
     Computes a sparse loss function consisting of two terms: the mean squared error (MSE) loss between the
     reconstructed and true data, and a L1 regularization term on the output of a list of model children.
