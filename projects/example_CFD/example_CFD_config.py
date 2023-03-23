@@ -17,5 +17,5 @@ def set_config(c):
     c.save_as_root = False
     c.test_size = 0
     c.data_dimension = 2
-    c.extra_compression = False
     c.apply_normalization = False
+    c.extra_compression = False

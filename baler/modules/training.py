@@ -104,10 +104,10 @@ def train(model, variables, train_data, test_data, parent_path, config):
     # Converting data to tensors
     if config.data_dimension == 2:
         train_ds = torch.tensor(train_data, dtype=torch.float32, device=device).view(
-            1, 1, len(test_data), len(test_data)
+            train_data.shape[0], 1, train_data.shape[1], train_data.shape[2]
         )
         valid_ds = torch.tensor(test_data, dtype=torch.float32, device=device).view(
-            1, 1, len(test_data), len(test_data)
+            test_data.shape[0], 1, test_data.shape[1], test_data.shape[2]
         )
     elif config.data_dimension == 1:
         train_ds = torch.tensor(train_data, dtype=torch.float64, device=device)

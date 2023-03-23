@@ -154,6 +154,7 @@ def process(input_path, custom_norm, test_size, energy_conversion, apply_normali
     loaded = np.load(input_path)
     data = loaded["data"]
     names = loaded["names"]
+    normalization_features = 0
 
     # TODO Fix this
     # if energy_conversion:
@@ -223,9 +224,10 @@ def compress(model_path, config):
             config.number_of_columns = number_of_columns
         elif config.data_dimension == 2:
             data = np.load(config.input_path)["data"]
-            number_of_columns = len(data)
-            latent_space_size = int(
-                (number_of_columns * number_of_columns) // config.compression_ratio
+            number_of_rows = data.shape[1]
+            number_of_columns = data.shape[2]
+            config.latent_space_size = int(
+                (number_of_rows * number_of_columns) // config.compression_ratio
             )
         else:
             raise NameError(
@@ -238,6 +240,7 @@ def compress(model_path, config):
         print(number_of_columns, latent_space_size)
 
     # Initialise and load the model correctly.
+    latent_space_size = config.latent_space_size
     model_object = data_processing.initialise_model(config.model_name)
     model = data_processing.load_model(
         model_object,
@@ -247,7 +250,7 @@ def compress(model_path, config):
     )
 
     if config.data_dimension == 2:
-        data_tensor = torch.from_numpy(data).to(model.device).view(1, 1, 50, 50)
+        data_tensor = torch.from_numpy(data.astype('float32', casting='same_kind')).to(model.device).view(data.shape[0], 1, data.shape[1], data.shape[2])
     elif config.data_dimension == 1:
         data_tensor = torch.from_numpy(data).to(model.device)
 

@@ -42,9 +42,10 @@ def perform_training(config, project_path):
             )
             config.number_of_columns = number_of_columns
         elif config.data_dimension == 2:
-            number_of_columns = len(train_set_norm[0])
+            number_of_rows = train_set_norm.shape[1]
+            number_of_columns = train_set_norm.shape[2]
             config.latent_space_size = int(
-                (number_of_columns * number_of_columns) // config.compression_ratio
+                (number_of_rows * number_of_columns) // config.compression_ratio
             )
             config.number_of_columns = number_of_columns
         else:
