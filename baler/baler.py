@@ -23,6 +23,8 @@ def main():
         )
     elif mode == "info":
         print_info(project_path)
+    else:
+        raise NameError("Baler mode " + mode + " not recognised. Use baler --help to see available modes.")
 
 
 def perform_training(config, project_path):
