@@ -1,9 +1,8 @@
 import argparse
 import importlib
 import os
-import pickle
-from dataclasses import dataclass
 import sys
+from dataclasses import dataclass
 
 sys.path.append(os.getcwd())
 import numpy as np
@@ -90,8 +89,9 @@ class Config:
     compression_ratio: float
     epochs: int
     early_stopping: bool
+    early_stoppin_patience: int
     lr_scheduler: bool
-    patience: int
+    lr_scheduler_patience: int
     min_delta: int
     model_name: str
     custom_norm: bool
@@ -100,48 +100,40 @@ class Config:
     RHO: float
     lr: float
     batch_size: int
-    save_as_root: bool
     test_size: float
-    energy_conversion: bool
     data_dimension: int
+    intermittent_model_saving: bool
+    intermittent_saving_patience: int
 
 
 def create_default_config(project_name: str) -> str:
     return f"""
 def set_config(c):
-    c.input_path          = "data/{project_name}/{project_name}_data.npz"
-    c.compression_ratio   = 2.0
-    c.epochs              = 5
-    c.energy_conversion = False
-    c.early_stopping      = True
-    c.lr_scheduler        = False
-    c.patience            = 100
-    c.min_delta           = 0
-    c.model_name          = "george_SAE"
-    c.custom_norm         = False
-    c.l1                  = True
-    c.reg_param             = 0.001
-    c.RHO                 = 0.05
-    c.lr                  = 0.001
-    c.batch_size          = 512
-    c.save_as_root        = True
-    c.test_size           = 0.15
-    c.energy_conversion   = False
-    c.data_dimension      = 1
-    c.apply_normalization = True
-    c.extra_compression   = False
+    c.input_path                   = "data/{project_name}/{project_name}_data.npz"
+    c.compression_ratio            = 2.0
+    # c.number_of_columns            = 24
+    # c.latent_space_size            = 12
+    c.epochs                       = 5
+    c.early_stopping               = True
+    c.early_stopping_patience      = 100
+    c.min_delta                    = 0
+    c.lr_scheduler                 = False
+    c.lr_scheduler_patience        = 100
+    c.model_name                   = "AE"
+    c.custom_norm                  = False
+    c.l1                           = True
+    c.reg_param                    = 0.001
+    c.RHO                          = 0.05
+    c.lr                           = 0.001
+    c.batch_size                   = 512
+    c.test_size                    = 0.15
+    c.data_dimension               = 1
+    c.apply_normalization          = True
+    c.extra_compression            = False
+    c.intermittent_model_saving    = False
+    c.intermittent_saving_patience = 100
 
 """
-
-
-def to_pickle(data, path):
-    with open(path, "wb") as handle:
-        pickle.dump(data, handle)
-
-
-def from_pickle(path):
-    with open(path, "rb") as handle:
-        return pickle.load(handle)
 
 
 def model_init(model_name):
@@ -186,7 +178,7 @@ def normalize(data, custom_norm):
     return data
 
 
-def process(input_path, custom_norm, test_size, energy_conversion, apply_normalization):
+def process(input_path, custom_norm, test_size, apply_normalization):
     """ Loads the input data into an ndarray, splits it into train/test splits and normalizes if chosen. 
 
     Args:
@@ -201,12 +193,8 @@ def process(input_path, custom_norm, test_size, energy_conversion, apply_normali
     loaded = np.load(input_path)
     data = loaded["data"]
     names = loaded["names"]
-    normalization_features = 0
+    normalization_features = []
 
-    # TODO Fix this
-    # if energy_conversion:
-    #     print("Converting mass to energy with eta, pt & mass")
-    #     df = convert_mass_to_energy(df, cleared_col_names)
     normalization_features = data_processing.find_minmax(data)
     if apply_normalization:
         print("Normalizing the data...")
@@ -259,17 +247,18 @@ def train(model, number_of_columns, train_set, test_set, project_path, config):
     )
 
 
-def plot(project_path, config):
+def plotter(project_path, config):
     """ Calls `plotting.plot()`
 
     Args:
         project_path (string): Path to the project directory
         config (dataClass): Base class selecting user inputs
-    Returns:
-        .pdf file: Plot containing the loss curves
+
     """
 
-    return plotting.plot(project_path, config)
+    plotting.plot(project_path, config)
+    print("### Done ###")
+    print("Your plots are available in    :", project_path + "plotting/")
 
 
 def loss_plotter(path_to_loss_data, output_path, config):
@@ -299,7 +288,7 @@ def model_saver(model, model_path):
     return data_processing.save_model(model, model_path)
 
 
-def detach(tensor):
+def detacher(tensor):
     """ Detaches a given tensor to ndarray
 
     Args:
@@ -309,6 +298,17 @@ def detach(tensor):
         ndarray: Converted torch.Tensor to ndarray
     """
     return tensor.cpu().detach().numpy()
+
+
+def get_device():
+    device = None
+    if torch.cuda.is_available():
+        dev = "cuda:0"
+        device = torch.device(dev)
+    else:
+        dev = "cpu"
+        device = torch.device(dev)
+    return device
 
 
 def compress(model_path, config):
@@ -341,18 +341,20 @@ def compress(model_path, config):
         if config.data_dimension == 1:
             column_names = np.load(config.input_path)["names"]
             number_of_columns = len(column_names)
-            latent_space_size = int(number_of_columns // config.compression_ratio)
+            config.latent_space_size = int(
+                number_of_columns // config.compression_ratio
+            )
             config.number_of_columns = number_of_columns
         elif config.data_dimension == 2:
             data = np.load(config.input_path)["data"]
             number_of_rows = data.shape[1]
-            number_of_columns = data.shape[2]
+            config.number_of_columns = data.shape[2]
             config.latent_space_size = int(
                 (number_of_rows * number_of_columns) // config.compression_ratio
             )
         else:
             raise NameError(
-                "Data dimension can only be 1 or 2. Introduced value = "
+                "Data dimension can only be 1 or 2. Got config.data_dimension = "
                 + str(config.data_dimension)
             )
     except AttributeError:
@@ -362,6 +364,7 @@ def compress(model_path, config):
 
     # Initialise and load the model correctly.
     latent_space_size = config.latent_space_size
+    device = get_device()
     model_object = data_processing.initialise_model(config.model_name)
     model = data_processing.load_model(
         model_object,
@@ -372,9 +375,13 @@ def compress(model_path, config):
 
     # Give the encoding function the correct input as tensor
     if config.data_dimension == 2:
-        data_tensor = torch.from_numpy(data.astype('float32', casting='same_kind')).to(model.device).view(data.shape[0], 1, data.shape[1], data.shape[2])
+        data_tensor = (
+            torch.from_numpy(data.astype("float32", casting="same_kind"))
+            .to(device)
+            .view(data.shape[0], 1, data.shape[1], data.shape[2])
+        )
     elif config.data_dimension == 1:
-        data_tensor = torch.from_numpy(data).to(model.device)
+        data_tensor = torch.from_numpy(data).to(device)
 
     compressed = model.encode(data_tensor)
     return compressed
@@ -404,6 +411,7 @@ def decompress(model_path, input_path, model_name):
     number_of_columns = len(model_dict[list(model_dict.keys())[-1]])
 
     # Initialise and load the model correctly.
+    device = get_device()
     model_object = data_processing.initialise_model(model_name)
     model = data_processing.load_model(
         model_object,
@@ -413,67 +421,8 @@ def decompress(model_path, input_path, model_name):
     )
 
     # Load the data & convert to tensor
-    data_tensor = torch.from_numpy(data).to(model.device)
+    data_tensor = torch.from_numpy(data).to(device)
 
     # Decompress the data using the trained models decode function
     decompressed = model.decode(data_tensor)
     return decompressed, names, normalization_features
-
-
-def get_device():
-    """Obtains the avaliable devices to to training on. If an GPU is avaliable (cuda), use that. Otherwise, use the CPU for training.
-
-    Returns:
-        torch.device: PyTorch device object capable of telling the training where to train the model.
-    """
-    device = None
-    if torch.cuda.is_available():
-        dev = "cuda:0"
-        device = torch.device(dev)
-    else:
-        dev = "cpu"
-        device = torch.device(dev)
-    return device
-
-
-def compute_e(mass, eta, pt):
-    masspt = pt**2 + mass**2
-    cosh = (np.cosh(eta)) ** 2
-    total = np.sqrt(masspt * cosh)
-    return total
-
-
-def convert_mass_to_energy(df, col_names):
-    # TODO Not used right now
-
-    for i in range(len(col_names)):
-        if col_names[i].split(".")[-1] == "pt":
-            pt = df.iloc[:, i]
-
-        if col_names[i].split(".")[-1] == "mass_":
-            mass = df.iloc[:, i]
-
-            # Store name to rename & replace mass in df:
-            mass_name: str = str(col_names[i])
-
-        if col_names[i].split(".")[-1] == "99":
-            eta = df.iloc[:, i]
-
-        else:
-            print(
-                "Can't convert to energy. Please turn off `energy_conversion` in the config to continue"
-            )
-            exit(1)
-
-    # Compute mass
-    energy = compute_e(mass=mass, eta=eta, pt=pt)
-
-    # Get correct new column name
-    energy_name = mass_name.replace("mass_", "energy_")
-
-    # Replace mass with energy
-    df[mass_name] = energy
-
-    # Replace column name
-    df.columns = df.columns.str.replace(mass_name, energy_name, regex=True)
-    return df

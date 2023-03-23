@@ -45,7 +45,8 @@ def load_model(model_object, model_path, n_features, z_dim):
         nn.Module: Returns a model object with the attributes of the model class, with the a selected state dictionary loaded into it.
     """
     device = helper.get_device()
-    model = model_object(device, n_features, z_dim)
+    model = model_object(n_features, z_dim)
+    model.to(device)
 
     # Loading the state_dict into the model
     model.load_state_dict(torch.load(str(model_path)), strict=False)

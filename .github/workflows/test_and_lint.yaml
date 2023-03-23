@@ -3,30 +3,28 @@ name: Code-Quality
 on: [pull_request, workflow_dispatch]
 
 jobs:
-  test_and_lint:    
+  test_and_lint:
     strategy:
         fail-fast: false
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: "checkout repository"
       uses: actions/checkout@v3
-      
+
     - name: "install poetry"
       uses: abatilo/actions-poetry@v2
       with:
         poetry-version: 1.3.2
-        
+
     - name: "install dependencies"
       run: poetry install
-      
+
     - name: "set python path"
       run: echo "PYTHONPATH=.:baler" >> $GITHUB_ENV
     - name: "run tests"
       run: poetry run pytest
-      
+
     - name: "run black"
-      uses: psf/black@stable
-      with:
-        options: "--check"
-        src: "./baler"
+      run: |
+        black --check baler

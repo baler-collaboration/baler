@@ -8,9 +8,8 @@ factor = 0.5
 min_lr = 1e-6
 
 
-def sparse_loss_function_emd_l1(
-    model_children, true_data, reconstructed_data, reg_param, validate
-):
+def mse_loss_emd_l1(model_children, true_data, reconstructed_data, reg_param, validate):
+
     """
     Computes a sparse loss function consisting of three terms: the Earth Mover's Distance (EMD) loss between the
     true and reconstructed data, the mean squared error (MSE) loss between the reconstructed and true data, and a
@@ -53,9 +52,7 @@ def sparse_loss_function_emd_l1(
         return emd_loss
 
 
-def sparse_loss_function_l1(
-    model_children, true_data, reconstructed_data, reg_param, validate
-):
+def mse_loss_l1(model_children, true_data, reconstructed_data, reg_param, validate):
     """
     Computes a sparse loss function consisting of two terms: the mean squared error (MSE) loss between the
     reconstructed and true data, and a L1 regularization term on the output of a list of model children.
@@ -90,9 +87,7 @@ def sparse_loss_function_l1(
         return mse_loss, 0, 0
 
 
-def sparse_sum_loss_function_l1(
-    model_children, true_data, reconstructed_data, reg_param, validate
-):
+def mse_sum_loss_l1(model_children, true_data, reconstructed_data, reg_param, validate):
     """
     Computes the sum of mean squared error (MSE) loss and L1 regularization loss.
 

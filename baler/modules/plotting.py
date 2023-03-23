@@ -1,7 +1,5 @@
-from mpl_toolkits.axes_grid1 import make_axes_locatable
-import numpy as np
 import matplotlib.pyplot as plt
-import pickle
+import numpy as np
 from matplotlib.backends.backend_pdf import PdfPages
 
 
@@ -200,9 +198,6 @@ def plot_1D(project_path, config):
             ax3.clear()
             ax4.clear()
 
-            # if index == 3:
-            #    break
-
 
 def plot_2D(project_path, config):
     """General plotting for 2D data, for example 2D arraysfrom computational fluid
@@ -214,6 +209,7 @@ def plot_2D(project_path, config):
         project_path (string): The path to the project directory
         config (dataclass): The config class containing attributes set in the config file
     """
+    
     data = np.load(config.input_path)["data"]
     data_decompressed = np.load(project_path + "/decompressed_output/decompressed.npz")[
         "data"
@@ -225,7 +221,6 @@ def plot_2D(project_path, config):
         num_tiles = 1
 
     for ind in range(0, num_tiles):
-
         tile_data_decompressed = data_decompressed[ind].reshape(
             data_decompressed.shape[2], data_decompressed.shape[3]
         )

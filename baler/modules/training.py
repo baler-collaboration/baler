@@ -1,3 +1,4 @@
+import os
 import random
 import time
 
@@ -6,10 +7,8 @@ import torch
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-import modules.utils as utils
 import modules.helper as helper
-
-import os
+import modules.utils as utils
 
 
 def fit(
@@ -36,19 +35,18 @@ def fit(
     model.train()
 
     running_loss = 0.0
-    counter = 0
+    device = helper.get_device()
 
-    for inputs in tqdm(train_dl):
-        counter += 1
-        inputs = inputs.to(model.device)
+    for idx, inputs in enumerate(tqdm(train_dl)):
+        inputs = inputs.to(device)
         optimizer.zero_grad()
         reconstructions = model(inputs)
-        loss, mse_loss, l1_loss = utils.sparse_SumLoss_function_l1(
+        loss, mse_loss, l1_loss = utils.mse_sum_loss_l1(
             model_children=model_children,
             true_data=inputs,
             reconstructed_data=reconstructions,
             reg_param=regular_param,
-            validate=True,
+            validate=False,
         )
 
         loss.backward()
@@ -56,7 +54,7 @@ def fit(
 
         running_loss += loss.item()
 
-    epoch_loss = running_loss / counter
+    epoch_loss = running_loss / (idx + 1)
     print(f"# Finished. Training Loss: {loss:.6f}")
     return epoch_loss, mse_loss, l1_loss, model
 
@@ -76,16 +74,16 @@ def validate(model, test_dl, model_children, reg_param):
     print("### Beginning Validating")
 
     model.eval()
-    counter = 0
+
     running_loss = 0.0
+    device = helper.get_device()
 
     with torch.no_grad():
-        for inputs in tqdm(test_dl):
-            counter += 1
-            inputs = inputs.to(model.device)
+        for idx, inputs in enumerate(tqdm(test_dl)):
+            inputs = inputs.to(device)
             reconstructions = model(inputs)
 
-            loss, _, _ = utils.sparse_loss_function_l1(
+            loss, _, _ = utils.mse_loss_l1(
                 model_children=model_children,
                 true_data=inputs,
                 reconstructed_data=reconstructions,
@@ -94,7 +92,7 @@ def validate(model, test_dl, model_children, reg_param):
             )
             running_loss += loss.item()
 
-    epoch_loss = running_loss / counter
+    epoch_loss = running_loss / (idx + 1)
     print(f"# Finished. Validation Loss: {loss:.6f}")
     return epoch_loss
 
@@ -105,7 +103,7 @@ def seed_worker(worker_id):
     random.seed(worker_seed)
 
 
-def train(model, variables, train_data, test_data, parent_path, config):
+def train(model, variables, train_data, test_data, project_path, config):
     """ Calls the `fit()` and `validate()` functions in a loop, which defines how many "times" the network should be trained. 
 
     Args:
@@ -113,12 +111,13 @@ def train(model, variables, train_data, test_data, parent_path, config):
         variables (_type_): _description_
         train_set (ndarray): Array consisting of the train set
         test_set (ndarray): Array consisting of the test set
-        parent_path (string): Path to the project directory
+        project_path (string): Path to the project directory
         config (dataClass): Base class selecting user inputs
 
     Returns:
         modelObject: fully trained model ready to perform compression and decompression
     """
+    # Fix the random seed - TODO: add flag to make this optional
     random.seed(0)
     torch.manual_seed(0)
     np.random.seed(0)
@@ -134,6 +133,8 @@ def train(model, variables, train_data, test_data, parent_path, config):
     l1 = config.l1
     epochs = config.epochs
     latent_space_size = config.latent_space_size
+    intermittent_model_saving = config.intermittent_model_saving
+    intermittent_saving_patience = config.intermittent_saving_patience
 
     model_children = list(model.children())
 
@@ -169,7 +170,7 @@ def train(model, variables, train_data, test_data, parent_path, config):
         worker_init_fn=seed_worker,
         generator=g,
         drop_last=False,
-    )  # Used to be batch_size = bs * 2
+    )
 
     # Select Optimizer
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
@@ -177,14 +178,16 @@ def train(model, variables, train_data, test_data, parent_path, config):
     # Activate early stopping
     if config.early_stopping:
         early_stopping = utils.EarlyStopping(
-            patience=config.patience, min_delta=config.min_delta
+            patience=config.early_stopping_patience, min_delta=config.min_delta
         )  # Changes to patience & min_delta can be made in configs
 
     # Activate LR Scheduler
     if config.lr_scheduler:
-        lr_scheduler = utils.LRScheduler(optimizer=optimizer, patience=config.patience)
+        lr_scheduler = utils.LRScheduler(
+            optimizer=optimizer, patience=config.lr_scheduler_patience
+        )
 
-    # train and validate the autoencoder neural network
+    # Training and Validation of the model
     train_loss = []
     val_loss = []
     start = time.time()
@@ -224,36 +227,15 @@ def train(model, variables, train_data, test_data, parent_path, config):
             if early_stopping.early_stop:
                 break
 
-        ## Make-shift implementation to save models & values after 100 epochs:
-        save_model_and_data = False
-        if save_model_and_data:
-            if epoch % 100 == 0:
-                path = os.path.join(parent_path, f"model_{epoch}.pt")
-                path_data = os.path.join(parent_path, f"after_{epoch}.pickle")
-                path_pred = os.path.join(parent_path, f"before_{epoch}.pickle")
-
+        ## Implementation to save models & values after every N epochs, where N is stored in 'intermittent_saving_patience':
+        if intermittent_model_saving:
+            if epoch % intermittent_saving_patience == 0:
+                path = os.path.join(project_path, f"model_{epoch}.pt")
                 helper.model_saver(model, path)
-                data_tensor = torch.tensor(test_data, dtype=torch.float64).to(
-                    model.device
-                )
-                pred_tensor = model(data_tensor)
-                data = helper.detach(data_tensor)
-                pred = helper.detach(pred_tensor)
-
-                helper.to_pickle(data, path_data)
-                helper.to_pickle(pred, path_pred)
 
     end = time.time()
 
     print(f"{(end - start) / 60:.3} minutes")
-    np.save(parent_path + "loss_data.npy", np.array([train_loss, val_loss]))
+    np.save(project_path + "loss_data.npy", np.array([train_loss, val_loss]))
 
-    # print("1")
-    # data_as_tensor = torch.tensor(test_data, dtype=torch.float32)
-    # print("2")
-    # print(test_data.shape, data_as_tensor.shape)
-    # data_as_tensor = data_as_tensor.to(trained_model.device)
-    # print("3")
-    # print(test_data.shape, data_as_tensor.shape)
-    # pred_as_tensor = trained_model(data_as_tensor)
     return trained_model
