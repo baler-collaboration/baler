@@ -14,6 +14,11 @@ from modules import training, plotting, data_processing
 
 
 def get_arguments():
+    """ Determines the arguments one is able to apply in the command line when running Baler. Use `--help` to see what options are avaliable.
+
+    Returns:
+        .py, string, folder: `.py` file containing the config options, string determining what mode to run, projects directory where outputs go.
+    """
     parser = argparse.ArgumentParser(
         prog="baler.py",
         description=(
@@ -53,6 +58,12 @@ def get_arguments():
 
 
 def create_new_project(project_name: str, base_path: str = "projects") -> None:
+    """ Creates a new project directory with all necessary sub-directories and config files.
+
+    Args:
+        project_name (str): Determines what you want to call your new project as. 
+        base_path (str, optional): Defaults to "projects"
+    """
     project_path = os.path.join(base_path, project_name)
     if os.path.exists(project_path):
         print(f"The project {project_path} already exists.")
@@ -134,16 +145,41 @@ def from_pickle(path):
 
 
 def model_init(model_name):
+    """ Calls `data_processing.initialise_model`.
+
+    Args:
+        model_name (string): The name of the model you wish to initialize
+
+    Returns:
+       nn.Module : The initialized model
+    """
     # This is used when we don't have saved model parameters.
     model_object = data_processing.initialise_model(model_name)
     return model_object
 
 
 def numpy_to_tensor(data):
+    """ Converts ndarrays to torch.Tensors.
+
+    Args:
+        data (ndarray): The data you wish to convert from ndarray to torch.Tensor.
+
+    Returns:
+        torch.Tensor: Your data as a tensor
+    """
     return torch.from_numpy(data)
 
 
 def normalize(data, custom_norm):
+    """ Applies `data_processing.normalize()` along every axis of given data
+
+    Args:
+        data (ndarray): Data you wish to normalize
+        custom_norm (boolean): Wether or not you wish to use MinMax normalization
+
+    Returns:
+        ndarray: Normalized data
+    """
     data = np.apply_along_axis(
         data_processing.normalize, axis=0, arr=data, custom_norm=custom_norm
     )
@@ -151,6 +187,17 @@ def normalize(data, custom_norm):
 
 
 def process(input_path, custom_norm, test_size, energy_conversion, apply_normalization):
+    """ Loads the input data into an ndarray, splits it into train/test splits and normalizes if chosen. 
+
+    Args:
+        input_path (string): Path to input data
+        custom_norm (boolean): `False` if you want to use MinMax normalization. `True` otherwise.
+        test_size (float): How much of your data to use as validation.
+        apply_normalization (boolean): `True` if you want to normalize. `False` if you don't want to normalize.
+
+    Returns:
+        ndarray, ndarray, ndarray: Array with the train set, array with the test set and array with the normalization features.
+    """
     loaded = np.load(input_path)
     data = loaded["data"]
     names = loaded["names"]
@@ -180,33 +227,107 @@ def process(input_path, custom_norm, test_size, energy_conversion, apply_normali
 
 
 def renormalize(data, true_min_list, feature_range_list):
+    """Calls `data_processing.renormalize_func()`.
+
+    Args:
+        data (ndarray): Data you wish to un-normalize
+        true_min_list (ndarray): List of column minimums
+        feature_range_list (ndarray): List of column feature ranges
+
+    Returns:
+        ndarray: Un-normalized array
+    """
     return data_processing.renormalize_func(data, true_min_list, feature_range_list)
 
 
 def train(model, number_of_columns, train_set, test_set, project_path, config):
+    """ Calls `training.train()`
+
+    Args:
+        model (modelObject): The model you wish to train
+        number_of_columns (int): Amount of columns in the initial dataset
+        train_set (ndarray): Array consisting of the train set
+        test_set (ndarray): Array consisting of the test set
+        project_path (string): Path to the project directory
+        config (dataClass): Base class selecting user inputs
+
+    Returns:
+        _type_: _description_
+    """
     return training.train(
         model, number_of_columns, train_set, test_set, project_path, config
     )
 
 
 def plot(project_path, config):
-    plotting.plot(project_path, config)
+    """ Calls `plotting.plot()`
+
+    Args:
+        project_path (string): Path to the project directory
+        config (dataClass): Base class selecting user inputs
+    Returns:
+        .pdf file: Plot containing the loss curves
+    """
+
+    return plotting.plot(project_path, config)
 
 
 def loss_plotter(path_to_loss_data, output_path, config):
+    """ Calls `plotting.loss_plot()`
+
+    Args:
+        path_to_loss_data (string): Path to the values for the loss plot
+        output_path (string): Path to output the data
+        config (dataClass): Base class selecting user inputs
+
+    Returns:
+        .pdf file: Plot containing the loss curves
+    """
     return plotting.loss_plot(path_to_loss_data, output_path, config)
 
 
 def model_saver(model, model_path):
+    """ Calls `data_processing.save_model()` 
+
+    Args:
+        model (nn.Module): The PyTorch model to save.
+        model_path (str): String defining the models save path.
+
+    Returns:
+        .pt file: `.pt` File containing the model state dictionary
+    """
     return data_processing.save_model(model, model_path)
 
 
 def detach(tensor):
+    """ Detaches a given tensor to ndarray
+
+    Args:
+        tensor (torch.Tensor): The PyTorch tensor one wants to convert to a ndarray
+
+    Returns:
+        ndarray: Converted torch.Tensor to ndarray
+    """
     return tensor.cpu().detach().numpy()
 
 
 def compress(model_path, config):
-    # Give the encoding function the correct input as tensor
+    """Function which performs the compression of the input file. In order to compress, you must have a dataset whose path is
+        determined by `input_path` in the `config`. You also need a trained model from path `model_path`. The model path is then used to initialize the model
+        used for compression. The data is then converted into a `torch.tensor` and then passed through `model.encode`. 
+
+    Args:
+        model_path (string): Path to where the model is located
+        config (dataClass): Base class selecting user inputs
+
+    Raises:
+        NameError: Baler currently only supports 1D (e.g. HEP) or 2D (e.g. CFD) data as inputs. 
+
+    Returns:
+        torch.Tensor: Compressed data as PyTorch tensor
+    """
+
+    # Loads the data and applies normalization if config.apply_normalization = True
     loaded = np.load(config.input_path)
     data_before = loaded["data"]
     if config.apply_normalization:
@@ -237,7 +358,7 @@ def compress(model_path, config):
     except AttributeError:
         number_of_columns = config.number_of_columns
         latent_space_size = config.latent_space_size
-        print(number_of_columns, latent_space_size)
+        print(f"{number_of_columns} -> {latent_space_size} dimensions")
 
     # Initialise and load the model correctly.
     latent_space_size = config.latent_space_size
@@ -249,6 +370,7 @@ def compress(model_path, config):
         z_dim=latent_space_size,
     )
 
+    # Give the encoding function the correct input as tensor
     if config.data_dimension == 2:
         data_tensor = torch.from_numpy(data.astype('float32', casting='same_kind')).to(model.device).view(data.shape[0], 1, data.shape[1], data.shape[2])
     elif config.data_dimension == 1:
@@ -259,7 +381,20 @@ def compress(model_path, config):
 
 
 def decompress(model_path, input_path, model_name):
-    # Load the data & convert to tensor
+    """ Function which performs the decompression of the compressed file. In order to decompress, you must have a compressed file, whose path is
+        determined by `input_path`, a model from path `model_path` and a model_name. The model path and model names are used to initialize the model
+        used for decompression. The data is then converted into a `torch.tensor` and then passed through `model.decode`. 
+
+    Args:
+        model_path (string): Path to where the model is located
+        input_path (string): Path to the data you want to decompress
+        model_name (string): Name of trained model from which you want to use decode
+
+    Returns:
+        torch.tensor, ndarray, ndarray: decompressed data as tensor, ndarray of column names, ndarray of normalization features
+    """
+
+    # Load the data & define necessary variables
     loaded = np.load(input_path)
     data = loaded["data"]
     names = loaded["names"]
@@ -280,11 +415,17 @@ def decompress(model_path, input_path, model_name):
     # Load the data & convert to tensor
     data_tensor = torch.from_numpy(data).to(model.device)
 
+    # Decompress the data using the trained models decode function
     decompressed = model.decode(data_tensor)
     return decompressed, names, normalization_features
 
 
 def get_device():
+    """Obtains the avaliable devices to to training on. If an GPU is avaliable (cuda), use that. Otherwise, use the CPU for training.
+
+    Returns:
+        torch.device: PyTorch device object capable of telling the training where to train the model.
+    """
     device = None
     if torch.cuda.is_available():
         dev = "cuda:0"
