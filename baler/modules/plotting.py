@@ -1,19 +1,18 @@
-from mpl_toolkits.axes_grid1 import make_axes_locatable
-import numpy as np
 import matplotlib.pyplot as plt
-import pickle
+import numpy as np
+from tqdm import tqdm
+from tqdm import trange
 from matplotlib.backends.backend_pdf import PdfPages
 
 
-# pickle_file = "./data/cfd2/cfd.pickle"
-
-# directory = "ConvAEDes_75"
-# directory = "ConvAEDes_500"
-
-# decompressed_cfd = f"./projects/{directory}/decompressed_output/decompressed.pickle"
-
-
 def loss_plot(path_to_loss_data, output_path, config):
+    """This function Plots the loss from the training and saves it
+
+    Args:
+        path_to_loss_data (string): Path to file containing loss plot data generated during training
+        output_path (string): Directory path to which the loss plot is saved
+        config (dataclass): The config class containing attributes set in the config file
+    """
     loss_data = np.load(path_to_loss_data)
     str_list = ["Epochs:", "Model Name:", "Reg. Param:", "lr:", "BS:"]
 
@@ -41,20 +40,32 @@ def loss_plot(path_to_loss_data, output_path, config):
     # plt.show()
 
 
-def pickle_to_df(file):
-    # From pickle to df:
-    with open(file, "rb") as handle:
-        data = pickle.load(handle)
-
-        return data
-
-
 def get_index_to_cut(column_index, cut, array):
+    """Given an array column index and a threshold, this function returns the index of the
+        entries not passing the threshold.
+
+    Args:
+        column_index (int): The index for the column where cuts should be applied
+        cut (float): Threshold for which values below will have the whole entry removed
+        array (np.array): The full array to be edited
+
+    Returns:
+        _type_: returns the index of the rows to be removed
+    """
     indices_to_cut = np.argwhere(array[column_index] < cut).flatten()
     return indices_to_cut
 
 
 def plot_1D(project_path, config):
+    """General plotting for 1D data, for example data from a '.csv' file. This function generates a pdf
+        document where each page contains the before/after performance
+        of each column of the 1D data
+
+    Args:
+        project_path (string): The path to the project directory
+        config (dataclass): The config class containing attributes set in the config file
+    """
+
     output_path = project_path + "training/"
     before_path = config.input_path
     after_path = project_path + "decompressed_output/decompressed.npz"
@@ -82,9 +93,11 @@ def plot_1D(project_path, config):
         ax4 = axsRight[1]
 
         number_of_columns = len(names)
-        for index, column in enumerate(names):
+
+        print("=== Plotting ===")
+
+        for index, column in enumerate(tqdm(names)):
             column_name = column.split(".")[-1]
-            print(f"Plotting: {column_name} ({index+1} of {number_of_columns})")
             rms = np.sqrt(np.mean(np.square(response[index])))
             residual_RMS = np.sqrt(np.mean(np.square(residual[index])))
 
@@ -189,51 +202,88 @@ def plot_1D(project_path, config):
             ax3.clear()
             ax4.clear()
 
-            # if index == 3:
-            #    break
-
 
 def plot_2D(project_path, config):
-    data = np.load(config.input_path)["data"]
+    """General plotting for 2D data, for example 2D arraysfrom computational fluid
+        dynamics or other image like data. This function generates a pdf
+        document where each page contains the before/after performance
+        of each column of the 1D data
 
+    Args:
+        project_path (string): The path to the project directory
+        config (dataclass): The config class containing attributes set in the config file
+    """
+
+    data = np.load(config.input_path)["data"]
     data_decompressed = np.load(project_path + "/decompressed_output/decompressed.npz")[
         "data"
-    ].reshape(50, 50)
+    ]
 
-    diff = ((data_decompressed - data) / data) * 100
+    if data.shape[0] > 1:
+        num_tiles = data.shape[0]
+    else:
+        num_tiles = 1
 
-    fig, axs = plt.subplots(
-        1, 3, figsize=(29.7 * (1 / 2.54), 21 * (1 / 2.54)), sharey=True
-    )
-    axs[0].set_title("Original", fontsize=11, y=-0.2)
-    im1 = axs[0].imshow(
-        data, vmin=-0.01, vmax=0.07, cmap="CMRmap", interpolation="nearest"
-    )
-    cb2 = plt.colorbar(im1, ax=[axs[0]], location="top")
+    print("=== Plotting ===")
 
-    axs[1].set_title("Decompressed", fontsize=11, y=-0.2)
-    im2 = axs[1].imshow(
-        data_decompressed, vmin=-0.01, vmax=0.07, cmap="CMRmap", interpolation="nearest"
-    )
-    cb2 = plt.colorbar(im2, ax=[axs[1]], location="top")
+    for ind in trange(num_tiles):
+        tile_data_decompressed = data_decompressed[ind].reshape(
+            data_decompressed.shape[2], data_decompressed.shape[3]
+        )
+        tile_data = data[ind].reshape(data.shape[1], data.shape[2])
 
-    axs[2].set_title("Relative Diff. [%]", fontsize=11, y=-0.2)
-    im3 = axs[2].imshow(diff, vmin=-10, vmax=10, cmap="cool_r", interpolation="nearest")
-    cb2 = plt.colorbar(im3, ax=[axs[2]], location="top")
+        diff = ((tile_data_decompressed - tile_data) / tile_data) * 100
 
-    plt.ylim(0, 50)
-    plt.xlim(0, 50)
-    fig.suptitle(
-        "Compressed file is 10% the size of original,\n75 epochs (3.5 min)",
-        y=0.9,
-        fontsize=16,
-    )
-    # fig.suptitle('Compressed file is 10% the size of original,\n500 epochs (20 min)',y=0.9, fontsize=16)
+        fig, axs = plt.subplots(
+            1, 3, figsize=(29.7 * (1 / 2.54), 21 * (1 / 2.54)), sharey=True
+        )
+        axs[0].set_title("Original", fontsize=11, y=-0.2)
+        im1 = axs[0].imshow(
+            tile_data, vmin=-0.01, vmax=0.07, cmap="CMRmap", interpolation="nearest"
+        )
+        cb2 = plt.colorbar(im1, ax=[axs[0]], location="top")
 
-    fig.savefig(project_path + "/plotting/" + "CFD.jpg", bbox_inches="tight")
+        axs[1].set_title("Decompressed", fontsize=11, y=-0.2)
+        im2 = axs[1].imshow(
+            tile_data_decompressed,
+            vmin=-0.01,
+            vmax=0.07,
+            cmap="CMRmap",
+            interpolation="nearest",
+        )
+        cb2 = plt.colorbar(im2, ax=[axs[1]], location="top")
+
+        axs[2].set_title("Relative Diff. [%]", fontsize=11, y=-0.2)
+        im3 = axs[2].imshow(
+            diff, vmin=-10, vmax=10, cmap="cool_r", interpolation="nearest"
+        )
+        cb2 = plt.colorbar(im3, ax=[axs[2]], location="top")
+
+        plt.ylim(0, 50)
+        plt.xlim(0, 50)
+        fig.suptitle(
+            "Compressed file is 10% the size of original,\n75 epochs (3.5 min)",
+            y=0.9,
+            fontsize=16,
+        )
+        fig.suptitle(
+            "Compressed file is 10% the size of original,\n500 epochs (20 min)",
+            y=0.9,
+            fontsize=16,
+        )
+
+        fig.savefig(
+            project_path + "/plotting/CFD" + str(ind) + ".jpg", bbox_inches="tight"
+        )
 
 
 def plot(project_path, config):
+    """Runs the appropriate plotting function based on the data dimension 1D or 2D
+
+    Args:
+        project_path (string): The path to the project directory
+        config (dataclass): The config class containing attributes set in the config file
+    """
     if config.data_dimension == 1:
         plot_1D(project_path, config)
     elif config.data_dimension == 2:

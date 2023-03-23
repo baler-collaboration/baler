@@ -1,13 +1,16 @@
 name: Docker-CI
 on: [pull_request, workflow_dispatch]
+branches:
+  - main
+  - development
 
 jobs:
   build-docker-image:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
-      - name: Build the Docker image
-        run: |
-          ./bin/build_docker.sh
-          ./bin/test_docker.sh
+    - uses: actions/checkout@v3
+    - name: Build the Docker image
+      run: |
+        ./bin/build_docker.sh
+        ./bin/test_docker.sh

@@ -3,27 +3,26 @@ from torch import nn
 from torch.nn import functional as F
 
 
-class george_SAE(nn.Module):
+class AE(nn.Module):
+
     # This class is a modified version of the original class by George Dialektakis found at
     # https://github.com/Autoencoders-compression-anomaly/Deep-Autoencoders-Data-Compression-GSoC-2021
     # Released under the Apache License 2.0 found at https://www.apache.org/licenses/LICENSE-2.0.txt
     # Copyright 2021 George Dialektakis
 
-    def __init__(self, device, n_features, z_dim, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        self.device = device
+    def __init__(self, n_features, z_dim, *args, **kwargs):
+        super(AE, self).__init__(*args, **kwargs)
 
         # encoder
-        self.en1 = nn.Linear(n_features, 200, dtype=torch.float64, device=device)
-        self.en2 = nn.Linear(200, 100, dtype=torch.float64, device=device)
-        self.en3 = nn.Linear(100, 50, dtype=torch.float64, device=device)
-        self.en4 = nn.Linear(50, z_dim, dtype=torch.float64, device=device)
+        self.en1 = nn.Linear(n_features, 200, dtype=torch.float64)
+        self.en2 = nn.Linear(200, 100, dtype=torch.float64)
+        self.en3 = nn.Linear(100, 50, dtype=torch.float64)
+        self.en4 = nn.Linear(50, z_dim, dtype=torch.float64)
         # decoder
-        self.de1 = nn.Linear(z_dim, 50, dtype=torch.float64, device=device)
-        self.de2 = nn.Linear(50, 100, dtype=torch.float64, device=device)
-        self.de3 = nn.Linear(100, 200, dtype=torch.float64, device=device)
-        self.de4 = nn.Linear(200, n_features, dtype=torch.float64, device=device)
+        self.de1 = nn.Linear(z_dim, 50, dtype=torch.float64)
+        self.de2 = nn.Linear(50, 100, dtype=torch.float64)
+        self.de3 = nn.Linear(100, 200, dtype=torch.float64)
+        self.de4 = nn.Linear(200, n_features, dtype=torch.float64)
 
         self.n_features = n_features
         self.z_dim = z_dim
@@ -46,71 +45,9 @@ class george_SAE(nn.Module):
         return self.decode(z)
 
 
-class george_SAE_BN(nn.Module):
-    def __init__(self, device, n_features, z_dim):
-        super(george_SAE_BN, self).__init__()
-
-        self.device = device
-
-        # encoder
-        self.enc_nn = nn.Sequential(
-            nn.Linear(n_features, 200, dtype=torch.float64, device=device),
-            # nn.Dropout(p=0.5),
-            nn.LeakyReLU(),
-            nn.BatchNorm1d(200, dtype=torch.float64, device=device),
-            nn.Linear(200, 100, dtype=torch.float64, device=device),
-            # nn.Dropout(p=0.4),
-            nn.LeakyReLU(),
-            nn.BatchNorm1d(100, dtype=torch.float64, device=device),
-            nn.Linear(100, 50, dtype=torch.float64, device=device),
-            # nn.Dropout(p=0.3),
-            nn.LeakyReLU(),
-            nn.BatchNorm1d(50, dtype=torch.float64, device=device),
-            nn.Linear(50, z_dim, dtype=torch.float64, device=device),
-            # nn.Dropout(p=0.2),
-            nn.LeakyReLU(),
-            nn.BatchNorm1d(z_dim, dtype=torch.float64, device=device),
-        )
-
-        # decoder
-        self.dec_nn = nn.Sequential(
-            nn.Linear(z_dim, 50, dtype=torch.float64, device=device),
-            # nn.Dropout(p=0.2),
-            nn.LeakyReLU(),
-            # nn.BatchNorm1d(50,dtype=torch.float64),
-            nn.Linear(50, 100, dtype=torch.float64, device=device),
-            # nn.Dropout(p=0.3),
-            nn.LeakyReLU(),
-            # nn.BatchNorm1d(100,dtype=torch.float64),
-            nn.Linear(100, 200, dtype=torch.float64, device=device),
-            # nn.Dropout(p=0.4),
-            nn.LeakyReLU(),
-            # nn.BatchNorm1d(200,dtype=torch.float64),
-            nn.Linear(200, n_features, dtype=torch.float64, device=device),
-            # nn.Dropout(p=0.5),
-            # nn.BatchNorm1d(n_features,dtype=torch.float64),
-            nn.ReLU(),
-        )
-
-        self.n_features = n_features
-        self.z_dim = z_dim
-
-    def encode(self, x):
-        out = self.enc_nn(x)
-        return out
-
-    def decode(self, z):
-        out = self.dec_nn(z)
-        return out
-
-    def forward(self, x):
-        z = self.encode(x)
-        return self.decode(z)
-
-
-class george_SAE_Dropout_BN(nn.Module):
-    def __init__(self, n_features, z_dim):
-        super(george_SAE_Dropout_BN, self).__init__()
+class AE_Dropout_BN(nn.Module):
+    def __init__(self, n_features, z_dim, *args, **kwargs):
+        super(AE_Dropout_BN, self).__init__(*args, **kwargs)
 
         # encoder
         self.enc_nn = nn.Sequential(
@@ -168,78 +105,15 @@ class george_SAE_Dropout_BN(nn.Module):
         return self.decode(z)
 
 
-class george_SAE_Dropout(nn.Module):
-    def __init__(self, n_features, z_dim):
-        super(george_SAE_Dropout, self).__init__()
-
-        # encoder
-        self.enc_nn = nn.Sequential(
-            nn.Linear(n_features, 200, dtype=torch.float64),
-            nn.Dropout(p=0.5),
-            nn.LeakyReLU(),
-            nn.Linear(200, 100, dtype=torch.float64),
-            nn.Dropout(p=0.4),
-            nn.LeakyReLU(),
-            nn.Linear(100, 50, dtype=torch.float64),
-            nn.Dropout(p=0.3),
-            nn.LeakyReLU(),
-            nn.Linear(50, z_dim, dtype=torch.float64),
-            nn.Dropout(p=0.2),
-            nn.LeakyReLU(),
-        )
-
-        # decoder
-        self.dec_nn = nn.Sequential(
-            nn.Linear(z_dim, 50, dtype=torch.float64),
-            nn.Dropout(p=0.2),
-            nn.LeakyReLU(),
-            nn.Linear(50, 100, dtype=torch.float64),
-            nn.Dropout(p=0.3),
-            nn.LeakyReLU(),
-            nn.Linear(100, 200, dtype=torch.float64),
-            nn.Dropout(p=0.4),
-            nn.LeakyReLU(),
-            nn.Linear(200, n_features, dtype=torch.float64),
-            nn.Dropout(p=0.5),
-            nn.ReLU(),
-        )
-
-        self.n_features = n_features
-        self.z_dim = z_dim
-
-    def encode(self, x):
-        out = self.enc_nn(x)
-        return out
-
-    def decode(self, z):
-        out = self.dec_nn(z)
-        return out
-
-    def forward(self, x):
-        # z = x.view(batch_size,a,b,c) ? What is this
-        return self.decode(x)
-
-    def loss(self, model_children, true_data, reconstructed_data, reg_param):
-        mse = nn.MSELoss()
-        mse_loss = mse(reconstructed_data, true_data)
-        l1_loss = 0
-        values = true_data
-        for i in range(len(model_children)):
-            values = F.relu((model_children[i](values)))
-            l1_loss += torch.mean(torch.abs(values))
-        loss = mse_loss + reg_param * l1_loss
-        return loss
-
-
 class Conv_AE(nn.Module):
-    def __init__(self, device, n_features, z_dim, *args, **kwargs):
+    def __init__(self, n_features, z_dim, *args, **kwargs):
         super(Conv_AE, self).__init__(*args, **kwargs)
-
-        self.device = device
 
         self.q_z_mid_dim = 2000
         self.q_z_output_dim = 72128
+
         # Encoder
+
         # Conv Layers
         self.q_z_conv = nn.Sequential(
             nn.Conv2d(1, 8, kernel_size=(2, 5), stride=(1), padding=(1)),
@@ -264,6 +138,8 @@ class Conv_AE(nn.Module):
         )
 
         # Decoder
+
+        # Linear layers
         self.p_x_lin = nn.Sequential(
             nn.Linear(z_dim, self.q_z_mid_dim),
             nn.ReLU(),
@@ -286,19 +162,18 @@ class Conv_AE(nn.Module):
     def encode(self, x):
         # Conv
         out = self.q_z_conv(x)
-        # flatten
+        # Flatten
         out = self.flatten(out)
-        # out = out.view(out.size(0), -1)
-        # dense
+        # Dense
         out = self.q_z_lin(out)
         return out
 
     def decode(self, z):
-        # dense
+        # Dense
         out = self.p_x_lin(z)
-        # reshape
+        # Unflatten
         out = out.view(out.size(0), 32, 49, 46)
-        # DeConv/UnConv?
+        # Conv transpose
         out = self.p_x_conv(out)
         return out
 
