@@ -7,6 +7,18 @@ import modules.helper as helper
 
 
 def main():
+    """Calls different functions depending on argument parsed in command line.
+
+        - if --mode=newProject: call `helper.create_new_project` and create a new project sub directory with config file
+        - if --mode=train: call `perform_training` and train the network on given data and based on the config file
+        - if --mode=compress: call `perform_compression` and compress the given data using the model trained in `--mode=train`
+        - if --mode=decompress: call `perform_decompression` and decompress the compressed file outputted from `--mode=compress`
+        - if --mode=plot: call `perform_plotting` and plot the comparison between the original data and the decompressed data from `--mode=decompress`. Also plots the loss plot from the trained network.
+
+
+    Raises:
+        NameError: Raises error if the chosen mode does not exist.
+    """
     config, mode, project_name = helper.get_arguments()
     project_path = f"projects/{project_name}/"
     if mode == "newProject":
@@ -30,9 +42,12 @@ def main():
 def perform_training(project_path,config):
     """ Main function calling the training functions, ran when --mode=train is selected.
         The three main functions this calls are: `helper.process`, `helper.mode_init` and `helper.training`.
+
+        Depending on `config.data_dimensions`, the calculated latent space size will differ. 
+
     Args:
         project_path (string): Selects base path for determining output path
-        config (dataClass): Base function selecting user inputs
+        config (dataClass): Base class selecting user inputs
 
     Raises:
         NameError: Baler currently only supports 1D (e.g. HEP) or 2D (e.g. CFD) data as inputs. 
@@ -94,7 +109,7 @@ def perform_plotting(project_path, config):
 
     Args:
         project_path (string): Selects base path for determining output path
-        config (dataClass): Base function selecting user inputs
+        config (dataClass): Base class selecting user inputs
     """
     output_path = project_path + "plotting/"
     helper.plot(project_path, config)
@@ -110,7 +125,7 @@ def perform_compression(project_path,config):
 
     Args:
         project_path (string): Selects base path for determining output path
-        config (dataClass): Base function selecting user inputs
+        config (dataClass): Base class selecting user inputs
     
     Outputs:
         An `.npz` file which includes:
@@ -165,7 +180,7 @@ def perform_decompression(model_name, project_path, config):
     Args:
         model_name (string): Name of the model you want to use for decompression
         project_path (string): Selects base path for determining output path
-        config (dataClass): Base function selecting user inputs
+        config (dataClass): Base class selecting user inputs
     """
     print("Decompressing...")
 
