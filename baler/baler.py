@@ -13,16 +13,14 @@ def main():
         helper.create_new_project(project_name)
     elif mode == "train":
         perform_training(config, project_path)
-    elif mode == "plot":
-        perform_plotting(project_path, config)
     elif mode == "compress":
         perform_compression(config, project_path)
     elif mode == "decompress":
-        perform_decompression(
-            config.save_as_root, config.model_name, project_path, config
-        )
+        perform_decompression(config.model_name, project_path, config)
+    elif mode == "plot":
+        perform_plotting(project_path, config)
     elif mode == "info":
-        print_info(project_path)
+        print_info(config, project_path)
     else:
         raise NameError(
             "Baler mode "
@@ -32,17 +30,20 @@ def main():
 
 
 def perform_training(config, project_path):
-    (train_set_norm, test_set_norm, normalization_features,) = helper.process(
+    (
+        train_set_norm,
+        test_set_norm,
+        normalization_features,
+    ) = helper.process(
         config.input_path,
         config.custom_norm,
         config.test_size,
-        config.energy_conversion,
         config.apply_normalization,
     )
 
     try:
         if config.data_dimension == 1:
-            number_of_columns = len(train_set_norm[0])
+            number_of_columns = train_set_norm.shape[1]
             config.latent_space_size = int(
                 number_of_columns // config.compression_ratio
             )
@@ -56,7 +57,7 @@ def perform_training(config, project_path):
             config.number_of_columns = number_of_columns
         else:
             raise NameError(
-                "Data dimension can only be 1 or 2. Introduced value = "
+                "Data dimension can only be 1 or 2. Got config.data_dimension value = "
                 + str(config.data_dimension)
             )
     except AttributeError:
@@ -66,9 +67,8 @@ def perform_training(config, project_path):
     device = helper.get_device()
 
     model_object = helper.model_init(config.model_name)
-    model = model_object(
-        device=device, n_features=number_of_columns, z_dim=config.latent_space_size
-    )
+    model = model_object(n_features=number_of_columns, z_dim=config.latent_space_size)
+    model.to(device)
 
     output_path = project_path + "training/"
     trained_model = helper.train(
@@ -85,27 +85,26 @@ def perform_training(config, project_path):
 
 def perform_plotting(project_path, config):
     output_path = project_path + "plotting/"
-    helper.plot(project_path, config)
     helper.loss_plotter(project_path + "training/loss_data.npy", output_path, config)
+    helper.plotter(project_path, config)
 
 
 def perform_compression(config, project_path):
     print("Compressing...")
     start = time.time()
+    normalization_features = []
 
     if config.apply_normalization:
         normalization_features = np.load(
             project_path + "training/normalization_features.npy"
         )
-    else:
-        normalization_features = []
 
     compressed = helper.compress(
         model_path=project_path + "compressed_output/model.pt",
         config=config,
     )
     # Converting back to numpyarray
-    compressed = helper.detach(compressed)
+    compressed = helper.detacher(compressed)
     end = time.time()
 
     print("Compression took:", f"{(end - start) / 60:.3} minutes")
@@ -128,7 +127,7 @@ def perform_compression(config, project_path):
         )
 
 
-def perform_decompression(save_as_root, model_name, project_path, config):
+def perform_decompression(model_name, project_path, config):
     print("Decompressing...")
 
     start = time.time()
@@ -139,7 +138,7 @@ def perform_decompression(save_as_root, model_name, project_path, config):
     )
 
     # Converting back to numpyarray
-    decompressed = helper.detach(decompressed)
+    decompressed = helper.detacher(decompressed)
 
     if config.apply_normalization:
         print("Un-normalizing...")
@@ -168,14 +167,15 @@ def perform_decompression(save_as_root, model_name, project_path, config):
         )
 
 
-def print_info(project_path):
+def print_info(config, project_path):
     print(
         "================================== \n Information about your compression \n================================== "
     )
 
-    pre_compression = project_path + "compressed_output/cleandata_pre_comp.pickle"
-    compressed = project_path + "compressed_output/compressed.pickle"
-    decompressed = project_path + "decompressed_output/decompressed.pickle"
+    pre_compression = config.input_path
+    model = project_path + "compressed_output/model.pt"
+    compressed = project_path + "compressed_output/compressed.npz"
+    decompressed = project_path + "decompressed_output/decompressed.npz"
 
     files = [pre_compression, compressed, decompressed]
     q = []
@@ -187,7 +187,7 @@ def print_info(project_path):
     )
     print(f"File size before compression: {round(q[0], 2)} MB")
     print(f"Compressed file size: {round(q[1], 2)} MB")
-    print(f"De-compressed file size: {round(q[2], 2),} MB")
+    print(f"De-compressed file size: {round(q[2], 2)} MB")
     print(f"Compression ratio: {round(q[0] / q[1], 2)}")
 
 

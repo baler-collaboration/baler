@@ -1,16 +1,6 @@
-import pickle
-
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.backends.backend_pdf import PdfPages
-
-
-# pickle_file = "./data/cfd2/cfd.pickle"
-
-# directory = "ConvAEDes_75"
-# directory = "ConvAEDes_500"
-
-# decompressed_cfd = f"./projects/{directory}/decompressed_output/decompressed.pickle"
 
 
 def loss_plot(path_to_loss_data, output_path, config):
@@ -39,14 +29,6 @@ def loss_plot(path_to_loss_data, output_path, config):
     plt.legend(loc="best")
     plt.savefig(output_path + "_Loss_plot.pdf")
     # plt.show()
-
-
-def pickle_to_df(file):
-    # From pickle to df:
-    with open(file, "rb") as handle:
-        data = pickle.load(handle)
-
-        return data
 
 
 def get_index_to_cut(column_index, cut, array):
@@ -189,9 +171,6 @@ def plot_1D(project_path, config):
             ax3.clear()
             ax4.clear()
 
-            # if index == 3:
-            #    break
-
 
 def plot_2D(project_path, config):
     data = np.load(config.input_path)["data"]
@@ -205,7 +184,6 @@ def plot_2D(project_path, config):
         num_tiles = 1
 
     for ind in range(0, num_tiles):
-
         tile_data_decompressed = data_decompressed[ind].reshape(
             data_decompressed.shape[2], data_decompressed.shape[3]
         )

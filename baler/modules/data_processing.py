@@ -17,7 +17,8 @@ def initialise_model(model_name):
 
 def load_model(model_object, model_path, n_features, z_dim):
     device = helper.get_device()
-    model = model_object(device, n_features, z_dim)
+    model = model_object(n_features, z_dim)
+    model.to(device)
 
     # Loading the state_dict into the model
     model.load_state_dict(torch.load(str(model_path)), strict=False)
