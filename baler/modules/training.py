@@ -30,7 +30,6 @@ def fit(
         list, model object: Losses and trained model
     """
     print("### Beginning Training")
-    print(type(model),type(train_dl),type(model_children),type(optimizer))
 
     model.train()
 
