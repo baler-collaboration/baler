@@ -4,6 +4,13 @@ from matplotlib.backends.backend_pdf import PdfPages
 
 
 def loss_plot(path_to_loss_data, output_path, config):
+    """This function Plots the loss from the training and saves it
+
+    Args:
+        path_to_loss_data (string): Path to file containing loss plot data generated during training
+        output_path (string): Directory path to which the loss plot is saved
+        config (dataclass): The config class containing attributes set in the config file
+    """
     loss_data = np.load(path_to_loss_data)
     str_list = ["Epochs:", "Model Name:", "Reg. Param:", "lr:", "BS:"]
 
@@ -32,11 +39,31 @@ def loss_plot(path_to_loss_data, output_path, config):
 
 
 def get_index_to_cut(column_index, cut, array):
+    """Given an array column index and a threshold, this function returns the index of the
+        entries not passing the threshold.
+
+    Args:
+        column_index (int): The index for the column where cuts should be applied
+        cut (float): Threshold for which values below will have the whole entry removed
+        array (np.array): The full array to be edited
+
+    Returns:
+        _type_: returns the index of the rows to be removed
+    """
     indices_to_cut = np.argwhere(array[column_index] < cut).flatten()
     return indices_to_cut
 
 
 def plot_1D(project_path, config):
+    """General plotting for 1D data, for example data from a '.csv' file. This function generates a pdf
+        document where each page contains the before/after performance
+        of each column of the 1D data
+
+    Args:
+        project_path (string): The path to the project directory
+        config (dataclass): The config class containing attributes set in the config file
+    """
+
     output_path = project_path + "training/"
     before_path = config.input_path
     after_path = project_path + "decompressed_output/decompressed.npz"
@@ -173,6 +200,16 @@ def plot_1D(project_path, config):
 
 
 def plot_2D(project_path, config):
+    """General plotting for 2D data, for example 2D arraysfrom computational fluid
+        dynamics or other image like data. This function generates a pdf
+        document where each page contains the before/after performance
+        of each column of the 1D data
+
+    Args:
+        project_path (string): The path to the project directory
+        config (dataclass): The config class containing attributes set in the config file
+    """
+    
     data = np.load(config.input_path)["data"]
     data_decompressed = np.load(project_path + "/decompressed_output/decompressed.npz")[
         "data"
@@ -235,6 +272,12 @@ def plot_2D(project_path, config):
 
 
 def plot(project_path, config):
+    """Runs the appropriate plotting function based on the data dimension 1D or 2D
+
+    Args:
+        project_path (string): The path to the project directory
+        config (dataclass): The config class containing attributes set in the config file
+    """
     if config.data_dimension == 1:
         plot_1D(project_path, config)
     elif config.data_dimension == 2:

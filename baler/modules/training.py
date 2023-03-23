@@ -14,7 +14,23 @@ import modules.utils as utils
 def fit(
     model, train_dl, model_children, regular_param, optimizer, RHO, l1, n_dimensions
 ):
+    """ This function trains the model on the train set. It computes the losses and does the backwards propagation, and updates the optimizer as well.  
+
+    Args:
+        model (modelObject): The model you wish to train
+        train_dl (torch.DataLoader): Defines the batched data which the model is trained on
+        model_children (list): List of model parameters
+        regular_param (float): Determines proportionality constant for the gradient descent step.
+        optimizer (torch.optim): Chooses optimizer for gradient descent.
+        RHO (float): Float used for KL Divergence (Not currently a feature)
+        l1 (boolean): If `True`, use L1 regularization. Otherwise, don't.
+        n_dimensions (int): Number of dimensions.
+
+    Returns:
+        list, model object: Losses and trained model
+    """
     print("### Beginning Training")
+    print(type(model),type(train_dl),type(model_children),type(optimizer))
 
     model.train()
 
@@ -30,7 +46,7 @@ def fit(
             true_data=inputs,
             reconstructed_data=reconstructions,
             reg_param=regular_param,
-            validate=True,
+            validate=False,
         )
 
         loss.backward()
@@ -44,6 +60,17 @@ def fit(
 
 
 def validate(model, test_dl, model_children, reg_param):
+    """ Function used to validate the training. Not necessary for doing compression, but gives a good indication of wether the model selected is a good fit or not.
+
+    Args:
+        model (modelObject): Defines the model one wants to validate. The model used here is passed directly from `fit()`.
+        test_dl (torch.DataLoader): Defines the batched data which the model is validated on
+        model_children (list): List of model parameters
+        regular_param (float): Determines proportionality constant for the gradient descent step.
+
+    Returns:
+        _type_: _description_
+    """
     print("### Beginning Validating")
 
     model.eval()
@@ -77,6 +104,19 @@ def seed_worker(worker_id):
 
 
 def train(model, variables, train_data, test_data, project_path, config):
+    """ Calls the `fit()` and `validate()` functions in a loop, which defines how many "times" the network should be trained. 
+
+    Args:
+        model (modelObject): The model you wish to train
+        variables (_type_): _description_
+        train_set (ndarray): Array consisting of the train set
+        test_set (ndarray): Array consisting of the test set
+        project_path (string): Path to the project directory
+        config (dataClass): Base class selecting user inputs
+
+    Returns:
+        modelObject: fully trained model ready to perform compression and decompression
+    """
     # Fix the random seed - TODO: add flag to make this optional
     random.seed(0)
     torch.manual_seed(0)
