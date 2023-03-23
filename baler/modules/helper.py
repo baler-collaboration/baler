@@ -221,7 +221,9 @@ def compress(model_path, config):
         if config.data_dimension == 1:
             column_names = np.load(config.input_path)["names"]
             number_of_columns = len(column_names)
-            config.latent_space_size = int(number_of_columns // config.compression_ratio)
+            config.latent_space_size = int(
+                number_of_columns // config.compression_ratio
+            )
             config.number_of_columns = number_of_columns
         elif config.data_dimension == 2:
             data = np.load(config.input_path)["data"]
@@ -252,7 +254,11 @@ def compress(model_path, config):
     )
 
     if config.data_dimension == 2:
-        data_tensor = torch.from_numpy(data.astype('float32', casting='same_kind')).to(device).view(data.shape[0], 1, data.shape[1], data.shape[2])
+        data_tensor = (
+            torch.from_numpy(data.astype("float32", casting="same_kind"))
+            .to(device)
+            .view(data.shape[0], 1, data.shape[1], data.shape[2])
+        )
     elif config.data_dimension == 1:
         data_tensor = torch.from_numpy(data).to(device)
 

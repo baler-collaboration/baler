@@ -16,19 +16,25 @@ def main():
     elif mode == "compress":
         perform_compression(config, project_path)
     elif mode == "decompress":
-        perform_decompression(
-            config.model_name, project_path, config
-        )
+        perform_decompression(config.model_name, project_path, config)
     elif mode == "plot":
         perform_plotting(project_path, config)
     elif mode == "info":
         print_info(config, project_path)
     else:
-        raise NameError("Baler mode " + mode + " not recognised. Use baler --help to see available modes.")
+        raise NameError(
+            "Baler mode "
+            + mode
+            + " not recognised. Use baler --help to see available modes."
+        )
 
 
 def perform_training(config, project_path):
-    (train_set_norm, test_set_norm, normalization_features,) = helper.process(
+    (
+        train_set_norm,
+        test_set_norm,
+        normalization_features,
+    ) = helper.process(
         config.input_path,
         config.custom_norm,
         config.test_size,
@@ -61,9 +67,7 @@ def perform_training(config, project_path):
     device = helper.get_device()
 
     model_object = helper.model_init(config.model_name)
-    model = model_object(
-        n_features=number_of_columns, z_dim=config.latent_space_size
-    )
+    model = model_object(n_features=number_of_columns, z_dim=config.latent_space_size)
     model.to(device)
 
     output_path = project_path + "training/"

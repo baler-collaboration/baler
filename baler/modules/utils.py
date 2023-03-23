@@ -8,9 +8,7 @@ factor = 0.5
 min_lr = 1e-6
 
 
-def mse_loss_emd_l1(
-    model_children, true_data, reconstructed_data, reg_param, validate
-):
+def mse_loss_emd_l1(model_children, true_data, reconstructed_data, reg_param, validate):
     mse = nn.MSELoss()
     mse_loss = mse(reconstructed_data, true_data)
     wasserstein_distance_list = [
@@ -34,9 +32,7 @@ def mse_loss_emd_l1(
         return emd_loss
 
 
-def mse_loss_l1(
-    model_children, true_data, reconstructed_data, reg_param, validate
-):
+def mse_loss_l1(model_children, true_data, reconstructed_data, reg_param, validate):
     mse = nn.MSELoss()
     mse_loss = mse(reconstructed_data, true_data)
 
@@ -53,9 +49,7 @@ def mse_loss_l1(
         return mse_loss, 0, 0
 
 
-def mse_sum_loss_l1(
-    model_children, true_data, reconstructed_data, reg_param, validate
-):
+def mse_sum_loss_l1(model_children, true_data, reconstructed_data, reg_param, validate):
     mse_sum = nn.MSELoss(reduction="sum")
     mse_loss = mse_sum(reconstructed_data, true_data)
     number_of_columns = true_data.shape[1]

@@ -144,7 +144,9 @@ def train(model, variables, train_data, test_data, parent_path, config):
 
     # Activate LR Scheduler
     if config.lr_scheduler:
-        lr_scheduler = utils.LRScheduler(optimizer=optimizer, patience=config.lr_scheduler_patience)
+        lr_scheduler = utils.LRScheduler(
+            optimizer=optimizer, patience=config.lr_scheduler_patience
+        )
 
     # Training and Validation of the model
     train_loss = []
