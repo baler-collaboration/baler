@@ -15,6 +15,11 @@ import os
 def fit(
     model, train_dl, model_children, regular_param, optimizer, RHO, l1, n_dimensions
 ):
+    # This function is a modified version of the original function by George Dialektakis found at
+    # https://github.com/Autoencoders-compression-anomaly/Deep-Autoencoders-Data-Compression-GSoC-2021
+    # Released under the Apache License 2.0 found at https://www.apache.org/licenses/LICENSE-2.0.txt
+    # Copyright 2021 George Dialektakis
+
     print("### Beginning Training")
 
     model.train()
@@ -48,6 +53,11 @@ def fit(
 def validate(model, test_dl, model_children, reg_param):
     print("### Beginning Validating")
 
+    # This function is a modified version of the original function by George Dialektakis found at
+    # https://github.com/Autoencoders-compression-anomaly/Deep-Autoencoders-Data-Compression-GSoC-2021
+    # Released under the Apache License 2.0 found at https://www.apache.org/licenses/LICENSE-2.0.txt
+    # Copyright 2021 George Dialektakis
+
     model.eval()
     counter = 0
     running_loss = 0.0
@@ -79,6 +89,12 @@ def seed_worker(worker_id):
 
 
 def train(model, variables, train_data, test_data, parent_path, config):
+
+    # This function is a modified version of the original function by George Dialektakis found at
+    # https://github.com/Autoencoders-compression-anomaly/Deep-Autoencoders-Data-Compression-GSoC-2021
+    # Released under the Apache License 2.0 found at https://www.apache.org/licenses/LICENSE-2.0.txt
+    # Copyright 2021 George Dialektakis
+
     random.seed(0)
     torch.manual_seed(0)
     np.random.seed(0)

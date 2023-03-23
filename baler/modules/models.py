@@ -4,6 +4,11 @@ from torch.nn import functional as F
 
 
 class george_SAE(nn.Module):
+    # This class is a modified version of the original class by George Dialektakis found at
+    # https://github.com/Autoencoders-compression-anomaly/Deep-Autoencoders-Data-Compression-GSoC-2021
+    # Released under the Apache License 2.0 found at https://www.apache.org/licenses/LICENSE-2.0.txt
+    # Copyright 2021 George Dialektakis
+
     def __init__(self, device, n_features, z_dim, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
