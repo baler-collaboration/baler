@@ -1,12 +1,14 @@
 def set_config(c):
     c.input_path = "data/example_CFD/example_CFD.npz"
-    c.energy_conversion = False
     c.compression_ratio = 10.0
+    # c.number_of_columns = 24
+    # c.latent_space_size = 15
     c.epochs = 2
     c.early_stopping = True
-    c.lr_scheduler = True
-    c.patience = 100
+    c.early_stopping_patience = 100
     c.min_delta = 0
+    c.lr_scheduler = False
+    c.lr_scheduler_patience = 100
     c.model_name = "Conv_AE"
     c.custom_norm = True
     c.l1 = True
@@ -14,8 +16,9 @@ def set_config(c):
     c.RHO = 0.05
     c.lr = 0.001
     c.batch_size = 1
-    c.save_as_root = False
     c.test_size = 0
     c.data_dimension = 2
     c.apply_normalization = False
     c.extra_compression = False
+    c.intermittent_model_saving = False
+    c.intermittent_saving_patience = 100

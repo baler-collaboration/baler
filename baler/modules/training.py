@@ -40,12 +40,12 @@ def fit(
         inputs = inputs.to(device)
         optimizer.zero_grad()
         reconstructions = model(inputs)
-        loss, mse_loss, l1_loss = utils.mse_sum_loss_l1(
+        loss, mse_loss, l1_loss = utils.mse_loss_l1(
             model_children=model_children,
             true_data=inputs,
             reconstructed_data=reconstructions,
             reg_param=regular_param,
-            validate=False,
+            validate=True,
         )
 
         loss.backward()
