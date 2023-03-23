@@ -2,8 +2,8 @@ import argparse
 import importlib
 import os
 import pickle
-from dataclasses import dataclass
 import sys
+from dataclasses import dataclass
 
 sys.path.append(os.getcwd())
 import numpy as np

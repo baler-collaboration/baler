@@ -1,3 +1,4 @@
+import os
 import random
 import time
 
@@ -6,10 +7,8 @@ import torch
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-import modules.utils as utils
 import modules.helper as helper
-
-import os
+import modules.utils as utils
 
 
 def fit(
