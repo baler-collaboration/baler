@@ -22,6 +22,15 @@ factor = 0.5
 min_lr = 1e-6
 
 
+def mse_avg(true_data, reconstructed_data, reg_param):
+    mse = nn.MSELoss()
+    if not reg_param:
+        loss = mse(reconstructed_data, true_data)
+    else:
+        loss = reg_param * mse(reconstructed_data, true_data)
+    return loss
+
+
 def mse_loss_emd_l1(model_children, true_data, reconstructed_data, reg_param, validate):
     """
     Computes a sparse loss function consisting of three terms: the Earth Mover's Distance (EMD) loss between the
