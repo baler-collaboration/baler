@@ -18,7 +18,6 @@ from torch.nn import functional as F
 
 
 class AE(nn.Module):
-
     # This class is a modified version of the original class by George Dialektakis found at
     # https://github.com/Autoencoders-compression-anomaly/Deep-Autoencoders-Data-Compression-GSoC-2021
     # Released under the Apache License 2.0 found at https://www.apache.org/licenses/LICENSE-2.0.txt

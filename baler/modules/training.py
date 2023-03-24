@@ -28,7 +28,6 @@ import modules.utils as utils
 def fit(
     model, train_dl, model_children, regular_param, optimizer, RHO, l1, n_dimensions
 ):
-
     """This function trains the model on the train set. It computes the losses and does the backwards propagation, and updates the optimizer as well.
 
     Args:
@@ -119,7 +118,6 @@ def seed_worker(worker_id):
 
 
 def train(model, variables, train_data, test_data, project_path, config):
-
     """Calls the `fit()` and `validate()` functions in a loop, which defines how many "times" the network should be trained.
 
     Args:
