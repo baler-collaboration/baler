@@ -41,7 +41,7 @@ def fit(
         n_dimensions (int): Number of dimensions.
 
     Returns:
-        list, model object: Losses and trained model
+        list, model object: Training loss and trained model
     """
 
     print("### Beginning Training")
@@ -53,8 +53,14 @@ def fit(
 
     for idx, inputs in enumerate(tqdm(train_dl)):
         inputs = inputs.to(device)
+
+        # Set the gradients to zero
         optimizer.zero_grad()
+
+        # Compute the predicted outputs from the input data
         reconstructions = model(inputs)
+
+        # Compute how far off the prediction is
         loss, mse_loss, l1_loss = utils.mse_loss_l1(
             model_children=model_children,
             true_data=inputs,
@@ -63,7 +69,10 @@ def fit(
             validate=True,
         )
 
+        # Compute the loss-gradient with
         loss.backward()
+
+        # Update the optimizer
         optimizer.step()
 
         running_loss += loss.item()
@@ -83,7 +92,7 @@ def validate(model, test_dl, model_children, reg_param):
         regular_param (float): Determines proportionality constant for the gradient descent step.
 
     Returns:
-        _type_: _description_
+        float: Validation loss
     """
     print("### Beginning Validating")
 
@@ -112,13 +121,25 @@ def validate(model, test_dl, model_children, reg_param):
 
 
 def seed_worker(worker_id):
+    """PyTorch implementation to fix the seeds
+
+    Args:
+        worker_id (): 
+    """
     worker_seed = torch.initial_seed() % 2**32
     np.random.seed(worker_seed)
     random.seed(worker_seed)
 
 
 def train(model, variables, train_data, test_data, project_path, config):
-    """Calls the `fit()` and `validate()` functions in a loop, which defines how many "times" the network should be trained.
+    """Does the entire training loop by calling the `fit()` and `validate()`. Appart from this, this is the main function where the data is converted
+        to the correct type for it to be trained, via `torch.Tensor()`. Furthermore, the batching is also done here, based on `config.batch_size`,
+        and it is the `torch.utils.data.DataLoader` doing the splitting.
+
+        Applying either `EarlyStopping` or `LR Scheduler` is also done here, all based on their respective `config` arguments.
+
+        For reproducibility, the seeds can also be fixed in this function.
+
 
     Args:
         model (modelObject): The model you wish to train
