@@ -58,6 +58,20 @@ def emd(true_data, reconstructed_data, reg_param):
         loss = reg_param * emd_loss
     return loss
 
+
+def l1(model_children, true_data, reg_param):
+    l1_loss = 0.0
+    values = true_data
+    for i in range(len(model_children)):
+        values = model_children[i](values)
+        l1_loss += torch.mean(torch.abs(values))
+
+    if not reg_param:
+        loss = l1_loss
+    else:
+        loss = reg_param * l1_loss
+    return loss
+
 def mse_loss_emd_l1(model_children, true_data, reconstructed_data, reg_param, validate):
     """
     Computes a sparse loss function consisting of three terms: the Earth Mover's Distance (EMD) loss between the
