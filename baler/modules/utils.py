@@ -44,6 +44,20 @@ def mse_sum(true_data, reconstructed_data, reg_param):
 
     return loss
 
+def emd(true_data, reconstructed_data, reg_param):
+    wasserstein_distance_list = [
+        wasserstein_distance(
+            true_data.detach().numpy()[i, :], reconstructed_data.detach().numpy()[i, :]
+        )
+        for i in range(len(true_data))
+    ]
+    emd_loss = sum(wasserstein_distance_list)
+    if not reg_param:
+        loss = emd_loss
+    else:
+        loss = reg_param * emd_loss
+    return loss
+
 def mse_loss_emd_l1(model_children, true_data, reconstructed_data, reg_param, validate):
     """
     Computes a sparse loss function consisting of three terms: the Earth Mover's Distance (EMD) loss between the
