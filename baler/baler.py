@@ -235,27 +235,57 @@ def perform_decompression(model_name, project_path, config):
 
 
 def print_info(project_path, config):
+    """Function which prints information about your total compression ratios and the file sizes.
+
+    Args:
+        project_path (string): Selects path to project from which one wants to obtain file information
+        config (dataClass): Base class selecting user inputs
+    """
     print(
         "================================== \n Information about your compression \n================================== "
     )
 
-    pre_compression = config.input_path
-    model = project_path + "compressed_output/model.pt"
-    compressed = project_path + "compressed_output/compressed.npz"
-    decompressed = project_path + "decompressed_output/decompressed.npz"
+    original = config.input_path
+    compressed_path = project_path + "compressed_output/"
+    decompressed_path = project_path + "decompressed_output/"
+    training_path = project_path + "training/"
 
-    files = [pre_compression, compressed, decompressed]
-    q = []
-    for i in range(len(files)):
-        q.append(os.stat(files[i]).st_size / (1024 * 1024))
+    model = compressed_path + "model.pt"
+    compressed = compressed_path + "compressed.npz"
+    decompressed = decompressed_path + "/decompressed.npz"
+
+    meta_data = [
+        model,
+        training_path + "loss_data.npy",
+        training_path + "normalization_features.npy",
+    ]
+
+    meta_data_stats = [
+        os.stat(meta_data[file]).st_size / (1024 * 1024)
+        for file in range(len(meta_data))
+    ]
+
+    files = [original, compressed, decompressed]
+    file_stats = [
+        os.stat(files[file]).st_size / (1024 * 1024) for file in range(len(files))
+    ]
 
     print(
-        f"\nCompressed file is {round(q[1] / q[0], 2) * 100}% the size of the original\n"
+        f"\nCompressed file is {round(file_stats[1] / file_stats[0], 4) * 100}% the size of the original\n"
     )
-    print(f"File size before compression: {round(q[0], 2)} MB")
-    print(f"Compressed file size: {round(q[1], 2)} MB")
-    print(f"De-compressed file size: {round(q[2], 2)} MB")
-    print(f"Compression ratio: {round(q[0] / q[1], 2)}")
+    print(f"File size before compression: {round(file_stats[0], 4)} MB\n")
+    print(f"Compressed file size: {round(file_stats[1], 4)} MB\n")
+    print(f"De-compressed file size: {round(file_stats[2], 4)} MB\n")
+    print(f"Compression ratio: {round(file_stats[0] / file_stats[1], 4)}\n")
+    print(
+        f"The meta-data saved has a total size of: {round(sum(meta_data_stats),4)} MB\n"
+    )
+    print(
+        f"Combined, the actual compression ratio is: {round((file_stats[0])/(file_stats[1] + sum(meta_data_stats)),4)}"
+    )
+    print("\n ==================================")
+
+    ## TODO: Add way to print how much your data has been distorted
 
 
 if __name__ == "__main__":
