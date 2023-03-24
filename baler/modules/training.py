@@ -124,7 +124,7 @@ def seed_worker(worker_id):
     """PyTorch implementation to fix the seeds
 
     Args:
-        worker_id (): 
+        worker_id ():
     """
     worker_seed = torch.initial_seed() % 2**32
     np.random.seed(worker_seed)
