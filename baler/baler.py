@@ -273,16 +273,19 @@ def print_info(project_path, config):
     print(
         f"\nCompressed file is {round(file_stats[1] / file_stats[0], 4) * 100}% the size of the original\n"
     )
-    print(f"File size before compression: {round(file_stats[0], 4)} MB")
-    print(f"Compressed file size: {round(file_stats[1], 4)} MB")
-    print(f"De-compressed file size: {round(file_stats[2], 4)} MB")
-    print(f"Compression ratio: {round(file_stats[0] / file_stats[1], 4)}")
+    print(f"File size before compression: {round(file_stats[0], 4)} MB\n")
+    print(f"Compressed file size: {round(file_stats[1], 4)} MB\n")
+    print(f"De-compressed file size: {round(file_stats[2], 4)} MB\n")
+    print(f"Compression ratio: {round(file_stats[0] / file_stats[1], 4)}\n")
     print(
-        f"The meta-data saved has a total size of: {round(sum(meta_data_stats),4)} MB"
+        f"The meta-data saved has a total size of: {round(sum(meta_data_stats),4)} MB\n"
     )
     print(
-        f"Combined, the actual compression ratio is:: {round((file_stats[0])/(file_stats[1] + sum(meta_data_stats)),4)}"
+        f"Combined, the actual compression ratio is: {round((file_stats[0])/(file_stats[1] + sum(meta_data_stats)),4)}"
     )
+    print("\n ==================================")
+
+    ## TODO: Add way to print how much your data has been distorted
 
 
 if __name__ == "__main__":
