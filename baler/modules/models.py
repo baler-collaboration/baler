@@ -1,10 +1,23 @@
+# Copyright 2022 Baler Contributors
+
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+#     http://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import torch
 from torch import nn
 from torch.nn import functional as F
 
 
 class AE(nn.Module):
-
     # This class is a modified version of the original class by George Dialektakis found at
     # https://github.com/Autoencoders-compression-anomaly/Deep-Autoencoders-Data-Compression-GSoC-2021
     # Released under the Apache License 2.0 found at https://www.apache.org/licenses/LICENSE-2.0.txt

@@ -1,3 +1,17 @@
+# Copyright 2022 Baler Contributors
+
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+#     http://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import os
 import random
 import time
@@ -14,7 +28,6 @@ import modules.utils as utils
 def fit(
     model, train_dl, model_children, regular_param, optimizer, RHO, l1, n_dimensions
 ):
-
     """This function trains the model on the train set. It computes the losses and does the backwards propagation, and updates the optimizer as well.
 
     Args:
@@ -105,7 +118,6 @@ def seed_worker(worker_id):
 
 
 def train(model, variables, train_data, test_data, project_path, config):
-
     """Calls the `fit()` and `validate()` functions in a loop, which defines how many "times" the network should be trained.
 
     Args:
