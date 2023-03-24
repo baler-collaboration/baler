@@ -31,6 +31,19 @@ def mse_avg(true_data, reconstructed_data, reg_param):
     return loss
 
 
+def mse_sum(true_data, reconstructed_data, reg_param):
+    mse = nn.MSELoss(reduction="sum")
+    number_of_columns = true_data.shape[1]
+
+    if not reg_param:
+        loss = mse(reconstructed_data, true_data)
+    else:
+        loss = reg_param * mse(reconstructed_data, true_data)
+
+    loss = loss / number_of_columns
+
+    return loss
+
 def mse_loss_emd_l1(model_children, true_data, reconstructed_data, reg_param, validate):
     """
     Computes a sparse loss function consisting of three terms: the Earth Mover's Distance (EMD) loss between the
