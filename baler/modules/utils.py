@@ -72,6 +72,51 @@ def l1(model_children, true_data, reg_param):
         loss = reg_param * l1_loss
     return loss
 
+def loss_combinations(
+    model_children, true_data, reconstructed_data, reg_param=False
+) -> float:
+    mse_sum_loss = 0.0
+    mse_avg_loss = 0.0
+    emd_loss = 0.0
+    l1_loss = 0.0
+
+    if mse_sum:
+        mse_sum_loss = mse_sum(
+            true_data=true_data,
+            reconstructed_data=reconstructed_data,
+            reg_param=reg_param,
+        )
+
+    elif mse_avg:
+        mse_avg_loss = mse_avg(
+            true_data=true_data,
+            reconstructed_data=reconstructed_data,
+            reg_param=reg_param,
+        )
+
+    elif emd:
+        emd_loss = emd(
+            true_data=true_data,
+            reconstructed_data=reconstructed_data,
+            reg_param=reg_param,
+        )
+
+    elif l1:
+        l1_loss = l1(
+            model_children=model_children,
+            true_data=true_data,
+            reconstructed_data=reconstructed_data,
+            reg_param=reg_param,
+        )
+    else:
+        print("Choosing default Loss of MSE")
+        mse_avg_loss = mse_avg(
+            true_data=true_data,
+            reconstructed_data=reconstructed_data,
+            reg_param=reg_param,
+        )
+    return mse_sum_loss + mse_avg_loss + emd_loss + l1_loss
+
 def mse_loss_emd_l1(model_children, true_data, reconstructed_data, reg_param, validate):
     """
     Computes a sparse loss function consisting of three terms: the Earth Mover's Distance (EMD) loss between the
