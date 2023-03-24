@@ -22,142 +22,70 @@ factor = 0.5
 min_lr = 1e-6
 
 
-def mse_avg(true_data, reconstructed_data, reg_param):
-    mse = nn.MSELoss()
-    if not reg_param:
-        loss = mse(reconstructed_data, true_data)
-    else:
-        loss = reg_param * mse(reconstructed_data, true_data)
-    return loss
-
-
-def mse_sum(true_data, reconstructed_data, reg_param):
-    mse = nn.MSELoss(reduction="sum")
-    number_of_columns = true_data.shape[1]
-
-    if not reg_param:
-        loss = mse(reconstructed_data, true_data)
-    else:
-        loss = reg_param * mse(reconstructed_data, true_data)
-
-    loss = loss / number_of_columns
-
-    return loss
-
-def emd(true_data, reconstructed_data, reg_param):
-    wasserstein_distance_list = [
-        wasserstein_distance(
-            true_data.detach().numpy()[i, :], reconstructed_data.detach().numpy()[i, :]
+class Loss:
+    def __init__(self, model_children, true_data, reconstructed_data, reg_param):
+        self.true_data = true_data  # Input data
+        self.reconstructed_data = (
+            reconstructed_data  # Input data evaluated through the model during training
         )
-        for i in range(len(true_data))
-    ]
-    emd_loss = sum(wasserstein_distance_list)
-    if not reg_param:
-        loss = emd_loss
-    else:
-        loss = reg_param * emd_loss
-    return loss
-
-
-def l1(model_children, true_data, reg_param):
-    l1_loss = 0.0
-    values = true_data
-    for i in range(len(model_children)):
-        values = model_children[i](values)
-        l1_loss += torch.mean(torch.abs(values))
-
-    if not reg_param:
-        loss = l1_loss
-    else:
-        loss = reg_param * l1_loss
-    return loss
-
-def loss_combinations(
-    model_children, true_data, reconstructed_data, reg_param=False
-) -> float:
-    mse_sum_loss = 0.0
-    mse_avg_loss = 0.0
-    emd_loss = 0.0
-    l1_loss = 0.0
-
-    if mse_sum:
-        mse_sum_loss = mse_sum(
-            true_data=true_data,
-            reconstructed_data=reconstructed_data,
-            reg_param=reg_param,
+        self.reg_param = reg_param  # Regularization parameter
+        self.model_children = (
+            model_children  # pytorch structure containing model weights
         )
+        self.loss = 0  # Loss value returned
+        self.chosen_loss = None
 
-    elif mse_avg:
-        mse_avg_loss = mse_avg(
-            true_data=true_data,
-            reconstructed_data=reconstructed_data,
-            reg_param=reg_param,
-        )
+    def mse_avg(true_data, reconstructed_data, reg_param):
+        mse = nn.MSELoss()
+        if not reg_param:
+            loss = mse(reconstructed_data, true_data)
+        else:
+            loss = reg_param * mse(reconstructed_data, true_data)
+        return loss
 
-    elif emd:
-        emd_loss = emd(
-            true_data=true_data,
-            reconstructed_data=reconstructed_data,
-            reg_param=reg_param,
-        )
+    def mse_sum(true_data, reconstructed_data, reg_param):
+        mse = nn.MSELoss(reduction="sum")
+        number_of_columns = true_data.shape[1]
 
-    elif l1:
-        l1_loss = l1(
-            model_children=model_children,
-            true_data=true_data,
-            reconstructed_data=reconstructed_data,
-            reg_param=reg_param,
-        )
-    else:
-        print("Choosing default Loss of MSE")
-        mse_avg_loss = mse_avg(
-            true_data=true_data,
-            reconstructed_data=reconstructed_data,
-            reg_param=reg_param,
-        )
-    return mse_sum_loss + mse_avg_loss + emd_loss + l1_loss
+        if not reg_param:
+            loss = mse(reconstructed_data, true_data)
+        else:
+            loss = reg_param * mse(reconstructed_data, true_data)
 
-def mse_loss_emd_l1(model_children, true_data, reconstructed_data, reg_param, validate):
-    """
-    Computes a sparse loss function consisting of three terms: the Earth Mover's Distance (EMD) loss between the
-    true and reconstructed data, the mean squared error (MSE) loss between the reconstructed and true data, and a
-    L1 regularization term on the output of a list of model children.
+        loss = loss / number_of_columns
 
-    Args: model_children (list): List of PyTorch modules representing the model architecture to be regularized.
-    true_data (torch.Tensor): The ground truth data, with shape (batch_size, num_features). reconstructed_data (
-    torch.Tensor): The reconstructed data, with shape (batch_size, num_features). reg_param (float): The weight of
-    the L1 regularization term in the loss function. validate (bool): If True, returns only the EMD loss. If False,
-    computes the full loss with the L1 regularization term.
+        return loss
 
-    Returns:
-        If validate is False, returns a tuple with three elements:
-        - loss (torch.Tensor): The full sparse loss function, with shape ().
-        - emd_loss (float): The EMD loss between the true and reconstructed data.
-        - l1_loss (float): The L1 regularization term on the output of the model children.
+    def emd(true_data, reconstructed_data, reg_param):
+        wasserstein_distance_list = [
+            wasserstein_distance(
+                true_data.detach().numpy()[i, :],
+                reconstructed_data.detach().numpy()[i, :],
+            )
+            for i in range(len(true_data))
+        ]
+        emd_loss = sum(wasserstein_distance_list)
+        if not reg_param:
+            loss = emd_loss
+        else:
+            loss = reg_param * emd_loss
+        return loss
 
-        If validate is True, returns only the EMD loss as a float.
-    """
-    mse = nn.MSELoss()
-    mse_loss = mse(reconstructed_data, true_data)
-    wasserstein_distance_list = [
-        wasserstein_distance(
-            true_data.detach().numpy()[i, :], reconstructed_data.detach().numpy()[i, :]
-        )
-        for i in range(len(true_data))
-    ]
-    emd_loss = sum(wasserstein_distance_list)
-
-    l1_loss = 0
-    values = true_data
-    if not validate:
+    def l1(model_children, true_data, reg_param):
+        l1_loss = 0.0
+        values = true_data
         for i in range(len(model_children)):
             values = model_children[i](values)
             l1_loss += torch.mean(torch.abs(values))
 
-        loss = emd_loss + mse_loss + reg_param * l1_loss
-        return loss, emd_loss, l1_loss
-    else:
-        return emd_loss
+        if not reg_param:
+            loss = l1_loss
+        else:
+            loss = reg_param * l1_loss
+        return loss
+
+    def __call__(self):
+        return
 
 
 def mse_loss_l1(model_children, true_data, reconstructed_data, reg_param, validate):
