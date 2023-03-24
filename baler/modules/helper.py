@@ -122,27 +122,35 @@ class Config:
 
 def create_default_config(project_name: str) -> str:
     return f"""
+# === Configuration options ===
+
 def set_config(c):
     c.input_path                   = "data/{project_name}/{project_name}_data.npz"
+    c.data_dimension               = 1
     c.compression_ratio            = 2.0
-    # c.number_of_columns            = 24
-    # c.latent_space_size            = 12
+    c.apply_normalization          = True
+    c.model_name                   = "AE"
     c.epochs                       = 5
+    c.lr                           = 0.001
+    c.batch_size                   = 512
     c.early_stopping               = True
+    c.lr_scheduler                 = True
+
+
+
+
+# === Additional configuration options ===
+
     c.early_stopping_patience      = 100
     c.min_delta                    = 0
-    c.lr_scheduler                 = False
-    c.lr_scheduler_patience        = 100
-    c.model_name                   = "AE"
+    c.lr_scheduler_patience        = 50
     c.custom_norm                  = False
     c.l1                           = True
     c.reg_param                    = 0.001
     c.RHO                          = 0.05
-    c.lr                           = 0.001
-    c.batch_size                   = 512
     c.test_size                    = 0
-    c.data_dimension               = 1
-    c.apply_normalization          = True
+    # c.number_of_columns            = 24
+    # c.latent_space_size            = 12
     c.extra_compression            = False
     c.intermittent_model_saving    = False
     c.intermittent_saving_patience = 100
