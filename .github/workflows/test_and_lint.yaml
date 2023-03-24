@@ -27,4 +27,4 @@ jobs:
 
     - name: "run black"
       run: |
-        black --check baler
+        poetry run black --check baler
