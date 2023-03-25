@@ -28,32 +28,24 @@ class Loss:
         self.reconstructed_data = (
             reconstructed_data  # Input data evaluated through the model during training
         )
-        self.reg_param = reg_param  # Regularization parameter
+        self.reg_param = 1  # Regularization parameter
         self.model_children = (
             model_children  # pytorch structure containing model weights
         )
-        self.loss = 0  # Loss value returned
+        self.loss = 1  # Loss value returned
         self.chosen_loss = None
 
     def mse_avg(true_data, reconstructed_data, reg_param):
         mse = nn.MSELoss()
-        if not reg_param:
-            loss = mse(reconstructed_data, true_data)
-        else:
-            loss = reg_param * mse(reconstructed_data, true_data)
+        loss = mse(reconstructed_data, true_data)
         return loss
 
     def mse_sum(true_data, reconstructed_data, reg_param):
         mse = nn.MSELoss(reduction="sum")
         number_of_columns = true_data.shape[1]
 
-        if not reg_param:
-            loss = mse(reconstructed_data, true_data)
-        else:
-            loss = reg_param * mse(reconstructed_data, true_data)
-
-        loss = loss / number_of_columns
-
+        loss = mse(reconstructed_data, true_data) / number_of_columns
+        print(loss)
         return loss
 
     def emd(true_data, reconstructed_data, reg_param):
@@ -64,11 +56,11 @@ class Loss:
             )
             for i in range(len(true_data))
         ]
-        emd_loss = sum(wasserstein_distance_list)
-        if not reg_param:
-            loss = emd_loss
-        else:
-            loss = reg_param * emd_loss
+        wasserstein_distance_tensor = torch.Tensor(wasserstein_distance_list)
+        #print((wasserstein_distance_tensor)[0])
+        #wasserstein_distance_tensor.requires_grad()
+        loss = torch.sum(wasserstein_distance_tensor)
+        print(loss)
         return loss
 
     def l1(model_children, true_data, reg_param):
@@ -78,14 +70,11 @@ class Loss:
             values = model_children[i](values)
             l1_loss += torch.mean(torch.abs(values))
 
-        if not reg_param:
-            loss = l1_loss
-        else:
-            loss = reg_param * l1_loss
+        loss = l1_loss
         return loss
 
     def __call__(self):
-        return
+        return self.loss
 
 
 def mse_loss_l1(model_children, true_data, reconstructed_data, reg_param, validate):
