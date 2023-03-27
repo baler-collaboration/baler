@@ -60,7 +60,7 @@ ghcr.io/uomresearchit/baler:latest \
 --mode=decompress
 ```
 
-## Running  with GPU##
+## Running  with GPU ##
 
 Baler can be run with GPU acceleration, with will happen automatically if a GPU is available on the system.
 
@@ -69,7 +69,7 @@ To allow the Docker image access to the system GPU a modification to the standar
 
 ```console
 docker run \
---gpus all 
+--gpus all \
 -u ${UID}:${GID} \ 
 --mount type=bind,source=${PWD}/projects/,target=/baler-root/projects \
 --mount type=bind,source=${PWD}/data/,target=/baler-root/data \
