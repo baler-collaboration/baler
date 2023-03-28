@@ -1,8 +1,5 @@
 name: Docker-CI
 on: [pull_request, workflow_dispatch]
-branches:
-  - main
-  - development
 
 jobs:
   build-docker-image:
