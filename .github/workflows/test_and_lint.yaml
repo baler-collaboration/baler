@@ -22,9 +22,10 @@ jobs:
 
     - name: "set python path"
       run: echo "PYTHONPATH=.:baler" >> $GITHUB_ENV
-    - name: "run tests"
-      run: poetry run pytest
-
-    - name: "run black"
+    - name: "run syntax check"
       run: |
-        poetry run black --check baler
+        ./bin/syntax.sh
+
+    - name: "run tests"
+      run: |
+        ./bin/tests.sh
