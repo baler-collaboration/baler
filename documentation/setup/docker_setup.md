@@ -76,7 +76,7 @@ pekman/baler:latest \
 
 ## Running  with GPU ##
 
-Baler can be run with GPU acceleration, with will happen automatically if a GPU is available on the system.
+Baler can be run with GPU acceleration, this will happen automatically if a GPU is available on the system.
 
 To allow the Docker image access to the system GPU a modification to the standard command is needed. For example, to run the training command:
 
