@@ -28,11 +28,9 @@ class Loss:
         self.reconstructed_data = (
             reconstructed_data  # Input data evaluated through the model during training
         )
-        self.reg_param = 1  # Regularization parameter
         self.model_children = (
             model_children  # pytorch structure containing model weights
         )
-        self.loss = 0  # Loss value returned
 
     def mse_avg(true_data, reconstructed_data, reg_param):
         mse = nn.MSELoss()
@@ -71,86 +69,6 @@ class Loss:
 
     def __call__(self):
         return
-
-
-def mse_loss_l1(model_children, true_data, reconstructed_data, reg_param, validate):
-    # This function is a modified version of the original function by George Dialektakis found at
-    # https://github.com/Autoencoders-compression-anomaly/Deep-Autoencoders-Data-Compression-GSoC-2021
-    # Released under the Apache License 2.0 found at https://www.apache.org/licenses/LICENSE-2.0.txt
-    # Copyright 2021 George Dialektakis
-
-    """
-    Computes a sparse loss function consisting of two terms: the mean squared error (MSE) loss between the
-    reconstructed and true data, and a L1 regularization term on the output of a list of model children.
-
-    Args: model_children (list): List of PyTorch modules representing the model architecture to be regularized.
-    true_data (torch.Tensor): The ground truth data, with shape (batch_size, num_features). reconstructed_data (
-    torch.Tensor): The reconstructed data, with shape (batch_size, num_features). reg_param (float): The weight of
-    the L1 regularization term in the loss function. validate (bool): If True, returns only the MSE loss. If False,
-    computes the full loss with the L1 regularization term.
-
-    Returns:
-        If validate is False, returns a tuple with three elements:
-        - loss (torch.Tensor): The full sparse loss function, with shape ().
-        - mse_loss (float): The MSE loss between the true and reconstructed data.
-        - l1_loss (float): The L1 regularization term on the output of the model children.
-
-        If validate is True, returns only the MSE loss as a float.
-    """
-    mse = nn.MSELoss()
-    mse_loss = mse(reconstructed_data, true_data)
-
-    l1_loss = 0
-    values = true_data
-    if not validate:
-        for i in range(len(model_children)):
-            values = functional.relu(model_children[i](values))
-            l1_loss += torch.mean(torch.abs(values))
-
-        loss = mse_loss + reg_param * l1_loss
-        return loss, mse_loss, l1_loss
-    else:
-        return mse_loss, 0, 0
-
-
-def mse_sum_loss_l1(model_children, true_data, reconstructed_data, reg_param, validate):
-    """
-    Computes the sum of mean squared error (MSE) loss and L1 regularization loss.
-
-    Args:
-        model_children (list): List of PyTorch modules representing the encoder network.
-        true_data (tensor): Ground truth tensor of shape (batch_size, input_size).
-        reconstructed_data (tensor): Reconstructed tensor of shape (batch_size, input_size).
-        reg_param (float): Regularization parameter for L1 loss.
-        validate (bool): Whether to return only MSE loss or both MSE and L1 losses.
-
-    Returns:
-        If validate is False:
-            loss (tensor): Total loss consisting of MSE loss and L1 regularization loss.
-            mse_sum_loss (tensor): Mean squared error loss.
-            l1_loss (tensor): L1 regularization loss.
-        If validate is True:
-            mse_sum_loss (tensor): Mean squared error loss.
-            0 (int): Placeholder for MSE loss since it is not calculated during validation.
-            0 (int): Placeholder for L1 loss since it is not calculated during validation.
-    """
-    mse_sum = nn.MSELoss(reduction="sum")
-    mse_loss = mse_sum(reconstructed_data, true_data)
-    number_of_columns = true_data.shape[1]
-
-    mse_sum_loss = mse_loss / number_of_columns
-
-    l1_loss = 0
-    values = true_data
-    if not validate:
-        for i in range(len(model_children)):
-            values = functional.relu(model_children[i](values))
-            l1_loss += torch.mean(torch.abs(values))
-
-        loss = mse_sum_loss + reg_param * l1_loss
-        return loss, mse_sum_loss, l1_loss
-    else:
-        return mse_sum_loss, 0, 0
 
 
 # Accuracy function still WIP. Not working properly.
