@@ -78,44 +78,17 @@ After that, plot the performance of the procedure by using `--mode=plot`. In thi
 
 ## Running  with GPU ##
 
-Baler can be run with GPU acceleration, this will happen automatically if a GPU is available on the system.
-
-To allow the Docker image access to the system GPU a modification to the standard command is needed. For example, to run the training command:
-
-
-```console
-docker run \
---gpus all \
--u ${UID}:${GID} \ 
---mount type=bind,source=${PWD}/projects/,target=/baler-root/projects \
---mount type=bind,source=${PWD}/data/,target=/baler-root/data \
-ghcr.io/uomresearchit/baler:latest \
---project=firstProject \
---mode=train
-```
-
-Where:
-  * `--gpus all` tell Docker to allow the container access to the system GPUs
+Baler can be run with GPU acceleration, o allow the Docker image access to the system GPU you need to add `--gpus all` at the right after `docker run` in the base command above.
 
 ## Build Docker image ##
 
-If you would prefer not to use the Docker image hosted by the University of Manchester, you may build the image yourself. This is achieved with:
+If you would prefer not to use the Docker image provided by us, you may build the image yourself. This is achieved with:
 
 ```console
-docker build -t baler:latest .
+docker build -t myBaler:latest .
 ```
 
-This image may be run using (e.g.):
-
-```console
-docker run \
--u ${UID}:${GID} \ 
---mount type=bind,source=${PWD}/projects/,target=/baler-root/projects \
---mount type=bind,source=${PWD}/data/,target=/baler-root/data \
-baler:latest \
---project=firstProject \
---mode=train
-```
+This image may be run using by specifying the image `myBaler:latest` instead of our `pekman/baler:latest` in the above base command.
 
 ## Developing using Docker image ##
 
