@@ -73,34 +73,45 @@ For the tutorial example, we want to compress the data called `example_CMS.npz`.
 
 ```console
 docker run \
--u ${UID}:${GID} \ 
+-u ${UID}:${GID} \
 --mount type=bind,source=${PWD}/projects/,target=/baler-root/projects \
 --mount type=bind,source=${PWD}/data/,target=/baler-root/data \
 pekman/baler:latest \
---project=firstProject \
+--project=example_CMS \
 --mode=train
 ```
 
-### Compress: ### 
+### Compress: ###
 ```console
 docker run \
--u ${UID}:${GID} \ 
+-u ${UID}:${GID} \
 --mount type=bind,source=${PWD}/projects/,target=/baler-root/projects \
 --mount type=bind,source=${PWD}/data/,target=/baler-root/data \
 pekman/baler:latest \
---project=firstProject \
+--project=example_CMS \
 --mode=compress
 ```
 
 ### Decompress: ###
 ```console
 docker run \
--u ${UID}:${GID} \ 
+-u ${UID}:${GID} \
 --mount type=bind,source=${PWD}/projects/,target=/baler-root/projects \
 --mount type=bind,source=${PWD}/data/,target=/baler-root/data \
 pekman/baler:latest \
---project=firstProject \
+--project=example_CMS \
 --mode=decompress
+```
+
+### Plot Performance: ###
+```console
+docker run \
+-u ${UID}:${GID} \
+--mount type=bind,source=${PWD}/projects/,target=/baler-root/projects \
+--mount type=bind,source=${PWD}/data/,target=/baler-root/data \
+pekman/baler:latest \
+--project=example_CMS \
+--mode=plot
 ```
 
 ## Running  with GPU ##
