@@ -14,7 +14,7 @@ docker run \
 -u ${UID}:${GID} \ 
 --mount type=bind,source=${PWD}/projects/,target=/baler-root/projects \
 --mount type=bind,source=${PWD}/data/,target=/baler-root/data \
-ghcr.io/uomresearchit/baler:latest 
+pekman/baler:latest 
 [--mode=... project--=...]
 ```
 
@@ -22,9 +22,23 @@ Where:
   * `docker run` invokes docker and specifies the running of a container
   * `-u ${UID}:${GID}` tells the container to use your username to create files
   * `--mount type=bind,source=${PWD}/projects/,target=/baler-root/projects` mounts the local (host) directory `./projects` to the container at `/projects`
-  * `ghcr.io/uomresearchit/baler:latest` specifies the container to run
+  * `pekman/baler:latest` specifies the container to run
   
-Therefore the three commands detailed above become:
+The following is a simple tutorial example using docker.
+
+### Download Data and Project Directory ###
+First download tutorial data and project directories.
+```console
+wget https://cernbox.cern.ch/remote.php/dav/public-files/21uZJO4hkqsQW6Z/baler.zip
+```
+Unzip the files
+```console
+unzip baler.zip
+```
+Enter the root directory of baler
+```console
+cd baler
+```
 
 ### Train: ###
 
@@ -33,7 +47,7 @@ docker run \
 -u ${UID}:${GID} \ 
 --mount type=bind,source=${PWD}/projects/,target=/baler-root/projects \
 --mount type=bind,source=${PWD}/data/,target=/baler-root/data \
-ghcr.io/uomresearchit/baler:latest \
+pekman/baler:latest \
 --project=firstProject \
 --mode=train
 ```
@@ -44,7 +58,7 @@ docker run \
 -u ${UID}:${GID} \ 
 --mount type=bind,source=${PWD}/projects/,target=/baler-root/projects \
 --mount type=bind,source=${PWD}/data/,target=/baler-root/data \
-ghcr.io/uomresearchit/baler:latest \
+pekman/baler:latest \
 --project=firstProject \
 --mode=compress
 ```
@@ -55,7 +69,7 @@ docker run \
 -u ${UID}:${GID} \ 
 --mount type=bind,source=${PWD}/projects/,target=/baler-root/projects \
 --mount type=bind,source=${PWD}/data/,target=/baler-root/data \
-ghcr.io/uomresearchit/baler:latest \
+pekman/baler:latest \
 --project=firstProject \
 --mode=decompress
 ```
