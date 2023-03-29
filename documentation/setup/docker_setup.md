@@ -1,4 +1,5 @@
 # Running with Docker #
+A setup for windows is available [here](documentation/setup/docker_setup_windows.md)
 
 ## Prerequisites ##
 
@@ -39,6 +40,34 @@ Enter the root directory of baler
 ```console
 cd baler
 ```
+
+This process has created the following directory tree:
+```console
+.
+├── data
+│   ├── example_CFD
+│   │   └── example_CFD.npz
+│   └── example_CMS
+│       └── example_CMS.npz
+└── projects
+    ├── example_CFD
+    │   ├── compressed_output
+    │   ├── decompressed_output
+    │   ├── example_CFD_config.py
+    │   ├── model
+    │   ├── plotting
+    │   └── training
+    └── example_CMS
+        ├── compressed_output
+        ├── decompressed_output
+        ├── example_CMS_analysis.py
+        ├── example_CMS_config.py
+        ├── example_CMS_preprocessing.py
+        ├── model
+        ├── plotting
+        └── training
+```
+For the tutorial example, we want to compress the data called `example_CMS.npz`. The configuration file for this, including the compression ratio, number of training epochs, input data path etc is defined in `projects/example_CMS/example_CMS_config.py`. the output of the compressed file is `projects/example_CMS/compressed_output/`.
 
 ### Train: ###
 
