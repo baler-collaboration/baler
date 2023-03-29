@@ -61,7 +61,7 @@ class Loss:
         l1_loss = 0.0
         values = true_data
         for i in range(len(model_children)):
-            values = model_children[i](values)
+            values = functional.relu(model_children[i](values))
             l1_loss += torch.mean(torch.abs(values))
 
         loss = reg_param * l1_loss
