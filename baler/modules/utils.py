@@ -23,6 +23,17 @@ min_lr = 1e-6
 
 
 class Loss:
+    """Class which contains all loss functions used for training the model.
+
+
+    Args:
+        model_children (list): List of model parameters
+        true_data (torch.Tensor): Input data as torch.Tensor
+        reconstructed_data (torch.Tensor): Input data ran through model as torch.Tensor
+        reg_param (float): Proportionality constant for the L1 loss
+
+    """
+
     def __init__(self, model_children, true_data, reconstructed_data, reg_param):
         self.true_data = true_data  # Input data
         self.reconstructed_data = (
@@ -32,19 +43,49 @@ class Loss:
             model_children  # pytorch structure containing model weights
         )
 
-    def mse_avg(true_data, reconstructed_data, reg_param):
+    def mse_avg(true_data, reconstructed_data):
+        """The Mean Squared Error (MSE) function. The most commonly used loss function in machine learning, defined as
+            `MSE = 1/m 1/n \sum^m_{j=1} \sum_{i=1}^n (true_data_i - reconstructed_data_i)^2_j`
+
+        Args:
+            true_data (torch.Tensor): Input data as torch.Tensor
+            reconstructed_data (torch.Tensor): Input data ran through model as torch.Tensor
+
+        Returns:
+            torch.Tensor: The loss after one iteration
+        """
         mse = nn.MSELoss()
         loss = mse(reconstructed_data, true_data)
         return loss
 
-    def mse_sum(true_data, reconstructed_data, reg_param):
+    def mse_sum(true_data, reconstructed_data):
+        """A variant of the MSE function, but now defined as:
+            `MSE = 1/n \sum^m_{j=1} \sum_{i=1}^n (true_data_i - reconstructed_data_i)^2_j`
+
+        Args:
+            true_data (torch.Tensor): Input data as torch.Tensor
+            reconstructed_data (torch.Tensor): Input data ran through model as torch.Tensor
+
+        Returns:
+            torch.Tensor: The loss after one iteration
+        """
         mse = nn.MSELoss(reduction="sum")
         number_of_columns = true_data.shape[1]
 
         loss = mse(reconstructed_data, true_data) / number_of_columns
         return loss
 
-    def emd(true_data, reconstructed_data, reg_param):
+    def emd(true_data, reconstructed_data):
+        """Another loss function called the Earths Movers Distance (EMD). This loss measures the distance between the input data and the reconstructed data.
+            The functionality is implemented from `scipy.stats.wasserstein_distance`.
+
+        Args:
+            true_data (torch.Tensor): Input data as torch.Tensor
+            reconstructed_data (torch.Tensor): Input data ran through model as torch.Tensor
+
+        Returns:
+            torch.Tensor: The loss after one iteration
+        """
         wasserstein_distance_list = [
             wasserstein_distance(
                 true_data.detach().numpy()[i, :],
@@ -58,6 +99,20 @@ class Loss:
         return loss
 
     def l1(model_children, true_data, reg_param):
+        """The "Lasso" Regularizer term, also known as the L1 term, defined as:
+        `L1 = reg_param * \sum_i \abs{w_i}`
+
+        The implementation of this term is heavily inspired from https://github.com/syorami/Autoencoders-Variants by `tmac1997`
+        and full credit goes to him for this implementation.
+
+        Args:
+            model_children (list): List containing model parameters, most importantly the model weights.
+            true_data (torch.Tensor): Input data as torch.Tensor
+            reconstructed_data (torch.Tensor): Input data ran through model as torch.Tensor
+
+        Returns:
+            torch.Tensor: The loss after one iteration
+        """
         l1_loss = 0.0
         values = true_data
         for i in range(len(model_children)):

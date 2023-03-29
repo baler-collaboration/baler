@@ -69,19 +69,16 @@ def fit(
             mse_avg_loss = utils.Loss.mse_avg(
                 true_data=inputs,
                 reconstructed_data=reconstructions,
-                reg_param=reg_param,
             )
         if config.mse_sum:
             mse_sum_loss = utils.Loss.mse_sum(
                 true_data=inputs,
                 reconstructed_data=reconstructions,
-                reg_param=reg_param,
             )
         if config.emd:
             emd_loss = utils.Loss.emd(
                 true_data=inputs,
                 reconstructed_data=reconstructions,
-                reg_param=reg_param,
             )
         if config.l1:
             l1_loss = utils.Loss.l1(
@@ -149,19 +146,16 @@ def validate(
                 mse_avg_loss = utils.Loss.mse_avg(
                     true_data=inputs,
                     reconstructed_data=reconstructions,
-                    reg_param=reg_param,
                 )
             if config.mse_sum:
                 mse_sum_loss = utils.Loss.mse_sum(
                     true_data=inputs,
                     reconstructed_data=reconstructions,
-                    reg_param=reg_param,
                 )
             if config.emd:
                 emd_loss = utils.Loss.emd(
                     true_data=inputs,
                     reconstructed_data=reconstructions,
-                    reg_param=reg_param,
                 )
             if config.l1:
                 l1_loss = utils.Loss.l1(
