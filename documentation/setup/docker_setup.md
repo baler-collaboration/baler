@@ -6,28 +6,7 @@ A setup for windows is available [here](documentation/setup/docker_setup_windows
   * You must have Docker installed. See this [guide](https://docs.docker.com/engine/install/ "Docker Install guide")
   * You must have carried out appropriate post-installation steps. For example, for Linux systems, see this [guide](https://docs.docker.com/engine/install/linux-postinstall/ "Docker postinstall guide")
 
-## Running ##
-
-Here is the base command for running with docker, but running examples comes further down:
-
-```console
-docker run \
--u ${UID}:${GID} \ 
---mount type=bind,source=${PWD}/projects/,target=/baler-root/projects \
---mount type=bind,source=${PWD}/data/,target=/baler-root/data \
-pekman/baler:latest 
-[--mode=... project--=...]
-```
-
-Where:
-  * `docker run` invokes docker and specifies the running of a container
-  * `-u ${UID}:${GID}` tells the container to use your username to create files
-  * `--mount type=bind,source=${PWD}/projects/,target=/baler-root/projects` mounts the local (host) directory `./projects` to the container at `/projects`
-  * `pekman/baler:latest` specifies the container to run
-  
-The following is a simple tutorial example using docker.
-
-### Download Data and Project Directory ###
+## Download Data and Project Directory ##
 First download tutorial data and project directories.
 ```console
 wget https://cernbox.cern.ch/remote.php/dav/public-files/21uZJO4hkqsQW6Z/baler.zip
@@ -67,52 +46,35 @@ This process has created the following directory tree:
         ├── plotting
         └── training
 ```
-For the tutorial example, we want to compress the data called `example_CMS.npz`. The configuration file for this, including the compression ratio, number of training epochs, input data path etc is defined in `projects/example_CMS/example_CMS_config.py`. the output of the compressed file is `projects/example_CMS/compressed_output/`.
+For the tutorial example, we want to compress the data called `example_CFD.npz`. The configuration file for this, including the compression ratio, number of training epochs, input data path etc is defined in `projects/example_CFD/example_CFD_config.py`. the output of the compressed file is `projects/example_CFD/compressed_output/`.
 
-### Train: ###
+## Running ##
 
+Here is the command to start **training** the network on the example_CFD data:
 ```console
 docker run \
 -u ${UID}:${GID} \
 --mount type=bind,source=${PWD}/projects/,target=/baler-root/projects \
 --mount type=bind,source=${PWD}/data/,target=/baler-root/data \
 pekman/baler:latest \
---project=example_CMS \
+--project=example_CFD \
 --mode=train
 ```
 
-### Compress: ###
-```console
-docker run \
--u ${UID}:${GID} \
---mount type=bind,source=${PWD}/projects/,target=/baler-root/projects \
---mount type=bind,source=${PWD}/data/,target=/baler-root/data \
-pekman/baler:latest \
---project=example_CMS \
---mode=compress
-```
+In this command, the "fixed" lines are:
+  * `docker run` invokes docker and specifies the running of a container
+  * `-u ${UID}:${GID}` tells the container to use your username to create files
+  * `--mount type=bind,source=${PWD}/projects/,target=/baler-root/projects` mounts the local (host) directory `./projects` to the container at `/projects`
+  * `--mount type=bind,source=${PWD}/data/,target=/baler-root/data` mounts the local (host) directory `./data` to the container at `/data`
+  * `pekman/baler:latest` specifies the container to run
 
-### Decompress: ###
-```console
-docker run \
--u ${UID}:${GID} \
---mount type=bind,source=${PWD}/projects/,target=/baler-root/projects \
---mount type=bind,source=${PWD}/data/,target=/baler-root/data \
-pekman/baler:latest \
---project=example_CMS \
---mode=decompress
-```
+And the user defined lines are:
+  * `--project=example_CFD` specifies the current "project", i.e. the directory for the config file and the output
+  * `--mode=train` specifies the current running mode of Baler. We start by training the network on the data
 
-### Plot Performance: ###
-```console
-docker run \
--u ${UID}:${GID} \
---mount type=bind,source=${PWD}/projects/,target=/baler-root/projects \
---mount type=bind,source=${PWD}/data/,target=/baler-root/data \
-pekman/baler:latest \
---project=example_CMS \
---mode=plot
-```
+To compress and decompress the data use `--mode=compress` and `--mode=decompress` respectively. 
+
+After that, plot the performance of the procedure by using `--mode=plot`. In this tutorial example, the performance plot is found in `projects/exmaple_CFD/plotting/comparison.jpg`
 
 ## Running  with GPU ##
 
