@@ -63,37 +63,31 @@ def fit(
         #print(type(inputs))
 
         # Compute how far off the prediction is
-        batch_loss = 0.0
+        mse_avg_loss, mse_sum_loss, emd_loss, l1_loss, else_loss = 0,0,0,0,0
         #print(idx)
         if config.mse_avg:
-            print("Using mse_avg")
-
-            batch_loss += utils.Loss.mse_avg(true_data=inputs, reconstructed_data=reconstructions, reg_param=reg_param)
-        elif config.mse_sum:
-            print("Using mse_sum")
-            mse_sum1 = utils.Loss.mse_sum(true_data=inputs, reconstructed_data=reconstructions, reg_param=reg_param)
-            print(mse_sum1)
-        elif config.emd:
-            print("Using emd")
-            emd = utils.Loss.emd(true_data=inputs, reconstructed_data=reconstructions, reg_param=reg_param)
-
-        elif config.l1:
-            print("Using l1")
-            batch_loss += utils.Loss.l1(model_children = model_children, true_data=inputs, reg_param=reg_param)
-        else:
-            print("Using default")
-            batch_loss += utils.Loss.mse_avg(true_data=inputs, reconstructed_data=reconstructions, reg_param=reg_param)
+            mse_avg_loss = utils.Loss.mse_avg(true_data=inputs, reconstructed_data=reconstructions, reg_param=reg_param)
+        if config.mse_sum:
+            mse_sum_loss = utils.Loss.mse_sum(true_data=inputs, reconstructed_data=reconstructions, reg_param=reg_param)
+        if config.emd:
+            emd_loss = utils.Loss.emd(true_data=inputs, reconstructed_data=reconstructions, reg_param=reg_param)
+        if config.l1:
+            l1_loss = utils.Loss.l1(model_children = model_children, true_data=inputs, reg_param=reg_param)
+        if not config.mse_avg and not config.mse_sum and not config.emd and not config.l1:
+            else_loss = utils.Loss.mse_avg(true_data=inputs, reconstructed_data=reconstructions, reg_param=reg_param)
 
         # Compute the loss-gradient with
-        batch_loss.backward()
+        loss = mse_avg_loss +  mse_sum_loss +  emd_loss +  l1_loss +  else_loss
+
+        loss.backward()
 
         # Update the optimizer
         optimizer.step()
 
-        running_loss += batch_loss.item()
+        running_loss += loss.item()
 
     epoch_loss = running_loss / (idx + 1)
-    print(f"# Finished. Training Loss: {batch_loss:.6f}")
+    print(f"# Finished. Training Loss: {loss:.6f}")
     return epoch_loss, model
 
 
@@ -121,27 +115,24 @@ def validate(model, test_dl, model_children, reg_param, config,):
             inputs = inputs.to(device)
             reconstructions = model(inputs)
 
-            batch_loss = 0.0
+            mse_avg_loss, mse_sum_loss, emd_loss, l1_loss, else_loss = 0,0,0,0,0
             if config.mse_avg:
-                print("Using mse_avg")
-                batch_loss += utils.Loss.mse_avg(true_data=inputs, reconstructed_data=reconstructions, reg_param=reg_param)
-            elif config.mse_sum:
-                print("Using mse_sum")
-                batch_loss += utils.Loss.mse_sum(true_data=inputs, reconstructed_data=reconstructions, reg_param=reg_param)
-            elif config.emd:
-                print("Using emd")
-                batch_loss += utils.Loss.emd(true_data=inputs, reconstructed_data=reconstructions, reg_param=reg_param)
-            elif config.l1:
-                print("Using L1")
-                batch_loss += utils.Loss.l1(model_children = model_children, true_data=inputs, reconstructed_data=reconstructions, reg_param=reg_param)
-            else:
-                print("Using the default")
-                #batch_loss += utils.Loss.mse_avg(true_data=inputs, reconstructed_data=reconstructions, reg_param=reg_param)
-                batch_loss += 1
-            running_loss += batch_loss
+                mse_avg_loss = utils.Loss.mse_avg(true_data=inputs, reconstructed_data=reconstructions, reg_param=reg_param)
+            if config.mse_sum:
+                mse_sum_loss = utils.Loss.mse_sum(true_data=inputs, reconstructed_data=reconstructions, reg_param=reg_param)
+            if config.emd:
+                emd_loss = utils.Loss.emd(true_data=inputs, reconstructed_data=reconstructions, reg_param=reg_param)
+            if config.l1:
+                l1_loss = utils.Loss.l1(model_children = model_children, true_data=inputs, reg_param=reg_param)
+            if not config.mse_avg and not config.mse_sum and not config.emd and not config.l1:
+                else_loss = utils.Loss.mse_avg(true_data=inputs, reconstructed_data=reconstructions, reg_param=reg_param)
+
+            # Compute the loss-gradient with
+            loss = mse_avg_loss +  mse_sum_loss +  emd_loss +  l1_loss +  else_loss
+            running_loss += loss
 
     epoch_loss = running_loss / (idx + 1)
-    print(f"# Finished. Validation Loss: {batch_loss:.6f}")
+    print(f"# Finished. Validation Loss: {loss:.6f}")
     return epoch_loss
 
 

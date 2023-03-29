@@ -32,8 +32,7 @@ class Loss:
         self.model_children = (
             model_children  # pytorch structure containing model weights
         )
-        self.loss = 1  # Loss value returned
-        self.chosen_loss = None
+        self.loss = 0  # Loss value returned
 
     def mse_avg(true_data, reconstructed_data, reg_param):
         mse = nn.MSELoss()
@@ -45,7 +44,6 @@ class Loss:
         number_of_columns = true_data.shape[1]
 
         loss = mse(reconstructed_data, true_data) / number_of_columns
-        print(loss)
         return loss
 
     def emd(true_data, reconstructed_data, reg_param):
@@ -57,10 +55,8 @@ class Loss:
             for i in range(len(true_data))
         ]
         wasserstein_distance_tensor = torch.Tensor(wasserstein_distance_list)
-        #print((wasserstein_distance_tensor)[0])
-        #wasserstein_distance_tensor.requires_grad()
+        wasserstein_distance_tensor.requires_grad_()
         loss = torch.sum(wasserstein_distance_tensor)
-        print(loss)
         return loss
 
     def l1(model_children, true_data, reg_param):
@@ -70,11 +66,11 @@ class Loss:
             values = model_children[i](values)
             l1_loss += torch.mean(torch.abs(values))
 
-        loss = l1_loss
+        loss = reg_param*l1_loss
         return loss
 
     def __call__(self):
-        return self.loss
+        return 
 
 
 def mse_loss_l1(model_children, true_data, reconstructed_data, reg_param, validate):
