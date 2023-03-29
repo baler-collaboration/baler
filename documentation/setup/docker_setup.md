@@ -50,6 +50,7 @@ For the tutorial example, we want to compress the data called `example_CFD.npz`.
 
 ## Running ##
 
+### Training ###
 Here is the command to start **training** the network on the example_CFD data:
 ```console
 docker run \
@@ -72,20 +73,64 @@ And the user defined lines are:
   * `--project=example_CFD` specifies the current "project", i.e. the directory for the config file and the output
   * `--mode=train` specifies the current running mode of Baler. We start by training the network on the data
 
-To compress and decompress the data use `--mode=compress` and `--mode=decompress` respectively. 
+### Compress ###
+To compress and decompress the data use `--mode=compress`
+```console
+docker run \
+-u ${UID}:${GID} \
+--mount type=bind,source=${PWD}/projects/,target=/baler-root/projects \
+--mount type=bind,source=${PWD}/data/,target=/baler-root/data \
+pekman/baler:latest \
+--project=example_CFD \
+--mode=compress
+```
 
-After that, plot the performance of the procedure by using `--mode=plot`. In this tutorial example, the performance plot is found in `projects/exmaple_CFD/plotting/comparison.jpg`
+### Compress ###
+To compress and decompress the data use `--mode=decompress`
+```console
+docker run \
+-u ${UID}:${GID} \
+--mount type=bind,source=${PWD}/projects/,target=/baler-root/projects \
+--mount type=bind,source=${PWD}/data/,target=/baler-root/data \
+pekman/baler:latest \
+--project=example_CFD \
+--mode=decompress
+```
+
+### Plotting ###
+After that training, compression, and decompression you can plot the performance of the procedure by using `--mode=plot`. In this tutorial example, the performance plot is found in `projects/exmaple_CFD/plotting/comparison.jpg`
+To compress and decompress the data use `--mode=decompress`
+```console
+docker run \
+-u ${UID}:${GID} \
+--mount type=bind,source=${PWD}/projects/,target=/baler-root/projects \
+--mount type=bind,source=${PWD}/data/,target=/baler-root/data \
+pekman/baler:latest \
+--project=example_CFD \
+--mode=plot
+```
 
 ## Running  with GPU ##
 
-Baler can be run with GPU acceleration, o allow the Docker image access to the system GPU you need to add `--gpus all` at the right after `docker run` in the base command above.
+Baler can be run with GPU acceleration, to allow the Docker image access to the system GPU you need to add `--gpus all` right after `docker run` in the run command:
+
+```console
+docker run \
+--gpus all
+-u ${UID}:${GID} \
+--mount type=bind,source=${PWD}/projects/,target=/baler-root/projects \
+--mount type=bind,source=${PWD}/data/,target=/baler-root/data \
+pekman/baler:latest \
+--project=example_CFD \
+--mode=plot
+```
 
 ## Build Docker image ##
 
 If you would prefer not to use the Docker image provided by us, you may build the image yourself. This is achieved with:
 
 ```console
-docker build -t myBaler:latest .
+docker build -rm -t myBaler:latest .
 ```
 
 This image may be run using by specifying the image `myBaler:latest` instead of our `pekman/baler:latest` in the above base command.
