@@ -66,11 +66,11 @@ class Loss:
             values = model_children[i](values)
             l1_loss += torch.mean(torch.abs(values))
 
-        loss = reg_param*l1_loss
+        loss = reg_param * l1_loss
         return loss
 
     def __call__(self):
-        return 
+        return
 
 
 def mse_loss_l1(model_children, true_data, reconstructed_data, reg_param, validate):

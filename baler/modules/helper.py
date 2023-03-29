@@ -118,10 +118,10 @@ class Config:
     data_dimension: int
     intermittent_model_saving: bool
     intermittent_saving_patience: int
-    mse_avg                      : bool
-    mse_sum                      : bool
-    emd                          : bool
-    l1                           : bool
+    mse_avg: bool
+    mse_sum: bool
+    emd: bool
+    l1: bool
 
 
 def create_default_config(project_name: str) -> str:
@@ -158,9 +158,9 @@ def set_config(c):
     c.extra_compression            = False
     c.intermittent_model_saving    = False
     c.intermittent_saving_patience = 100
-    c.mse_avg                      = True
+    c.mse_avg                      = False
     c.mse_sum                      = True
-    c.emd                          = True
+    c.emd                          = False
     c.l1                           = True 
 
 """
