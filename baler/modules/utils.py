@@ -34,14 +34,8 @@ class Loss:
 
     """
 
-    def __init__(self, model_children, true_data, reconstructed_data, reg_param):
-        self.true_data = true_data  # Input data
-        self.reconstructed_data = (
-            reconstructed_data  # Input data evaluated through the model during training
-        )
-        self.model_children = (
-            model_children  # pytorch structure containing model weights
-        )
+    def __init__(self, *args, **kwargs):
+        super(Loss, self).__init__(*args, **kwargs)
 
     def mse_avg(true_data, reconstructed_data):
         """The Mean Squared Error (MSE) function. The most commonly used loss function in machine learning, defined as

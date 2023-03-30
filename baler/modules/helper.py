@@ -149,7 +149,6 @@ def set_config(c):
     c.min_delta                    = 0
     c.lr_scheduler_patience        = 50
     c.custom_norm                  = False
-    c.l1                           = True
     c.reg_param                    = 0.001
     c.RHO                          = 0.05
     c.test_size                    = 0
