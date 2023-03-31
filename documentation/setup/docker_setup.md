@@ -116,7 +116,7 @@ Baler can be run with GPU acceleration, to allow the Docker image access to the 
 
 ```console
 docker run \
---gpus all
+--gpus all \
 -u ${UID}:${GID} \
 --mount type=bind,source=${PWD}/projects/,target=/baler-root/projects \
 --mount type=bind,source=${PWD}/data/,target=/baler-root/data \
@@ -130,7 +130,7 @@ pekman/baler:latest \
 If you would prefer not to use the Docker image provided by us, you may build the image yourself. This is achieved with:
 
 ```console
-docker build -rm -t myBaler:latest .
+docker build --rm -t myBaler:latest .
 ```
 
 This image may be run using by specifying the image `myBaler:latest` instead of our `pekman/baler:latest` in the above base command.
@@ -150,7 +150,7 @@ docker run \
 --mount type=bind,source=${PWD}/data/,target=/baler-root/data \
 --mount type=bind,source=${PWD}/baler/modules,target=/baler-root/baler/modules \
 --mount type=bind,source=${PWD}/baler/baler.py,target=/baler-root/baler/baler.py \
-ghcr.io/uomresearchit/baler:latest \
+pekman/baler:latest \
 --project=firstProject \
 --mode=train
 ```
