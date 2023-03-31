@@ -145,13 +145,13 @@ An example command is given here:
 
 ```console
 docker run \
--u ${UID}:${GID} \ 
+-u ${UID}:${GID} \
 --mount type=bind,source=${PWD}/projects/,target=/baler-root/projects \
 --mount type=bind,source=${PWD}/data/,target=/baler-root/data \
 --mount type=bind,source=${PWD}/baler/modules,target=/baler-root/baler/modules \
 --mount type=bind,source=${PWD}/baler/baler.py,target=/baler-root/baler/baler.py \
 pekman/baler:latest \
---project=firstProject \
+--project=example_CFD \
 --mode=train
 ```
 
@@ -162,45 +162,32 @@ Where:
 Please note, this mounting does not permanently change the behavior of the container, for this the container must be rebuilt.
 
 
-## Running with Apptainer (Singularity) ##
+## Running with Apptainer (Singularity)  on a cluster##
 
-Docker is not available on all platforms, particularly high-performance or shared environments prefer not to use Docker due to security concerns. In these environments, Apptainer (formerly Singularity) is generally preferred and available. 
+Docker is not available on all platforms, particularly high-performance or shared environments prefer not to use Docker due to security concerns. In these environments, Apptainer (formerly Singularity) is generally preferred and available.
 
-To run Baler using Apptainer, the base command can be modified as follows, e.g. for the training command:
+In order to run Baler on a managed platform may require additional options to work with the system wide Apptainer configuration and respect good practice such as writing to appropriate storage areas.
 
+Create and enter workspace directory:
 ```console
-apptainer run \
---nv \
---bind ${PWD}/projects/:/baler-root/projects \
---bind ${PWD}/data/:/baler-root/data \
-docker://ghcr.io/uomresearchit/baler:latest \
---project=firstProject \
---mode=train
+mkdir workspace
+cd workspace
 ```
 
-### Running on Blackett (UNIMAN GPU Cluster) ###
-
-In order to run Baler on a managed platform may require additional options to be uesd to work with the system wide Apptainer configuration and respect good practice such as writing to appropriate storage areas.
-
-An example implementation has been made on a Univerity of Manchester (UK) GPU equipped cluster, named Blackett.
-
-#### Ensure the Container is **not** written to the home area ####
-
-By default, Apptainer will write to your home area, this is not desirable on Blackett. To control this:
-
+Download and unzip the example datasets:
 ```console
-cd /to/data/dir
-export APPTAINER_CACHEDIR=${PWD} # ensure you are in hard disc area, not shared
+wget https://cernbox.cern.ch/remote.php/dav/public-files/21uZJO4hkqsQW6Z/baler.zip
+unzip baler.zip
 ```
-
-#### Create an Apptainer sandbox ####
+By default, Apptainer/singularity will write to your home area, this is not desirable on most remote environments. To control this:
+```console
+export APPTAINER_CACHEDIR=${PWD}
+export SINGULARITY_CACHEDIR=${PWD}
+```
 
 To build an Apptainer sandbox, a container completely constrained within a specified local directory, the following command can be run:
-
 ```console
-apptainer build \
---sandbox baler-sandbox \
-docker://ghcr.io/uomresearchit/baler:latest
+apptainer build --sandbox baler-sandbox docker://pekman/baler:latest
 ```
 
 Where:
@@ -208,9 +195,9 @@ Where:
   * `--sandbox baler-sandbox/` specifies the output directory for the sandboxed container
   * `docker://ghcr.io/uomresearchit/baler:latest` specifies that a the Baler Docker image should be targeted
 
-#### Run the Apptainer sandbox ####
+Now that the sandbox has been created, we can run the container.
 
-Now that the sandbox has been created, we can run the container. 
+### Training ###
 
 ```console
 apptainer run \
@@ -221,7 +208,7 @@ apptainer run \
 --bind ${PWD}/baler/projects/:/baler-root/projects \
 --bind ${PWD}/baler/data:/baler-root/data \
 baler-sandbox/ \
---project=firstProject \
+--project=example_CFD \
 --mode=train
 ```
 Where:
@@ -229,3 +216,45 @@ Where:
   * `--no-mount bind-paths` specifies to not mount the directories specified in the global Apptainer config
   * `--pwd /baler-root` sets the working directory for the container runtime 
   * `--nv` allows the use of Nvidia graphics cards
+
+### Compressing ###
+```console
+apptainer run \
+--no-home \
+--no-mount bind-paths \
+--pwd /baler-root \
+--nv \
+--bind ${PWD}/baler/projects/:/baler-root/projects \
+--bind ${PWD}/baler/data:/baler-root/data \
+baler-sandbox/ \
+--project=example_CFD \
+--mode=compress
+```
+
+### Decompressing ###
+```console
+apptainer run \
+--no-home \
+--no-mount bind-paths \
+--pwd /baler-root \
+--nv \
+--bind ${PWD}/baler/projects/:/baler-root/projects \
+--bind ${PWD}/baler/data:/baler-root/data \
+baler-sandbox/ \
+--project=example_CFD \
+--mode=decompress
+```
+
+### Plotting ###
+```console
+apptainer run \
+--no-home \
+--no-mount bind-paths \
+--pwd /baler-root \
+--nv \
+--bind ${PWD}/baler/projects/:/baler-root/projects \
+--bind ${PWD}/baler/data:/baler-root/data \
+baler-sandbox/ \
+--project=example_CFD \
+--mode=plot
+```
