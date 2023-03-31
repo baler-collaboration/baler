@@ -162,11 +162,11 @@ Where:
 Please note, this mounting does not permanently change the behavior of the container, for this the container must be rebuilt.
 
 
-## Running with Apptainer (Singularity)  on a cluster##
+## Running with Apptainer (Singularity) on a cluster ##
 
 Docker is not available on all platforms, particularly high-performance or shared environments prefer not to use Docker due to security concerns. In these environments, Apptainer (formerly Singularity) is generally preferred and available.
 
-In order to run Baler on a managed platform may require additional options to work with the system wide Apptainer configuration and respect good practice such as writing to appropriate storage areas.
+In order to run Baler on a managed platform may require additional options to work with the system wide Apptainer configuration and respect good practice such as writing to appropriate storage areas, preferably not in on a shared storage space.
 
 Create and enter workspace directory:
 ```console
