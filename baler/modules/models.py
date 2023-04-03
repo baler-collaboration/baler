@@ -26,6 +26,8 @@ class AE(nn.Module):
     def __init__(self, n_features, z_dim, *args, **kwargs):
         super(AE, self).__init__(*args, **kwargs)
 
+        self.activations = {}
+
         # encoder
         self.en1 = nn.Linear(n_features, 200, dtype=torch.float64)
         self.en2 = nn.Linear(200, 100, dtype=torch.float64)
@@ -56,6 +58,34 @@ class AE(nn.Module):
     def forward(self, x):
         z = self.encode(x)
         return self.decode(z)
+    
+    # Implementation of activation extraction using the forward_hook method
+    
+    def get_hook(self, layer_name):
+        def hook(model, input, output):
+            self.activations[layer_name] = output.detach()
+        return hook
+
+    def get_layers(self) -> list:
+        return [self.en1, self.en2, self.en3, self.de1, self.de2, self.de3]
+
+    def store_hooks(self) -> list:
+        layers = self.get_layers()
+        hooks = []
+        for i in range(len(layers)):
+            hooks.append(layers[i].register_forward_hook(self.get_hook(str(i))))
+        return hooks
+    
+    def get_activations(self) -> dict:
+        for kk in self.activations:
+            self.activations[kk] = F.leaky_relu(self.activations[kk])
+        return self.activations
+    
+    def detach_hooks(self, hooks: list) -> None:
+        for hook in hooks:
+            hook.remove()
+
+
 
 
 class AE_Dropout_BN(nn.Module):
