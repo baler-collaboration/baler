@@ -23,6 +23,7 @@ from tqdm import tqdm
 
 import modules.helper as helper
 import modules.utils as utils
+import modules.diagnostics as diagnostics
 
 
 def fit(
@@ -290,6 +291,10 @@ def train(model, variables, train_data, test_data, project_path, config):
     val_loss = []
     start = time.time()
 
+    # Registering hooks for activation extraction
+    if config.activation_extraction: 
+        hooks = model.store_hooks()
+
     for epoch in range(epochs):
         print(f"Epoch {epoch + 1} of {epochs}")
 
@@ -334,6 +339,12 @@ def train(model, variables, train_data, test_data, project_path, config):
                 helper.model_saver(model, path)
 
     end = time.time()
+
+    # Saving activations values
+    if config.activation_extraction: 
+        activations = diagnostics.dict_to_square_matrix(model.get_activations())
+        model.detach_hooks(hooks)
+        np.save(project_path + "activations.npy", activations)
 
     print(f"{(end - start) / 60:.3} minutes")
     np.save(project_path + "loss_data.npy", np.array([train_loss, val_loss]))

@@ -39,6 +39,8 @@ def main():
         helper.create_new_project(project_name)
     elif mode == "train":
         perform_training(project_path, config)
+    elif mode == "diagnose":
+        perform_diagnostics(project_path)
     elif mode == "compress":
         perform_compression(project_path, config)
     elif mode == "decompress":
@@ -116,6 +118,12 @@ def perform_training(project_path, config):
         )
     helper.model_saver(trained_model, project_path + "compressed_output/model.pt")
 
+def perform_diagnostics(project_path):
+    print("Performing diagnostics...")
+    output_path = project_path + "diagnostics/"
+    input_path = project_path + "/training/activations.npy"
+    helper.diagnose(input_path, output_path)
+    
 
 def perform_plotting(project_path, config):
     """Main function calling the two plotting functions, ran when --mode=plot is selected.

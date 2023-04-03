@@ -23,7 +23,7 @@ import numpy as np
 import torch
 from sklearn.model_selection import train_test_split
 
-from modules import training, plotting, data_processing
+from modules import training, plotting, data_processing, diagnostics
 
 
 def get_arguments():
@@ -474,3 +474,12 @@ def decompress(model_path, input_path, model_name):
     # Decompress the data using the trained models decode function
     decompressed = model.decode(data_tensor)
     return decompressed, names, normalization_features
+
+def diagnose(input_path: str, output_path: str) -> None:
+    """Calls diagnostics.diagnose()
+
+        Args:
+            input_path (str): path to the np.array contataining the activations values
+            output_path (str): path to store the diagnostics pdf
+    """
+    diagnostics.diagnose(input_path, output_path)
