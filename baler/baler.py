@@ -121,6 +121,8 @@ def perform_training(project_path, config):
 def perform_diagnostics(project_path):
     print("Performing diagnostics...")
     output_path = project_path + "diagnostics/"
+    if not os.path.exists(output_path):
+        os.makedirs(output_path)
     input_path = project_path + "/training/activations.npy"
     helper.diagnose(input_path, output_path)
     
