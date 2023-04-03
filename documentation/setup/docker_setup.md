@@ -1,5 +1,5 @@
 # Running with Docker #
-A setup for windows is available [here](documentation/setup/docker_setup_windows.md)
+Setup instructions for windows are available [here](documentation/setup/docker_setup_windows.md)
 
 ## Prerequisites ##
 
