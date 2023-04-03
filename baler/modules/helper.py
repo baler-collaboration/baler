@@ -99,6 +99,8 @@ def create_new_project(project_name: str, base_path: str = "projects") -> None:
 
 @dataclass
 class Config:
+    """Defines a configuration dataclass"""
+
     input_path: str
     compression_ratio: float
     epochs: int
@@ -121,6 +123,17 @@ class Config:
 
 
 def create_default_config(project_name: str) -> str:
+    """Returns the string of a default config file, where the given project
+        name has been inserted in the data input path for convenience
+
+    Args:
+        project_name (str): The name of the new project, i.e. the name of the
+        directory for all the output
+
+    Returns:
+        str: Returns a string of a default config which will be written to file
+    """
+
     return f"""
 # === Configuration options ===
 
@@ -323,6 +336,12 @@ def detacher(tensor):
 
 
 def get_device():
+    """Returns the appropriate processing device. IF cuda is available it returns "cuda:0"
+        Otherwise it returns "cpu"
+
+    Returns:
+        _type_: Device string, etiher "cpu" or "cuda:0"
+    """
     device = None
     if torch.cuda.is_available():
         dev = "cuda:0"
