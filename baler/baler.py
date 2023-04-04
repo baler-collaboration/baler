@@ -118,6 +118,7 @@ def perform_training(project_path, config):
         )
     helper.model_saver(trained_model, project_path + "compressed_output/model.pt")
 
+
 def perform_diagnostics(project_path):
     print("Performing diagnostics...")
     output_path = project_path + "diagnostics/"
@@ -125,7 +126,7 @@ def perform_diagnostics(project_path):
         os.makedirs(output_path)
     input_path = project_path + "/training/activations.npy"
     helper.diagnose(input_path, output_path)
-    
+
 
 def perform_plotting(project_path, config):
     """Main function calling the two plotting functions, ran when --mode=plot is selected.

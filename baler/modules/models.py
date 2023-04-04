@@ -58,12 +58,13 @@ class AE(nn.Module):
     def forward(self, x):
         z = self.encode(x)
         return self.decode(z)
-    
+
     # Implementation of activation extraction using the forward_hook method
-    
+
     def get_hook(self, layer_name):
         def hook(model, input, output):
             self.activations[layer_name] = output.detach()
+
         return hook
 
     def get_layers(self) -> list:
@@ -75,17 +76,15 @@ class AE(nn.Module):
         for i in range(len(layers)):
             hooks.append(layers[i].register_forward_hook(self.get_hook(str(i))))
         return hooks
-    
+
     def get_activations(self) -> dict:
         for kk in self.activations:
             self.activations[kk] = F.leaky_relu(self.activations[kk])
         return self.activations
-    
+
     def detach_hooks(self, hooks: list) -> None:
         for hook in hooks:
             hook.remove()
-
-
 
 
 class AE_Dropout_BN(nn.Module):
