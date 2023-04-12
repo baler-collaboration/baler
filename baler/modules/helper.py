@@ -54,7 +54,13 @@ def get_arguments():
         help="train, compress, decompress, plot, info",
     )
     parser.add_argument(
-        "--project", type=str, required=False, help="Name of new project"
+        "--project",
+        type=str,
+        required=False, help=
+        "create new workspace and/or project.\n"
+        "Format: newWorkspace:newProject.\n"
+        "If newWorkspace existing, create new project in workspace.\n"
+        "If newWorkspace not existing, create workspace directory and project."
     )
 
     args = parser.parse_args()
