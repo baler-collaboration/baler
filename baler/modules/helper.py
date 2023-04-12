@@ -45,6 +45,7 @@ def get_arguments():
             "your data into a larger file."
         ),
         epilog="Enjoy!",
+        formatter_class=argparse.RawTextHelpFormatter
     )
     parser.add_argument(
         "--mode",
