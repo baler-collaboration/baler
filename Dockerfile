@@ -21,9 +21,10 @@
 # SOFTWARE.
 
 ## -----------------------------------------------------------------------------
+## Base image with VENV
+
 # The following code was based on
 # https://github.com/michaeloliverx/python-poetry-docker-example/blob/master/docker/Dockerfile
-## Base image with VENV
 
 FROM python:3.8-slim as python-base
 
@@ -51,7 +52,8 @@ WORKDIR $PYSETUP_PATH
 COPY ./poetry.lock ./pyproject.toml ./
 
 # Project initialization:
-RUN poetry install --no-interaction --no-ansi
+RUN poetry remove torch && \
+    poetry install --no-interaction --no-ansi
 
 # Creating folders, and files for the project:
 COPY ./baler/ __init__.py README.md ./tests/ ./
@@ -69,7 +71,8 @@ WORKDIR /baler-root/baler
 COPY --from=python-base /baler-root/baler/dist/*.whl ./
 
 # Install wheel
-RUN pip install *.whl
+RUN pip install *.whl && \
+    pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
 
 # Copy source
 COPY --from=python-base /baler-root/baler/modules/ ./modules
