@@ -131,7 +131,7 @@ def seed_worker(worker_id):
     random.seed(worker_seed)
 
 
-def train(model, variables, train_data, test_data, project_path, config):
+def train(model, variables, train_data, test_data, output_path, config):
     """Does the entire training loop by calling the `fit()` and `validate()`. Appart from this, this is the main function where the data is converted
         to the correct type for it to be trained, via `torch.Tensor()`. Furthermore, the batching is also done here, based on `config.batch_size`,
         and it is the `torch.utils.data.DataLoader` doing the splitting.
@@ -146,7 +146,7 @@ def train(model, variables, train_data, test_data, project_path, config):
         variables (_type_): _description_
         train_set (ndarray): Array consisting of the train set
         test_set (ndarray): Array consisting of the test set
-        project_path (string): Path to the project directory
+        output_path (path): Path to the output directory
         config (dataClass): Base class selecting user inputs
 
     Returns:
@@ -266,12 +266,14 @@ def train(model, variables, train_data, test_data, project_path, config):
         ## Implementation to save models & values after every N epochs, where N is stored in 'intermittent_saving_patience':
         if intermittent_model_saving:
             if epoch % intermittent_saving_patience == 0:
-                path = os.path.join(project_path, f"model_{epoch}.pt")
-                helper.model_saver(model, path)
+                compressed_output_path = os.path.join(output_path,
+                                                       "compressed_output",
+                                                       f"model_{epoch}.pt")
+                helper.model_saver(model, compressed_output_path)
 
     end = time.time()
 
     print(f"{(end - start) / 60:.3} minutes")
-    np.save(project_path + "loss_data.npy", np.array([train_loss, val_loss]))
+    np.save(os.path.join(output_path, "training", "loss_data.npy"), np.array([train_loss, val_loss]))
 
     return trained_model

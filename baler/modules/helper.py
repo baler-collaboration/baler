@@ -112,7 +112,6 @@ def create_new_project(workspace_name: str, project_name: str) -> None:
         os.path.join(project_path, "output", "decompressed_output"),
         os.path.join(project_path, "output", "plotting"),
         os.path.join(project_path, "output", "training"),
-        os.path.join(project_path, "output", "model"),
     ]
 
     for directory in required_directories:
@@ -295,18 +294,18 @@ def train(model, number_of_columns, train_set, test_set, project_path, config):
     )
 
 
-def plotter(project_path, config):
+def plotter(output_path, config):
     """Calls `plotting.plot()`
 
     Args:
-        project_path (string): Path to the project directory
+        output_path (string): Path to the output directory
         config (dataClass): Base class selecting user inputs
 
     """
 
-    plotting.plot(project_path, config)
+    plotting.plot(output_path, config)
     print("=== Done ===")
-    print("Your plots are available in:", project_path + "plotting/")
+    print("Your plots are available in:", os.path.join(output_path, "plotting"))
 
 
 def loss_plotter(path_to_loss_data, output_path, config):

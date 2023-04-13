@@ -34,19 +34,21 @@ def main():
         NameError: Raises error if the chosen mode does not exist.
     """
     config, mode, workspace_name, project_name = helper.get_arguments()
-    project_path = f"workspaces/{workspace_name}/{project_name}/"
+    project_path = os.path.join("workspaces", workspace_name, project_name)
+    output_path = os.path.join(project_path, "output")
+    
     if mode == "newProject":
         helper.create_new_project(workspace_name, project_name)
     elif mode == "train":
-        perform_training(project_path, config)
+        perform_training(output_path, config)
     elif mode == "compress":
-        perform_compression(project_path, config)
+        perform_compression(output_path, config)
     elif mode == "decompress":
-        perform_decompression(config.model_name, project_path, config)
+        perform_decompression(config.model_name, output_path, config)
     elif mode == "plot":
-        perform_plotting(project_path, config)
+        perform_plotting(output_path, config)
     elif mode == "info":
-        print_info(project_path, config)
+        print_info(output_path, config)
     else:
         raise NameError(
             "Baler mode "
@@ -55,14 +57,14 @@ def main():
         )
 
 
-def perform_training(project_path, config):
+def perform_training(output_path, config):
     """Main function calling the training functions, ran when --mode=train is selected.
         The three main functions this calls are: `helper.process`, `helper.mode_init` and `helper.training`.
 
         Depending on `config.data_dimensions`, the calculated latent space size will differ.
 
     Args:
-        project_path (string): Selects base path for determining output path
+        output_path (path): Selects base path for determining output path
         config (dataClass): Base class selecting user inputs
 
     Raises:
@@ -104,33 +106,34 @@ def perform_training(project_path, config):
     model = model_object(n_features=number_of_columns, z_dim=config.latent_space_size)
     model.to(device)
 
-    output_path = project_path + "training/"
     trained_model = helper.train(
         model, number_of_columns, train_set_norm, test_set_norm, output_path, config
     )
 
+    training_path = os.path.join(output_path, "training")
     if config.apply_normalization:
         np.save(
-            project_path + "training/normalization_features.npy",
+            os.path.join(training_path, "normalization_features.npy"),
             normalization_features,
         )
-    helper.model_saver(trained_model, project_path + "compressed_output/model.pt")
+    helper.model_saver(trained_model, os.path.join(output_path, "compressed_output", "model.pt"))
 
 
-def perform_plotting(project_path, config):
+def perform_plotting(output_path, config):
     """Main function calling the two plotting functions, ran when --mode=plot is selected.
        The two main functions this calls are: `helper.plotter` and `helper.loss_plotter`
 
     Args:
-        project_path (string): Selects base path for determining output path
+        output_path (string): Selects base path for determining output path
         config (dataClass): Base class selecting user inputs
     """
-    output_path = project_path + "plotting/"
-    helper.loss_plotter(project_path + "training/loss_data.npy", output_path, config)
-    helper.plotter(project_path, config)
+    helper.loss_plotter(os.path.join(output_path, "training", "loss_data.npy"),
+                        output_path,
+                        config)
+    helper.plotter(output_path, config)
 
 
-def perform_compression(project_path, config):
+def perform_compression(output_path, config):
     """Main function calling the compression functions, ran when --mode=compress is selected.
        The main function being called here is: `helper.compress`
 
@@ -138,7 +141,7 @@ def perform_compression(project_path, config):
         Else, the function returns a compressed file of `.npz`, only compressed by Baler.
 
     Args:
-        project_path (string): Selects base path for determining output path
+        output_path (path): Selects base path for determining output path
         config (dataClass): Base class selecting user inputs
 
     Outputs:
@@ -153,11 +156,11 @@ def perform_compression(project_path, config):
 
     if config.apply_normalization:
         normalization_features = np.load(
-            project_path + "training/normalization_features.npy"
+            os.path.join(output_path, "training", "normalization_features.npy")
         )
 
     compressed = helper.compress(
-        model_path=project_path + "compressed_output/model.pt",
+        model_path=os.path.join(output_path, "compressed_output", "model.pt"),
         config=config,
     )
     # Converting back to numpyarray
@@ -170,21 +173,21 @@ def perform_compression(project_path, config):
 
     if config.extra_compression:
         np.savez_compressed(
-            project_path + "compressed_output/compressed.npz",
+            os.path.join(output_path, "compressed_output", "compressed.npz"),
             data=compressed,
             names=names,
             normalization_features=normalization_features,
         )
     else:
         np.savez(
-            project_path + "compressed_output/compressed.npz",
+            os.path.join(output_path, "compressed_output", "compressed.npz"),
             data=compressed,
             names=names,
             normalization_features=normalization_features,
         )
 
 
-def perform_decompression(model_name, project_path, config):
+def perform_decompression(model_name, output_path, config):
     """Main function calling the decompression functions, ran when --mode=decompress is selected.
        The main function being called here is: `helper.decompress`
 
@@ -192,15 +195,15 @@ def perform_decompression(model_name, project_path, config):
 
     Args:
         model_name (string): Name of the model you want to use for decompression
-        project_path (string): Selects base path for determining output path
+        output_path (path): Selects base path for determining output path
         config (dataClass): Base class selecting user inputs
     """
     print("Decompressing...")
 
     start = time.time()
     decompressed, names, normalization_features = helper.decompress(
-        model_path=project_path + "compressed_output/model.pt",
-        input_path=project_path + "compressed_output/compressed.npz",
+        model_path=os.path.join(output_path, "compressed_output", "model.pt"),
+        input_path=os.path.join(output_path, "compressed_output", "compressed.npz"),
         model_name=model_name,
     )
 
@@ -210,7 +213,7 @@ def perform_decompression(model_name, project_path, config):
     if config.apply_normalization:
         print("Un-normalizing...")
         normalization_features = np.load(
-            project_path + "training/normalization_features.npy"
+            os.path.join(output_path, "training", "normalization_features.npy"),
         )
         decompressed = helper.renormalize(
             decompressed,
@@ -222,23 +225,23 @@ def perform_decompression(model_name, project_path, config):
 
     if config.extra_compression:
         np.savez_compressed(
-            project_path + "decompressed_output/decompressed.npz",
+            os.path.join(output_path, "decompressed_output", "decompressed.npz"),
             data=decompressed,
             names=names,
         )
     else:
         np.savez(
-            project_path + "decompressed_output/decompressed.npz",
+            os.path.join(output_path, "decompressed_output", "decompressed.npz"),
             data=decompressed,
             names=names,
         )
 
 
-def print_info(project_path, config):
+def print_info(output_path, config):
     """Function which prints information about your total compression ratios and the file sizes.
 
     Args:
-        project_path (string): Selects path to project from which one wants to obtain file information
+        output_path (string): Selects path to project from which one wants to obtain file information
         config (dataClass): Base class selecting user inputs
     """
     print(
@@ -246,18 +249,18 @@ def print_info(project_path, config):
     )
 
     original = config.input_path
-    compressed_path = project_path + "compressed_output/"
-    decompressed_path = project_path + "decompressed_output/"
-    training_path = project_path + "training/"
+    compressed_path = os.path.join(output_path, "compressed_output")
+    decompressed_path = os.path.join(output_path, "decompressed_output")
+    training_path = os.path.join(output_path, "training")
 
-    model = compressed_path + "model.pt"
-    compressed = compressed_path + "compressed.npz"
-    decompressed = decompressed_path + "/decompressed.npz"
+    model = os.path.join(compressed_path, "model.pt")
+    compressed = os.path.join(compressed_path, "compressed.npz")
+    decompressed = os.path.join(decompressed_path, "decompressed.npz")
 
     meta_data = [
         model,
-        training_path + "loss_data.npy",
-        training_path + "normalization_features.npy",
+        os.path.join(training_path, "loss_data.npy"),
+        os.path.join(training_path, "normalization_features.npy"),
     ]
 
     meta_data_stats = [
