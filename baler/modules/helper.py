@@ -70,15 +70,20 @@ def get_arguments():
     )
 
     args = parser.parse_args()
+
+    workspace_name = args.project[0]
+    project_name = args.project[1]
+    config_path = f"workspaces.{workspace_name}.{project_name}"
+
     if args.mode == "newProject":
         config = None
     else:
         config = Config
         importlib.import_module(
-            f"projects.{args.project}.{args.project}_config"
+            f"{config_path}.{project_name}_config"
         ).set_config(config)
 
-    return config, args.mode, args.project[0], args.project[1]
+    return config, args.mode, workspace_name, project_name
 
 
 def create_new_project(workspace_name: str, project_name: str) -> None:
@@ -99,7 +104,7 @@ def create_new_project(workspace_name: str, project_name: str) -> None:
         return
     os.makedirs(project_path)
 
-    # Create required directories 
+    # Create required directories
     required_directories = [
         os.path.join(workspace_path, "data"),
         os.path.join(project_path, "config"),
@@ -115,7 +120,7 @@ def create_new_project(workspace_name: str, project_name: str) -> None:
 
     # Populate default config
     with open(os.path.join(project_path, "config", f"{project_name}_config.py"), "w") as f:
-        f.write(create_default_config(project_name))
+        f.write(create_default_config(workspace_name, project_name))
 
 
 @dataclass
@@ -141,12 +146,12 @@ class Config:
     intermittent_saving_patience: int
 
 
-def create_default_config(project_name: str) -> str:
+def create_default_config(workspace_name: str, project_name: str) -> str:
     return f"""
 # === Configuration options ===
 
 def set_config(c):
-    c.input_path                   = "data/{project_name}/{project_name}_data.npz"
+    c.input_path                   = "workspaces/{workspace_name}/data/{project_name}_data.npz"
     c.data_dimension               = 1
     c.compression_ratio            = 2.0
     c.apply_normalization          = True
