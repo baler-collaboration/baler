@@ -73,7 +73,7 @@ def get_arguments():
 
     workspace_name = args.project[0]
     project_name = args.project[1]
-    config_path = f"workspaces.{workspace_name}.{project_name}.config"
+    config_path = f"workspaces.{workspace_name}.{project_name}."
 
     if args.mode == "newProject":
         config = None
