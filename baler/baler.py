@@ -33,10 +33,10 @@ def main():
     Raises:
         NameError: Raises error if the chosen mode does not exist.
     """
-    config, mode, project_name = helper.get_arguments()
-    project_path = f"projects/{project_name}/"
+    config, mode, workspace_name, project_name = helper.get_arguments()
+    project_path = f"workspaces/{workspace_name}/{project_name}/"
     if mode == "newProject":
-        helper.create_new_project(project_name)
+        helper.create_new_project(workspace_name, project_name)
     elif mode == "train":
         perform_training(project_path, config)
     elif mode == "compress":

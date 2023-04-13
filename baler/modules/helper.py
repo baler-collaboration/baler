@@ -50,23 +50,26 @@ def get_arguments():
     parser.add_argument(
         "--mode",
         type=str,
-        required=False,
-        help="train, compress, decompress, plot, info",
+        required=True,
+        help="newProject, train, compress, decompress, plot, info",
     )
     parser.add_argument(
         "--project",
         type=str,
-        required=False, help=
-        "create new workspace and/or project.\n"
-        "Format: newWorkspace:newProject.\n"
-        "If newWorkspace existing, create new project in workspace.\n"
-        "If newWorkspace not existing, create workspace directory and project."
+        required=True,
+        nargs=2,
+        metavar=("WORKSPACE", "PROJECT"),
+        help=
+        "Specifies workspace and project.\n"
+        "e.g. --project CFD firstTry"
+        ", specifies workspace 'CFD' and project 'firstTry'\n\n"
+        "When combined with newProject mode:\n"
+        "  1. If workspace and project exist, take no action.\n"
+        "  2. If workspace exists but project does not, create project in workspace.\n"
+        "  3. If workspace does not exist, create workspace directory and project."
     )
 
     args = parser.parse_args()
-    if not args.mode or (args.mode != "newProject" and not args.project):
-        parser.print_usage()
-        exit(1)
     if args.mode == "newProject":
         config = None
     else:
@@ -74,34 +77,45 @@ def get_arguments():
         importlib.import_module(
             f"projects.{args.project}.{args.project}_config"
         ).set_config(config)
-    return config, args.mode, args.project
+
+    return config, args.mode, args.project[0], args.project[1]
 
 
-def create_new_project(project_name: str, base_path: str = "projects") -> None:
-    """Creates a new project directory with all necessary sub-directories and config files.
+def create_new_project(workspace_name: str, project_name: str) -> None:
+    """Creates a new project directory output sub-directories and config files within a workspace.
 
     Args:
-        project_name (str): Determines what you want to call your new project as.
-        base_path (str, optional): Defaults to "projects"
+        workspace_name (str): Creates a workspace (dir) for storing data and projects with this name.
+        project_name (str): Creates a project (dir) for storing configs and outputs with this name.
     """
-    project_path = os.path.join(base_path, project_name)
-    if os.path.exists(project_path):
-        print(f"The project {project_path} already exists.")
-        return
 
-    required_directories = [
-        "compressed_output",
-        "decompressed_output",
-        "plotting",
-        "training",
-        "model",
-    ]
+    base_path = "workspaces"
+
+    # Create full project path
+    workspace_path = os.path.join(base_path, workspace_name)
+    project_path = os.path.join(base_path, workspace_name, project_name)
+    if os.path.exists(project_path):
+        print(f"The workspace and project ({project_path}) already exists.")
+        return
     os.makedirs(project_path)
-    with open(os.path.join(project_path, f"{project_name}_config.py"), "w") as f:
-        print(project_path)
-        f.write(create_default_config(project_name))
+
+    # Create required directories 
+    required_directories = [
+        os.path.join(workspace_path, "data"),
+        os.path.join(project_path, "config"),
+        os.path.join(project_path, "output", "compressed_output"),
+        os.path.join(project_path, "output", "decompressed_output"),
+        os.path.join(project_path, "output", "plotting"),
+        os.path.join(project_path, "output", "training"),
+        os.path.join(project_path, "output", "model"),
+    ]
+
     for directory in required_directories:
-        os.makedirs(os.path.join(project_path, directory))
+        os.makedirs(directory, exist_ok=True)
+
+    # Populate default config
+    with open(os.path.join(project_path, "config", f"{project_name}_config.py"), "w") as f:
+        f.write(create_default_config(project_name))
 
 
 @dataclass
