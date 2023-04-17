@@ -17,10 +17,12 @@ import importlib
 import os
 import sys
 from dataclasses import dataclass
+from tqdm import tqdm
 
 sys.path.append(os.getcwd())
 import numpy as np
 import torch
+from torch.utils.data import DataLoader
 from sklearn.model_selection import train_test_split
 
 from modules import training, plotting, data_processing
@@ -386,6 +388,7 @@ def compress(model_path, config):
 
     # Initialise and load the model correctly.
     latent_space_size = config.latent_space_size
+    bs = config.batch_size
     device = get_device()
     model_object = data_processing.initialise_model(config.model_name)
     model = data_processing.load_model(
@@ -394,22 +397,50 @@ def compress(model_path, config):
         n_features=config.number_of_columns,
         z_dim=config.latent_space_size,
     )
+    model.eval()
 
     # Give the encoding function the correct input as tensor
+    # if config.data_dimension == 2:
+    #     data_tensor = (
+    #         torch.from_numpy(data.astype("float32", casting="same_kind"))
+    #         .to(device)
+    #         .view(data.shape[0], 1, data.shape[1], data.shape[2])
+    #     )
+    # elif config.data_dimension == 1:
+    #     data_tensor = torch.from_numpy(data).to(device)
     if config.data_dimension == 2:
-        data_tensor = (
-            torch.from_numpy(data.astype("float32", casting="same_kind"))
-            .to(device)
-            .view(data.shape[0], 1, data.shape[1], data.shape[2])
+        data_tensor = torch.tensor(data, dtype=torch.float32).view(
+            data.shape[0], 1, data.shape[1], data.shape[2]
         )
     elif config.data_dimension == 1:
-        data_tensor = torch.from_numpy(data).to(device)
+        data_tensor = torch.tensor(data, dtype=torch.float64)
 
-    compressed = model.encode(data_tensor)
+    # Batching data to avoid memory leaks
+    data_dl = DataLoader(
+        data_tensor,
+        batch_size=bs,
+        shuffle=False,
+        drop_last=False,
+    )
+
+    # Perform compression
+    compressed = []
+    with torch.no_grad():
+        for idx, data_batch in enumerate(tqdm(data_dl)):
+            data_batch = data_batch.to(device)
+
+            out = model.encode(data_batch)
+            # Converting back to numpyarray
+            out = detacher(out)
+            if idx == 0:
+                compressed = out
+            else:
+                compressed = np.concatenate((compressed, out))
+
     return compressed
 
 
-def decompress(model_path, input_path, model_name):
+def decompress(model_path, input_path, model_name, config):
     """Function which performs the decompression of the compressed file. In order to decompress, you must have a compressed file, whose path is
         determined by `input_path`, a model from path `model_path` and a model_name. The model path and model names are used to initialize the model
         used for decompression. The data is then converted into a `torch.tensor` and then passed through `model.decode`.
@@ -418,6 +449,7 @@ def decompress(model_path, input_path, model_name):
         model_path (string): Path to where the model is located
         input_path (string): Path to the data you want to decompress
         model_name (string): Name of trained model from which you want to use decode
+        config (dataClass): Base class selecting user inputs
 
     Returns:
         torch.tensor, ndarray, ndarray: decompressed data as tensor, ndarray of column names, ndarray of normalization features
@@ -428,7 +460,9 @@ def decompress(model_path, input_path, model_name):
     data = loaded["data"]
     names = loaded["names"]
     normalization_features = loaded["normalization_features"]
+    model_name = config.model_name
     latent_space_size = len(data[0])
+    bs = config.batch_size
     model_dict = torch.load(str(model_path))
     number_of_columns = len(model_dict[list(model_dict.keys())[-1]])
 
@@ -441,10 +475,29 @@ def decompress(model_path, input_path, model_name):
         n_features=number_of_columns,
         z_dim=latent_space_size,
     )
+    model.eval()
 
-    # Load the data & convert to tensor
-    data_tensor = torch.from_numpy(data).to(device)
+    # Load the data, convert to tensor and batch it to avoid memory leaks
+    data_tensor = torch.from_numpy(data)
+    data_dl = DataLoader(
+        data_tensor,
+        batch_size=bs,
+        shuffle=False,
+        drop_last=False,
+    )
 
     # Decompress the data using the trained models decode function
-    decompressed = model.decode(data_tensor)
+    decompressed = []
+    with torch.no_grad():
+        for idx, data_batch in enumerate(tqdm(data_dl)):
+            data_batch = data_batch.to(device)
+
+            out = model.decode(data_batch)
+            # Converting back to numpyarray
+            out = detacher(out)
+            if idx == 0:
+                decompressed = out
+            else:
+                decompressed = np.concatenate((decompressed, out))
+
     return decompressed, names, normalization_features
