@@ -36,7 +36,7 @@ def main():
     config, mode, workspace_name, project_name = helper.get_arguments()
     project_path = os.path.join("workspaces", workspace_name, project_name)
     output_path = os.path.join(project_path, "output")
-    
+
     if mode == "newProject":
         helper.create_new_project(workspace_name, project_name)
     elif mode == "train":
@@ -116,7 +116,9 @@ def perform_training(output_path, config):
             os.path.join(training_path, "normalization_features.npy"),
             normalization_features,
         )
-    helper.model_saver(trained_model, os.path.join(output_path, "compressed_output", "model.pt"))
+    helper.model_saver(
+        trained_model, os.path.join(output_path, "compressed_output", "model.pt")
+    )
 
 
 def perform_plotting(output_path, config):
@@ -127,9 +129,9 @@ def perform_plotting(output_path, config):
         output_path (string): Selects base path for determining output path
         config (dataClass): Base class selecting user inputs
     """
-    helper.loss_plotter(os.path.join(output_path, "training", "loss_data.npy"),
-                        output_path,
-                        config)
+    helper.loss_plotter(
+        os.path.join(output_path, "training", "loss_data.npy"), output_path, config
+    )
     helper.plotter(output_path, config)
 
 

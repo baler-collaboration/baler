@@ -266,14 +266,17 @@ def train(model, variables, train_data, test_data, output_path, config):
         ## Implementation to save models & values after every N epochs, where N is stored in 'intermittent_saving_patience':
         if intermittent_model_saving:
             if epoch % intermittent_saving_patience == 0:
-                compressed_output_path = os.path.join(output_path,
-                                                       "compressed_output",
-                                                       f"model_{epoch}.pt")
+                compressed_output_path = os.path.join(
+                    output_path, "compressed_output", f"model_{epoch}.pt"
+                )
                 helper.model_saver(model, compressed_output_path)
 
     end = time.time()
 
     print(f"{(end - start) / 60:.3} minutes")
-    np.save(os.path.join(output_path, "training", "loss_data.npy"), np.array([train_loss, val_loss]))
+    np.save(
+        os.path.join(output_path, "training", "loss_data.npy"),
+        np.array([train_loss, val_loss]),
+    )
 
     return trained_model

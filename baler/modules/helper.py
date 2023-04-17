@@ -45,7 +45,7 @@ def get_arguments():
             "your data into a larger file."
         ),
         epilog="Enjoy!",
-        formatter_class=argparse.RawTextHelpFormatter
+        formatter_class=argparse.RawTextHelpFormatter,
     )
     parser.add_argument(
         "--mode",
@@ -59,14 +59,13 @@ def get_arguments():
         required=True,
         nargs=2,
         metavar=("WORKSPACE", "PROJECT"),
-        help=
-        "Specifies workspace and project.\n"
+        help="Specifies workspace and project.\n"
         "e.g. --project CFD firstTry"
         ", specifies workspace 'CFD' and project 'firstTry'\n\n"
         "When combined with newProject mode:\n"
         "  1. If workspace and project exist, take no action.\n"
         "  2. If workspace exists but project does not, create project in workspace.\n"
-        "  3. If workspace does not exist, create workspace directory and project."
+        "  3. If workspace does not exist, create workspace directory and project.",
     )
 
     args = parser.parse_args()
@@ -79,9 +78,9 @@ def get_arguments():
         config = None
     else:
         config = Config
-        importlib.import_module(
-            f"{config_path}.{project_name}_config"
-        ).set_config(config)
+        importlib.import_module(f"{config_path}.{project_name}_config").set_config(
+            config
+        )
 
     return config, args.mode, workspace_name, project_name
 
@@ -118,7 +117,9 @@ def create_new_project(workspace_name: str, project_name: str) -> None:
         os.makedirs(directory, exist_ok=True)
 
     # Populate default config
-    with open(os.path.join(project_path, "config", f"{project_name}_config.py"), "w") as f:
+    with open(
+        os.path.join(project_path, "config", f"{project_name}_config.py"), "w"
+    ) as f:
         f.write(create_default_config(workspace_name, project_name))
 
 

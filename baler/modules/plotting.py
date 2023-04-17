@@ -19,6 +19,7 @@ from tqdm import trange
 from matplotlib.backends.backend_pdf import PdfPages
 import os
 
+
 def loss_plot(path_to_loss_data, output_path, config):
     """This function Plots the loss from the training and saves it
 
@@ -229,11 +230,9 @@ def plot_2D(output_path, config):
     """
 
     data = np.load(config.input_path)["data"]
-    data_decompressed = np.load(os.path.join(output_path,
-                                             "decompressed_output",
-                                             "decompressed.npz"))[
-        "data"
-    ]
+    data_decompressed = np.load(
+        os.path.join(output_path, "decompressed_output", "decompressed.npz")
+    )["data"]
 
     if data.shape[0] > 1:
         num_tiles = data.shape[0]
