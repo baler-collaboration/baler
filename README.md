@@ -15,5 +15,5 @@ If you wish to contribute, please see the contribution guidelines [here](https:/
 
 # Getting Started #
 In the links below we offer instructions on how to set up Baler and working tutorial examples to get you started. We offer two ways to run baler:
-* [Python](documentation/setup/python_setup.md)
-* [Docker/Singularity/Apptainer](documentation/setup/docker_setup.md)
+* [Python](docs/setup/python_setup.md)
+* [Docker/Singularity/Apptainer](docs/setup/docker_setup.md)
