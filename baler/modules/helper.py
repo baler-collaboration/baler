@@ -152,6 +152,7 @@ class Config:
     mse_sum: bool
     emd: bool
     l1: bool
+    randomization: bool
 
 
 def create_default_config(workspace_name: str, project_name: str) -> str:
@@ -202,6 +203,7 @@ def set_config(c):
     c.mse_sum                      = True
     c.emd                          = False
     c.l1                           = True 
+    c.randomization                = True
 
 """
 

@@ -32,6 +32,7 @@ def set_config(c):
     c.emd = False
     c.l1 = True
     c.activation_extraction = True
+    c.deterministic_algorithm = False
     c.type_list = [
         "float64",
         "float64",
