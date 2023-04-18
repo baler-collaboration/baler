@@ -201,7 +201,8 @@ def set_config(c):
     c.mse_avg                      = False
     c.mse_sum                      = True
     c.emd                          = False
-    c.l1                           = True 
+    c.l1                           = True
+    c.activation_extraction        = False
 
 """
 
