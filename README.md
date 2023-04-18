@@ -1,4 +1,5 @@
-[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![DOI](https://zenodo.org/badge/576188110.svg)](https://zenodo.org/badge/latestdoi/576188110)\
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)\
 ![example workflow](https://github.com/baler-compressor/baler/actions/workflows/test_and_lint.yaml/badge.svg)
 ![example workflow](https://github.com/baler-compressor/baler/actions/workflows/docker.yaml/badge.svg)
 
@@ -9,10 +10,16 @@ Baler is a tool used to test the feasibility of compressing different types of s
 3. Decompress the file using the model at a later time
 4. Plot the performance of the compression/decompression
 
-If you wish to contribute, please see the contributio guidelines [here](https://github.com/baler-compressor/baler/blob/main/documentation/CONTRIBUTING.md)
+If you wish to contribute, please see the contribution guidelines [here](https://github.com/baler-compressor/baler/blob/main/docs/CONTRIBUTING.md)
 
 
 # Getting Started #
 In the links below we offer instructions on how to set up Baler and working tutorial examples to get you started. We offer two ways to run baler:
-* [Python](documentation/setup/python_setup.md)
-* [Docker/Singularity/Apptainer](documentation/setup/docker_setup.md)
+* [Python](docs/setup/python_setup.md)
+* [Docker/Singularity/Apptainer](docs/setup/docker_setup.md)
+
+
+
+# Contributing
+
+If you wish to contribute, please see the [contribution guidelines](https://github.com/baler-collaboration/baler/blob/main/docs/CONTRIBUTING.md).

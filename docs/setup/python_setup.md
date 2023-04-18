@@ -1,5 +1,5 @@
 ## Python Setup
-A setup for windows is avaliable [here](documentation/setup/python_setup_windows.md)
+A setup for windows is available [here](documentation/setup/python_setup_windows.md)
 
 For some Linux users, disable the KDE keyring
 ```console
