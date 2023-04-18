@@ -14,11 +14,9 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.backends.backend_pdf import PdfPages
 from tqdm import tqdm
 from tqdm import trange
-from matplotlib.backends.backend_pdf import PdfPages
-
-from modules import helper as helper
 
 
 def loss_plot(path_to_loss_data, output_path, config):
@@ -98,7 +96,7 @@ def plot_box_and_whisker(names, residual, pdf):
     pdf.savefig()
 
 
-def plot_1D(project_path, config):
+def plot_1D(project_path: str, config):
     """General plotting for 1D data, for example data from a '.csv' file. This function generates a pdf
         document where each page contains the before/after performance
         of each column of the 1D data
@@ -244,29 +242,6 @@ def plot_1D(project_path, config):
             ax1.clear()
             ax3.clear()
             ax4.clear()
-
-
-def plot_box_and_whisker(names, residual, pdf):
-    """Plots Box and Whisker plots of 1D data
-    Args:
-        project_path (string): The path to the project directory
-        config (dataclass): The config class containing attributes set in the config file
-    """
-    column_names = [name.split(".")[-1] for name in names]
-    fig1, ax1 = plt.subplots()
-
-    boxes = ax1.boxplot(list(residual), showfliers=False, vert=False)
-    whiskers = np.concatenate([item.get_xdata() for item in boxes["whiskers"]])
-    edges = max([abs(min(whiskers)), abs(max(whiskers))])
-
-    ax1.set_yticks(np.arange(1, len(column_names) + 1, 1))
-    ax1.set_yticklabels(column_names)
-
-    ax1.grid()
-    fig1.tight_layout()
-    ax1.set_xlabel("Residual")
-    ax1.set_xlim(-edges - edges * 0.1, edges + edges * 0.1)
-    pdf.savefig()
 
 
 def plot_2D(project_path, config):
