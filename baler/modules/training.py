@@ -230,7 +230,7 @@ def train(model, variables, train_data, test_data, project_path, config):
     start = time.time()
 
     # Registering hooks for activation extraction
-    if config.activation_extraction: 
+    if config.activation_extraction:
         hooks = model.store_hooks()
 
     for epoch in range(epochs):
@@ -277,7 +277,7 @@ def train(model, variables, train_data, test_data, project_path, config):
     end = time.time()
 
     # Saving activations values
-    if config.activation_extraction: 
+    if config.activation_extraction:
         activations = diagnostics.dict_to_square_matrix(model.get_activations())
         model.detach_hooks(hooks)
         np.save(project_path + "activations.npy", activations)
