@@ -125,7 +125,6 @@ def plot_1D(project_path, config):
 
     with PdfPages(project_path + "/plotting/comparison.pdf") as pdf:
         plot_box_and_whisker(names, residual, pdf)
-
         fig = plt.figure(constrained_layout=True, figsize=(10, 4))
         subfigs = fig.subfigures(1, 2, wspace=0.07, width_ratios=[1, 1])
 
