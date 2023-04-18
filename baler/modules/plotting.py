@@ -18,7 +18,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 from tqdm import tqdm
 from tqdm import trange
 
-from baler.modules.helper import Config
+from helper import Config
 
 
 def loss_plot(path_to_loss_data, output_path, config):
