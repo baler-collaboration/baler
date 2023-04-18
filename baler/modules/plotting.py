@@ -18,6 +18,8 @@ from tqdm import tqdm
 from tqdm import trange
 from matplotlib.backends.backend_pdf import PdfPages
 
+from modules import helper as helper
+
 
 def loss_plot(path_to_loss_data, output_path, config):
     """This function Plots the loss from the training and saves it
@@ -69,6 +71,31 @@ def get_index_to_cut(column_index, cut, array):
     """
     indices_to_cut = np.argwhere(array[column_index] < cut).flatten()
     return indices_to_cut
+
+
+def plot_box_and_whisker(names, residual, pdf):
+    """Plots Box and Whisker plots of 1D data
+
+    Args:
+        project_path (string): The path to the project directory
+        config (dataclass): The config class containing attributes set in the config file
+    """
+    column_names = [i.split(".")[-1] for i in names]
+
+    fig1, ax1 = plt.subplots()
+
+    boxes = ax1.boxplot(list(residual), showfliers=False, vert=False)
+    whiskers = np.concatenate([item.get_xdata() for item in boxes["whiskers"]])
+    edges = max([abs(min(whiskers)), max(whiskers)])
+
+    ax1.set_yticks(np.arange(1, len(column_names) + 1, 1))
+    ax1.set_yticklabels(column_names)
+
+    ax1.grid()
+    fig1.tight_layout()
+    ax1.set_xlabel("Residual")
+    ax1.set_xlim(-edges - edges * 0.1, edges + edges * 0.1)
+    pdf.savefig()
 
 
 def plot_1D(project_path, config):
@@ -301,12 +328,7 @@ def plot_2D(project_path, config):
         plt.ylim(0, 50)
         plt.xlim(0, 50)
         fig.suptitle(
-            "Compressed file is 10% the size of original,\n75 epochs (3.5 min)",
-            y=0.9,
-            fontsize=16,
-        )
-        fig.suptitle(
-            "Compressed file is 10% the size of original,\n500 epochs (20 min)",
+            "Compressed file is 10% the size of original,\n100 epochs (4.52 min)",
             y=0.9,
             fontsize=16,
         )
