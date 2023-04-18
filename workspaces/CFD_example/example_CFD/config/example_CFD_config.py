@@ -28,3 +28,4 @@ def set_config(c):
     c.emd = False
     c.l1 = True
     c.activation_extraction = False
+    c.deterministic_algorithm = False

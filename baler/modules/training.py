@@ -145,12 +145,13 @@ def train(model, variables, train_data, test_data, project_path, config):
     """
     # Fix the random seed - TODO: add flag to make this optional
 
-    random.seed(0)
-    torch.manual_seed(0)
-    np.random.seed(0)
-    torch.use_deterministic_algorithms(True)
-    g = torch.Generator()
-    g.manual_seed(0)
+    if config.deterministic_algorithm:
+        random.seed(0)
+        torch.manual_seed(0)
+        np.random.seed(0)
+        torch.use_deterministic_algorithms(True)
+        g = torch.Generator()
+        g.manual_seed(0)
 
     test_size = config.test_size
     learning_rate = config.lr
@@ -183,21 +184,35 @@ def train(model, variables, train_data, test_data, project_path, config):
 
     # Pushing input data into the torch-DataLoader object and combines into one DataLoader object (a basic wrapper
     # around several DataLoader objects).
-    train_dl = DataLoader(
-        train_ds,
-        batch_size=bs,
-        shuffle=False,
-        worker_init_fn=seed_worker,
-        generator=g,
-        drop_last=False,
-    )
-    valid_dl = DataLoader(
-        valid_ds,
-        batch_size=bs,
-        worker_init_fn=seed_worker,
-        generator=g,
-        drop_last=False,
-    )
+
+    if config.deterministic_algorithm:
+        train_dl = DataLoader(
+            train_ds,
+            batch_size=bs,
+            shuffle=False,
+            worker_init_fn=seed_worker,
+            generator=g,
+            drop_last=False,
+        )
+        valid_dl = DataLoader(
+            valid_ds,
+            batch_size=bs,
+            worker_init_fn=seed_worker,
+            generator=g,
+            drop_last=False,
+        )
+    else:
+        train_dl = DataLoader(
+            train_ds,
+            batch_size=bs,
+            shuffle=False,
+            drop_last=False,
+        )
+        valid_dl = DataLoader(
+            valid_ds,
+            batch_size=bs,
+            drop_last=False,
+        )
 
     # Select Optimizer
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
