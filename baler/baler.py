@@ -229,11 +229,11 @@ def perform_decompression(output_path, config):
             os.path.join(output_path, "training", "normalization_features.npy"),
         )
 
-    decompressed = helper.renormalize(
-        decompressed,
-        normalization_features[0],
-        normalization_features[1],
-    )
+        decompressed = helper.renormalize(
+            decompressed,
+            normalization_features[0],
+            normalization_features[1],
+        )
 
     try:
         type_list = config.type_list

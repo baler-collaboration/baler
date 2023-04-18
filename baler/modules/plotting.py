@@ -20,7 +20,6 @@ from tqdm import trange
 import os
 
 
-
 def loss_plot(path_to_loss_data, output_path, config):
     """This function Plots the loss from the training and saves it
 
@@ -274,7 +273,7 @@ def plot_2D(output_path, config):
         )
         tile_data = data[ind].reshape(data.shape[1], data.shape[2])
 
-        diff = ((tile_data_decompressed - tile_data) / tile_data) * 100
+        diff = ((tile_data_decompressed - tile_data) / tile_data_decompressed) * 100
 
         fig, axs = plt.subplots(
             1, 3, figsize=(29.7 * (1 / 2.54), 21 * (1 / 2.54)), sharey=True
