@@ -28,29 +28,3 @@ def set_config(c):
     c.intermittent_model_saving = False
     c.intermittent_saving_patience = 100
     c.activation_extraction = True
-    c.type_list = [
-        "float64",
-        "float64",
-        "float64",
-        "float64",
-        "float64",
-        "float64",
-        "float64",
-        "float64",
-        "float64",
-        "float64",
-        "float64",
-        "float64",
-        "int",
-        "int",
-        "int",
-        "int",
-        "int",
-        "int",
-        "int",
-        "float64",
-        "float64",
-        "float64",
-        "int",
-        "int",
-    ]
