@@ -122,6 +122,10 @@ class Config:
     data_dimension: int
     intermittent_model_saving: bool
     intermittent_saving_patience: int
+    mse_avg: bool
+    mse_sum: bool
+    emd: bool
+    l1: bool
 
 
 def create_default_config(project_name: str) -> str:
@@ -160,7 +164,6 @@ def set_config(c):
     c.min_delta                    = 0
     c.lr_scheduler_patience        = 50
     c.custom_norm                  = False
-    c.l1                           = True
     c.reg_param                    = 0.001
     c.RHO                          = 0.05
     c.test_size                    = 0
@@ -169,6 +172,10 @@ def set_config(c):
     c.extra_compression            = False
     c.intermittent_model_saving    = False
     c.intermittent_saving_patience = 100
+    c.mse_avg                      = False
+    c.mse_sum                      = True
+    c.emd                          = False
+    c.l1                           = True 
 
 """
 

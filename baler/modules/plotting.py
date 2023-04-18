@@ -190,7 +190,7 @@ def plot_1D(project_path: str, config):
 
             # Response Histogram
             counts_response, bins_response = np.histogram(
-                response[index], bins=np.arange(-20, 20, 0.2)
+                response[index], bins=np.arange(-20, 20, 0.1)
             )
             ax2.hist(
                 bins_response[:-1],

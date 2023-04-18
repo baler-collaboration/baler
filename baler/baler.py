@@ -127,6 +127,15 @@ def perform_diagnostics(project_path):
     helper.diagnose(input_path, output_path)
 
 
+def perform_diagnostics(project_path):
+    print("Performing diagnostics...")
+    output_path = project_path + "diagnostics/"
+    if not os.path.exists(output_path):
+        os.makedirs(output_path)
+    input_path = project_path + "/training/activations.npy"
+    helper.diagnose(input_path, output_path)
+
+
 def perform_plotting(project_path, config):
     """Main function calling the two plotting functions, ran when --mode=plot is selected.
        The two main functions this calls are: `helper.plotter` and `helper.loss_plotter`
@@ -218,11 +227,22 @@ def perform_decompression(project_path, config):
         normalization_features = np.load(
             project_path + "training/normalization_features.npy"
         )
-        decompressed = helper.renormalize(
-            decompressed,
-            normalization_features[0],
-            normalization_features[1],
-        )
+
+    decompressed = helper.renormalize(
+        decompressed,
+        normalization_features[0],
+        normalization_features[1],
+    )
+
+    try:
+        type_list = config.type_list
+        decompressed = np.transpose(decompressed)
+        for index, column in enumerate(decompressed):
+            decompressed[index] = decompressed[index].astype(type_list[index])
+        decompressed = np.transpose(decompressed)
+    except AttributeError:
+        pass
+
     end = time.time()
     print("Decompression took:", f"{(end - start) / 60:.3} minutes")
 
