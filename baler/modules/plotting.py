@@ -17,6 +17,7 @@ import numpy as np
 from matplotlib.backends.backend_pdf import PdfPages
 from tqdm import tqdm
 from tqdm import trange
+import os
 
 
 def loss_plot(path_to_loss_data, output_path, config):
@@ -24,7 +25,7 @@ def loss_plot(path_to_loss_data, output_path, config):
 
     Args:
         path_to_loss_data (string): Path to file containing loss plot data generated during training
-        output_path (string): Directory path to which the loss plot is saved
+        output_path (path): Directory path to which the loss plot is saved
         config (dataclass): The config class containing attributes set in the config file
     """
     loss_data = np.load(path_to_loss_data)
@@ -51,7 +52,7 @@ def loss_plot(path_to_loss_data, output_path, config):
     plt.yscale("log")
     plt.ylabel("Loss")
     plt.legend(loc="best")
-    plt.savefig(output_path + "_Loss_plot.pdf")
+    plt.savefig(os.path.join(output_path, "plotting", "Loss_plot.pdf"))
     # plt.show()
 
 
@@ -96,19 +97,18 @@ def plot_box_and_whisker(names, residual, pdf):
     pdf.savefig()
 
 
-def plot_1D(project_path: str, config):
+def plot_1D(output_path: str, config):
     """General plotting for 1D data, for example data from a '.csv' file. This function generates a pdf
         document where each page contains the before/after performance
         of each column of the 1D data
 
     Args:
-        project_path (string): The path to the project directory
+        output_path (path): The path to the project directory
         config (dataclass): The config class containing attributes set in the config file
     """
 
-    output_path = project_path + "training/"
     before_path = config.input_path
-    after_path = project_path + "decompressed_output/decompressed.npz"
+    after_path = os.path.join(output_path, "decompressed_output", "decompressed.npz")
 
     before = np.transpose(np.load(before_path)["data"])
     after = np.transpose(np.load(after_path)["data"])
@@ -121,7 +121,7 @@ def plot_1D(project_path: str, config):
     response = np.divide(np.subtract(after, before), before) * 100
     residual = np.subtract(after, before)
 
-    with PdfPages(project_path + "/plotting/comparison.pdf") as pdf:
+    with PdfPages(os.path.join(output_path, "plotting", "comparison.pdf")) as pdf:
         plot_box_and_whisker(names, residual, pdf)
         fig = plt.figure(constrained_layout=True, figsize=(10, 4))
         subfigs = fig.subfigures(1, 2, wspace=0.07, width_ratios=[1, 1])
@@ -244,21 +244,21 @@ def plot_1D(project_path: str, config):
             ax4.clear()
 
 
-def plot_2D(project_path, config):
+def plot_2D(output_path, config):
     """General plotting for 2D data, for example 2D arraysfrom computational fluid
         dynamics or other image like data. This function generates a pdf
         document where each page contains the before/after performance
         of each column of the 1D data
 
     Args:
-        project_path (string): The path to the project directory
+        output_path (path): The path to the output directory
         config (dataclass): The config class containing attributes set in the config file
     """
 
     data = np.load(config.input_path)["data"]
-    data_decompressed = np.load(project_path + "/decompressed_output/decompressed.npz")[
-        "data"
-    ]
+    data_decompressed = np.load(
+        os.path.join(output_path, "decompressed_output", "decompressed.npz")
+    )["data"]
 
     if data.shape[0] > 1:
         num_tiles = data.shape[0]
@@ -273,7 +273,7 @@ def plot_2D(project_path, config):
         )
         tile_data = data[ind].reshape(data.shape[1], data.shape[2])
 
-        diff = ((tile_data_decompressed - tile_data) / tile_data) * 100
+        diff = ((tile_data_decompressed - tile_data) / tile_data_decompressed) * 100
 
         fig, axs = plt.subplots(
             1, 3, figsize=(29.7 * (1 / 2.54), 21 * (1 / 2.54)), sharey=True
@@ -309,18 +309,18 @@ def plot_2D(project_path, config):
         )
 
         fig.savefig(
-            project_path + "/plotting/CFD" + str(ind) + ".jpg", bbox_inches="tight"
+            os.path.join(output_path, "plotting", f"CFD{ind}.jpg"), bbox_inches="tight"
         )
 
 
-def plot(project_path, config):
+def plot(output_path, config):
     """Runs the appropriate plotting function based on the data dimension 1D or 2D
 
     Args:
-        project_path (string): The path to the project directory
+        output_path (path): The path to the project directory
         config (dataclass): The config class containing attributes set in the config file
     """
     if config.data_dimension == 1:
-        plot_1D(project_path, config)
+        plot_1D(output_path, config)
     elif config.data_dimension == 2:
-        plot_2D(project_path, config)
+        plot_2D(output_path, config)

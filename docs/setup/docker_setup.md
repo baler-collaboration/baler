@@ -22,31 +22,35 @@ cd baler
 
 This process has created the following directory tree:
 ```console
+tree
 .
-├── data
-│   ├── example_CFD
-│   │   └── example_CFD.npz
-│   └── example_CMS
-│       └── example_CMS.npz
-└── projects
-    ├── example_CFD
-    │   ├── compressed_output
-    │   ├── decompressed_output
-    │   ├── example_CFD_config.py
-    │   ├── model
-    │   ├── plotting
-    │   └── training
-    └── example_CMS
-        ├── compressed_output
-        ├── decompressed_output
-        ├── example_CMS_analysis.py
-        ├── example_CMS_config.py
-        ├── example_CMS_preprocessing.py
-        ├── model
-        ├── plotting
-        └── training
+└── workspaces
+    ├── CFD_example
+    │   ├── data
+    │   │   └── example_CFD.npz
+    │   └── exampleCFD
+    │       ├── config
+    │       │   └── example_CFD_config.py
+    │       └── output
+    │           ├── compressed_output
+    │           ├── decompressed_output
+    │           ├── plotting
+    │           └── training
+    └── CMS_example
+        ├── data
+        │   └── example_CMS.npz
+        └── example_CMS
+            ├── config
+            │   ├── example_CMS_analysis.py
+            │   ├── example_CMS_config.py
+            │   └── example_CMS_preprocessing.py
+            └── output
+                ├── compressed_output
+                ├── decompressed_output
+                ├── plotting
+                └── training
 ```
-For the tutorial example, we want to compress the data called `example_CFD.npz`. The configuration file for this, including the compression ratio, number of training epochs, input data path etc is defined in `projects/example_CFD/example_CFD_config.py`. the output of the compressed file is `projects/example_CFD/compressed_output/`.
+For the tutorial example, we want to compress the data called `example_CFD.npz`. The configuration file for this, including the compression ratio, number of training epochs, input data path etc is defined in `workspaces/CFD_example/example_CFD/config/example_CFD_config.py`. the output of the compressed file is `workspaces/CFD_example/example_CFD/output/compressed_output/`.
 
 ## Running ##
 
@@ -55,62 +59,57 @@ Here is the command to start **training** the network on the example_CFD data:
 ```console
 docker run \
 -u ${UID}:${GID} \
---mount type=bind,source=${PWD}/projects/,target=/baler-root/projects \
---mount type=bind,source=${PWD}/data/,target=/baler-root/data \
+--mount type=bind,source=${PWD}/workspaces/,target=/baler-root/workspaces \
 pekman/baler:latest \
---project=example_CFD \
---mode=train
+--project CFD_example example_CFD \
+--mode train
 ```
 
 In this command, the "fixed" lines are:
   * `docker run` invokes docker and specifies the running of a container
   * `-u ${UID}:${GID}` tells the container to use your username to create files
-  * `--mount type=bind,source=${PWD}/projects/,target=/baler-root/projects` mounts the local (host) directory `./projects` to the container at `/projects`
-  * `--mount type=bind,source=${PWD}/data/,target=/baler-root/data` mounts the local (host) directory `./data` to the container at `/data`
+  * `--mount type=bind,source=${PWD}/workspaces/,target=/baler-root/workspaces` mounts the local (host) directory `./workspaces` to the container at `/baler-root/workspace`
   * `pekman/baler:latest` specifies the container to run
 
 And the user defined lines are:
-  * `--project=example_CFD` specifies the current "project", i.e. the directory for the config file and the output
-  * `--mode=train` specifies the current running mode of Baler. We start by training the network on the data
+  * `--project CFD_example example_CFD` specifies the current "workspace" and project. Workspaces hold input data and projects. Projects hold configuration files and output.
+  * `--mode train` specifies the current running mode of Baler. We start by training the network on the data
 
 ### Compress ###
-To compress and decompress the data use `--mode=compress`
+To compress the data use `--mode compress`
 ```console
 docker run \
 -u ${UID}:${GID} \
---mount type=bind,source=${PWD}/projects/,target=/baler-root/projects \
---mount type=bind,source=${PWD}/data/,target=/baler-root/data \
+--mount type=bind,source=${PWD}/workspaces/,target=/baler-root/workspaces \
 pekman/baler:latest \
---project=example_CFD \
---mode=compress
+--project CFD_example example_CFD \
+--mode compress
 ```
 
-### Compress ###
-To compress and decompress the data use `--mode=decompress`
+### Decompress ###
+To decompress the data use `--mode decompress`
 ```console
 docker run \
 -u ${UID}:${GID} \
---mount type=bind,source=${PWD}/projects/,target=/baler-root/projects \
---mount type=bind,source=${PWD}/data/,target=/baler-root/data \
+--mount type=bind,source=${PWD}/workspaces/,target=/baler-root/workspaces \
 pekman/baler:latest \
---project=example_CFD \
---mode=decompress
+--project CFD_example example_CFD \
+--mode decompress
 ```
 
 ### Plotting ###
-After that training, compression, and decompression you can plot the performance of the procedure by using `--mode=plot`. In this tutorial example, the performance plot is found in `projects/exmaple_CFD/plotting/comparison.jpg`
-To compress and decompress the data use `--mode=decompress`
+After that training, compression, and decompression you can plot the performance of the procedure by using `--mode plot`. In this tutorial example, the performance plot is found in `workspaces/CFD_example/exmaple_CFD/output/plotting/comparison.jpg`
+
 ```console
 docker run \
 -u ${UID}:${GID} \
---mount type=bind,source=${PWD}/projects/,target=/baler-root/projects \
---mount type=bind,source=${PWD}/data/,target=/baler-root/data \
+--mount type=bind,source=${PWD}/workspaces/,target=/baler-root/workspaces \
 pekman/baler:latest \
---project=example_CFD \
---mode=plot
+--project CFD_example example_CFD \
+--mode plot
 ```
 
-## Running  with GPU ##
+## Running with GPU ##
 
 Baler can be run with GPU acceleration, to allow the Docker image access to the system GPU you need to add `--gpus all` right after `docker run` in the run command:
 
@@ -118,11 +117,10 @@ Baler can be run with GPU acceleration, to allow the Docker image access to the 
 docker run \
 --gpus all \
 -u ${UID}:${GID} \
---mount type=bind,source=${PWD}/projects/,target=/baler-root/projects \
---mount type=bind,source=${PWD}/data/,target=/baler-root/data \
+--mount type=bind,source=${PWD}/workspaces/,target=/baler-root/workspaces \
 pekman/baler:latest \
---project=example_CFD \
---mode=plot
+--project CFD_example example_CFD \
+--mode plot
 ```
 
 ## Build Docker image ##
@@ -146,13 +144,12 @@ An example command is given here:
 ```console
 docker run \
 -u ${UID}:${GID} \
---mount type=bind,source=${PWD}/projects/,target=/baler-root/projects \
---mount type=bind,source=${PWD}/data/,target=/baler-root/data \
+--mount type=bind,source=${PWD}/workspaces/,target=/baler-root/workspaces \
 --mount type=bind,source=${PWD}/baler/modules,target=/baler-root/baler/modules \
 --mount type=bind,source=${PWD}/baler/baler.py,target=/baler-root/baler/baler.py \
 pekman/baler:latest \
---project=example_CFD \
---mode=train
+--project CFD_example example_CFD \
+--mode train
 ```
 
 Where:
@@ -193,7 +190,7 @@ apptainer build --sandbox baler-sandbox docker://pekman/baler:latest
 Where:
   * `apptainer build` specifies the building of an Apptainer image
   * `--sandbox baler-sandbox/` specifies the output directory for the sandboxed container
-  * `docker://ghcr.io/uomresearchit/baler:latest` specifies that a the Baler Docker image should be targeted
+  * `docker://pekman/baler:latest` specifies that a the Baler Docker image should be targeted
 
 Now that the sandbox has been created, we can run the container.
 
@@ -205,11 +202,10 @@ apptainer run \
 --no-mount bind-paths \
 --pwd /baler-root \
 --nv \
---bind ${PWD}/baler/projects/:/baler-root/projects \
---bind ${PWD}/baler/data:/baler-root/data \
+--bind ${PWD}/baler/workspaces/:/baler-root/workspaces \
 baler-sandbox/ \
---project=example_CFD \
---mode=train
+--project CFD_example example_CFD \
+--mode train
 ```
 Where:
   * `-no-home` specifies to not mount the user's home directory (small, networked storage on Blackett)
@@ -224,11 +220,10 @@ apptainer run \
 --no-mount bind-paths \
 --pwd /baler-root \
 --nv \
---bind ${PWD}/baler/projects/:/baler-root/projects \
---bind ${PWD}/baler/data:/baler-root/data \
+--bind ${PWD}/baler/workspaces/:/baler-root/workspaces \
 baler-sandbox/ \
---project=example_CFD \
---mode=compress
+--project CFD_example example_CFD \
+--mode compress
 ```
 
 ### Decompressing ###
@@ -238,11 +233,10 @@ apptainer run \
 --no-mount bind-paths \
 --pwd /baler-root \
 --nv \
---bind ${PWD}/baler/projects/:/baler-root/projects \
---bind ${PWD}/baler/data:/baler-root/data \
+--bind ${PWD}/baler/workspaces/:/baler-root/workspaces \
 baler-sandbox/ \
---project=example_CFD \
---mode=decompress
+--project CFD_example example_CFD \
+--mode decompress
 ```
 
 ### Plotting ###
@@ -252,9 +246,8 @@ apptainer run \
 --no-mount bind-paths \
 --pwd /baler-root \
 --nv \
---bind ${PWD}/baler/projects/:/baler-root/projects \
---bind ${PWD}/baler/data:/baler-root/data \
+--bind ${PWD}/baler/workspaces/:/baler-root/workspaces \
 baler-sandbox/ \
---project=example_CFD \
---mode=plot
+--project CFD_example example_CFD \
+--mode plot
 ```

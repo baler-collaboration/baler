@@ -27,20 +27,18 @@ import modules.diagnostics as diagnostics
 
 
 def fit(
-    model, train_dl, model_children, reg_param, optimizer, RHO, l1, n_dimensions, config
+    model, train_dl, model_children, regular_param, optimizer, RHO, l1, n_dimensions
 ):
     """This function trains the model on the train set. It computes the losses and does the backwards propagation, and updates the optimizer as well.
-
     Args:
         model (modelObject): The model you wish to train
         train_dl (torch.DataLoader): Defines the batched data which the model is trained on
         model_children (list): List of model parameters
-        reg_param (float): Determines proportionality constant for the gradient descent step.
+        regular_param (float): Determines proportionality constant for the gradient descent step.
         optimizer (torch.optim): Chooses optimizer for gradient descent.
         RHO (float): Float used for KL Divergence (Not currently a feature)
         l1 (boolean): If `True`, use L1 regularization. Otherwise, don't.
         n_dimensions (int): Number of dimensions.
-
     Returns:
         list, model object: Training loss and trained model
     """
@@ -60,46 +58,17 @@ def fit(
 
         # Compute the predicted outputs from the input data
         reconstructions = model(inputs)
-        # print(type(reconstructions))
-        # print(type(inputs))
 
         # Compute how far off the prediction is
-        mse_avg_loss, mse_sum_loss, emd_loss, l1_loss, else_loss = 0, 0, 0, 0, 0
-        # print(idx)
-        if config.mse_avg:
-            mse_avg_loss = utils.Loss.mse_avg(
-                true_data=inputs,
-                reconstructed_data=reconstructions,
-            )
-        if config.mse_sum:
-            mse_sum_loss = utils.Loss.mse_sum(
-                true_data=inputs,
-                reconstructed_data=reconstructions,
-            )
-        if config.emd:
-            emd_loss = utils.Loss.emd(
-                true_data=inputs,
-                reconstructed_data=reconstructions,
-            )
-        if config.l1:
-            l1_loss = utils.Loss.l1(
-                model_children=model_children, true_data=inputs, reg_param=reg_param
-            )
-        if (
-            not config.mse_avg
-            and not config.mse_sum
-            and not config.emd
-            and not config.l1
-        ):
-            else_loss = utils.Loss.mse_avg(
-                true_data=inputs,
-                reconstructed_data=reconstructions,
-                reg_param=reg_param,
-            )
+        loss, mse_loss, l1_loss = utils.mse_loss_l1(
+            model_children=model_children,
+            true_data=inputs,
+            reconstructed_data=reconstructions,
+            reg_param=regular_param,
+            validate=True,
+        )
 
         # Compute the loss-gradient with
-        loss = mse_avg_loss + mse_sum_loss + emd_loss + l1_loss + else_loss
-
         loss.backward()
 
         # Update the optimizer
@@ -109,24 +78,16 @@ def fit(
 
     epoch_loss = running_loss / (idx + 1)
     print(f"# Finished. Training Loss: {loss:.6f}")
-    return epoch_loss, model
+    return epoch_loss, mse_loss, l1_loss, model
 
 
-def validate(
-    model,
-    test_dl,
-    model_children,
-    reg_param,
-    config,
-):
+def validate(model, test_dl, model_children, reg_param):
     """Function used to validate the training. Not necessary for doing compression, but gives a good indication of wether the model selected is a good fit or not.
-
     Args:
         model (modelObject): Defines the model one wants to validate. The model used here is passed directly from `fit()`.
         test_dl (torch.DataLoader): Defines the batched data which the model is validated on
         model_children (list): List of model parameters
-        reg_param (float): Determines proportionality constant for the gradient descent step.
-
+        regular_param (float): Determines proportionality constant for the gradient descent step.
     Returns:
         float: Validation loss
     """
@@ -142,41 +103,14 @@ def validate(
             inputs = inputs.to(device)
             reconstructions = model(inputs)
 
-            mse_avg_loss, mse_sum_loss, emd_loss, l1_loss, else_loss = 0, 0, 0, 0, 0
-            if config.mse_avg:
-                mse_avg_loss = utils.Loss.mse_avg(
-                    true_data=inputs,
-                    reconstructed_data=reconstructions,
-                )
-            if config.mse_sum:
-                mse_sum_loss = utils.Loss.mse_sum(
-                    true_data=inputs,
-                    reconstructed_data=reconstructions,
-                )
-            if config.emd:
-                emd_loss = utils.Loss.emd(
-                    true_data=inputs,
-                    reconstructed_data=reconstructions,
-                )
-            if config.l1:
-                l1_loss = utils.Loss.l1(
-                    model_children=model_children, true_data=inputs, reg_param=reg_param
-                )
-            if (
-                not config.mse_avg
-                and not config.mse_sum
-                and not config.emd
-                and not config.l1
-            ):
-                else_loss = utils.Loss.mse_avg(
-                    true_data=inputs,
-                    reconstructed_data=reconstructions,
-                    reg_param=reg_param,
-                )
-
-            # Compute the loss-gradient with
-            loss = mse_avg_loss + mse_sum_loss + emd_loss + l1_loss + else_loss
-            running_loss += loss
+            loss, _, _ = utils.mse_loss_l1(
+                model_children=model_children,
+                true_data=inputs,
+                reconstructed_data=reconstructions,
+                reg_param=reg_param,
+                validate=True,
+            )
+            running_loss += loss.item()
 
     epoch_loss = running_loss / (idx + 1)
     print(f"# Finished. Validation Loss: {loss:.6f}")
@@ -185,7 +119,6 @@ def validate(
 
 def seed_worker(worker_id):
     """PyTorch implementation to fix the seeds
-
     Args:
         worker_id ():
     """
@@ -198,12 +131,8 @@ def train(model, variables, train_data, test_data, project_path, config):
     """Does the entire training loop by calling the `fit()` and `validate()`. Appart from this, this is the main function where the data is converted
         to the correct type for it to be trained, via `torch.Tensor()`. Furthermore, the batching is also done here, based on `config.batch_size`,
         and it is the `torch.utils.data.DataLoader` doing the splitting.
-
         Applying either `EarlyStopping` or `LR Scheduler` is also done here, all based on their respective `config` arguments.
-
         For reproducibility, the seeds can also be fixed in this function.
-
-
     Args:
         model (modelObject): The model you wish to train
         variables (_type_): _description_
@@ -211,7 +140,6 @@ def train(model, variables, train_data, test_data, project_path, config):
         test_set (ndarray): Array consisting of the test set
         project_path (string): Path to the project directory
         config (dataClass): Base class selecting user inputs
-
     Returns:
         modelObject: fully trained model ready to perform compression and decompression
     """
@@ -298,16 +226,15 @@ def train(model, variables, train_data, test_data, project_path, config):
     for epoch in range(epochs):
         print(f"Epoch {epoch + 1} of {epochs}")
 
-        train_epoch_loss, trained_model = fit(
+        train_epoch_loss, mse_loss_fit, regularizer_loss_fit, trained_model = fit(
             model=model,
             train_dl=train_dl,
             model_children=model_children,
             optimizer=optimizer,
             RHO=rho,
-            reg_param=reg_param,
+            regular_param=reg_param,
             l1=l1,
             n_dimensions=config.data_dimension,
-            config=config,
         )
 
         train_loss.append(train_epoch_loss)
@@ -318,7 +245,6 @@ def train(model, variables, train_data, test_data, project_path, config):
                 test_dl=valid_dl,
                 model_children=model_children,
                 reg_param=reg_param,
-                config=config,
             )
             val_loss.append(val_epoch_loss)
         else:
@@ -344,9 +270,11 @@ def train(model, variables, train_data, test_data, project_path, config):
     if config.activation_extraction:
         activations = diagnostics.dict_to_square_matrix(model.get_activations())
         model.detach_hooks(hooks)
-        np.save(project_path + "activations.npy", activations)
+        np.save(os.path.join(project_path, "activations.npy"), activations)
 
     print(f"{(end - start) / 60:.3} minutes")
-    np.save(project_path + "loss_data.npy", np.array([train_loss, val_loss]))
+    np.save(
+        os.path.join(project_path, "loss_data.npy"), np.array([train_loss, val_loss])
+    )
 
     return trained_model
