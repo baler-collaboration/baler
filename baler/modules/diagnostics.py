@@ -4,6 +4,7 @@ import matplotlib.colors
 import matplotlib.ticker
 import numpy as np
 from matplotlib.backends.backend_pdf import PdfPages
+import os
 
 
 def get_mean_node_activations(input_dict: dict) -> dict:
@@ -66,7 +67,7 @@ def plot(data: np.array, output_path: str) -> None:
     ax.xaxis.set_major_locator(matplotlib.ticker.FixedLocator(xtick_loc))
     ax.set_xticklabels(["", "en1", "en2", "en3", "de1", "de2", "de3", ""])
     ax.set_yticks(nodes_numbers)
-    ax.figure.savefig(output_path + "diagnostics.pdf")
+    ax.figure.savefig(os.path.join(output_path, "diagnostics.pdf"))
 
 
 def diagnose(input_path: str, output_path: str) -> None:
