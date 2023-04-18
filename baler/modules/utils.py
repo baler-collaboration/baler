@@ -22,102 +22,122 @@ factor = 0.5
 min_lr = 1e-6
 
 
-class Loss:
-    """Class which contains all loss functions used for training the model.
+def mse_loss_emd_l1(model_children, true_data, reconstructed_data, reg_param, validate):
+    """
+    Computes a sparse loss function consisting of three terms: the Earth Mover's Distance (EMD) loss between the
+    true and reconstructed data, the mean squared error (MSE) loss between the reconstructed and true data, and a
+    L1 regularization term on the output of a list of model children.
+    Args: model_children (list): List of PyTorch modules representing the model architecture to be regularized.
+    true_data (torch.Tensor): The ground truth data, with shape (batch_size, num_features). reconstructed_data (
+    torch.Tensor): The reconstructed data, with shape (batch_size, num_features). reg_param (float): The weight of
+    the L1 regularization term in the loss function. validate (bool): If True, returns only the EMD loss. If False,
+    computes the full loss with the L1 regularization term.
+    Returns:
+        If validate is False, returns a tuple with three elements:
+        - loss (torch.Tensor): The full sparse loss function, with shape ().
+        - emd_loss (float): The EMD loss between the true and reconstructed data.
+        - l1_loss (torch.Tensor): The L1 regularization term on the output of the model children.
+        If validate is True, returns only the EMD loss as a float.
+    """
+    mse = nn.MSELoss()
+    mse_loss = mse(reconstructed_data, true_data)
+    wasserstein_distance_list = [
+        wasserstein_distance(
+            true_data.detach().numpy()[i, :], reconstructed_data.detach().numpy()[i, :]
+        )
+        for i in range(len(true_data))
+    ]
+    emd_loss = sum(wasserstein_distance_list)
+
+    l1_loss = torch.Tensor(0)
+    values = true_data
+    if not validate:
+        for i in range(len(model_children)):
+            values = model_children[i](values)
+            l1_loss += torch.mean(torch.abs(values))
+
+        loss = emd_loss + mse_loss + reg_param * l1_loss
+        return loss, emd_loss, l1_loss
+    else:
+        return emd_loss
 
 
-    Args:
-        model_children (list): List of model parameters
-        true_data (torch.Tensor): Input data as torch.Tensor
-        reconstructed_data (torch.Tensor): Input data ran through model as torch.Tensor
-        reg_param (float): Proportionality constant for the L1 loss
+def mse_loss_l1(model_children, true_data, reconstructed_data, reg_param, validate):
+    # This function is a modified version of the original function by George Dialektakis found at
+    # https://github.com/Autoencoders-compression-anomaly/Deep-Autoencoders-Data-Compression-GSoC-2021
+    # Released under the Apache License 2.0 found at https://www.apache.org/licenses/LICENSE-2.0.txt
+    # Copyright 2021 George Dialektakis
 
     """
+    Computes a sparse loss function consisting of two terms: the mean squared error (MSE) loss between the
+    reconstructed and true data, and a L1 regularization term on the output of a list of model children.
+    Args: model_children (list): List of PyTorch modules representing the model architecture to be regularized.
+    true_data (torch.Tensor): The ground truth data, with shape (batch_size, num_features). reconstructed_data (
+    torch.Tensor): The reconstructed data, with shape (batch_size, num_features). reg_param (float): The weight of
+    the L1 regularization term in the loss function. validate (bool): If True, returns only the MSE loss. If False,
+    computes the full loss with the L1 regularization term.
+    Returns:
+        If validate is False, returns a tuple with three elements:
+        - loss (torch.Tensor): The full sparse loss function, with shape ().
+        - mse_loss (float): The MSE loss between the true and reconstructed data.
+        - l1_loss (torch.Tensor): The L1 regularization term on the output of the model children.
+        If validate is True, returns a tuple with three elements:
+        - mse_loss (torch.Tensor): The MSE loss between the true and reconstructed data.
+        - 0.
+        - 0.
+    """
+    mse = nn.MSELoss()
+    mse_loss = mse(reconstructed_data, true_data)
 
-    def __init__(self, *args, **kwargs):
-        super(Loss, self).__init__(*args, **kwargs)
-
-    def mse_avg(true_data, reconstructed_data):
-        """The Mean Squared Error (MSE) function. The most commonly used loss function in machine learning, defined as
-            `MSE = 1/m 1/n \sum^m_{j=1} \sum_{i=1}^n (true_data_i - reconstructed_data_i)^2_j`
-
-        Args:
-            true_data (torch.Tensor): Input data as torch.Tensor
-            reconstructed_data (torch.Tensor): Input data ran through model as torch.Tensor
-
-        Returns:
-            torch.Tensor: The loss after one iteration
-        """
-        mse = nn.MSELoss()
-        loss = mse(reconstructed_data, true_data)
-        return loss
-
-    def mse_sum(true_data, reconstructed_data):
-        """A variant of the MSE function, but now defined as:
-            `MSE = 1/n \sum^m_{j=1} \sum_{i=1}^n (true_data_i - reconstructed_data_i)^2_j`
-
-        Args:
-            true_data (torch.Tensor): Input data as torch.Tensor
-            reconstructed_data (torch.Tensor): Input data ran through model as torch.Tensor
-
-        Returns:
-            torch.Tensor: The loss after one iteration
-        """
-        mse = nn.MSELoss(reduction="sum")
-        number_of_columns = true_data.shape[1]
-
-        loss = mse(reconstructed_data, true_data) / number_of_columns
-        return loss
-
-    def emd(true_data, reconstructed_data):
-        """Another loss function called the Earths Movers Distance (EMD). This loss measures the distance between the input data and the reconstructed data.
-            The functionality is implemented from `scipy.stats.wasserstein_distance`.
-
-        Args:
-            true_data (torch.Tensor): Input data as torch.Tensor
-            reconstructed_data (torch.Tensor): Input data ran through model as torch.Tensor
-
-        Returns:
-            torch.Tensor: The loss after one iteration
-        """
-        wasserstein_distance_list = [
-            wasserstein_distance(
-                true_data.detach().numpy()[i, :],
-                reconstructed_data.detach().numpy()[i, :],
-            )
-            for i in range(len(true_data))
-        ]
-        wasserstein_distance_tensor = torch.Tensor(wasserstein_distance_list)
-        wasserstein_distance_tensor.requires_grad_()
-        loss = torch.sum(wasserstein_distance_tensor)
-        return loss
-
-    def l1(model_children, true_data, reg_param):
-        """The "Lasso" Regularizer term, also known as the L1 term, defined as:
-        `L1 = reg_param * \sum_i \abs{w_i}`
-
-        The implementation of this term is heavily inspired from https://github.com/syorami/Autoencoders-Variants by `tmac1997`
-        and full credit goes to him for this implementation.
-
-        Args:
-            model_children (list): List containing model parameters, most importantly the model weights.
-            true_data (torch.Tensor): Input data as torch.Tensor
-            reconstructed_data (torch.Tensor): Input data ran through model as torch.Tensor
-
-        Returns:
-            torch.Tensor: The loss after one iteration
-        """
-        l1_loss = 0.0
-        values = true_data
+    l1_loss = 0
+    values = true_data
+    if not validate:
         for i in range(len(model_children)):
             values = functional.relu(model_children[i](values))
             l1_loss += torch.mean(torch.abs(values))
 
-        loss = reg_param * l1_loss
-        return loss
+        loss = mse_loss + reg_param * l1_loss
+        return loss, mse_loss, l1_loss
+    else:
+        return mse_loss, 0, 0
 
-    def __call__(self):
-        return
+
+def mse_sum_loss_l1(model_children, true_data, reconstructed_data, reg_param, validate):
+    """
+    Computes the sum of mean squared error (MSE) loss and L1 regularization loss.
+    Args:
+        model_children (list): List of PyTorch modules representing the encoder network.
+        true_data (tensor): Ground truth tensor of shape (batch_size, input_size).
+        reconstructed_data (tensor): Reconstructed tensor of shape (batch_size, input_size).
+        reg_param (float): Regularization parameter for L1 loss.
+        validate (bool): Whether to return only MSE loss or both MSE and L1 losses.
+    Returns:
+        If validate is False:
+            loss (tensor): Total loss consisting of MSE loss and L1 regularization loss.
+            mse_sum_loss (tensor): Mean squared error loss.
+            l1_loss (tensor): L1 regularization loss.
+        If validate is True:
+            mse_sum_loss (tensor): Mean squared error loss.
+            0 (int): Placeholder for MSE loss since it is not calculated during validation.
+            0 (int): Placeholder for L1 loss since it is not calculated during validation.
+    """
+    mse_sum = nn.MSELoss(reduction="sum")
+    mse_loss = mse_sum(reconstructed_data, true_data)
+    number_of_columns = true_data.shape[1]
+
+    mse_sum_loss = mse_loss / number_of_columns
+
+    l1_loss = 0
+    values = true_data
+    if not validate:
+        for i in range(len(model_children)):
+            values = functional.relu(model_children[i](values))
+            l1_loss += torch.mean(torch.abs(values))
+
+        loss = mse_sum_loss + reg_param * l1_loss
+        return loss, mse_sum_loss, l1_loss
+    else:
+        return mse_sum_loss, 0, 0
 
 
 # Accuracy function still WIP. Not working properly.
@@ -127,11 +147,9 @@ class Loss:
 def accuracy(model, dataloader):
     """
     Computes the accuracy of a PyTorch model on a given dataset.
-
     Args:
         model (nn.Module): The PyTorch model to evaluate.
         dataloader (DataLoader): DataLoader object containing the dataset to evaluate on.
-
     Returns:
         accuracy_frac (float): The fraction of correctly classified instances in the dataset.
     """
@@ -159,7 +177,6 @@ def accuracy(model, dataloader):
 class EarlyStopping:
     """
     Class to perform early stopping during model training.
-
     Attributes:
         patience (int): The number of epochs to wait before stopping the training process if the
             validation loss doesn't improve.
@@ -197,22 +214,18 @@ class EarlyStopping:
 class LRScheduler:
     """
     A learning rate scheduler that adjusts the learning rate of an optimizer based on the training loss.
-
     Args:
         optimizer (torch.optim.Optimizer): The optimizer whose learning rate will be adjusted.
         patience (int): The number of epochs with no improvement in training loss after which the learning rate
             will be reduced.
         min_lr (float, optional): The minimum learning rate that can be reached (default: 1e-6).
         factor (float, optional): The factor by which the learning rate will be reduced (default: 0.1).
-
     Attributes:
         lr_scheduler (torch.optim.lr_scheduler.ReduceLROnPlateau): The PyTorch learning rate scheduler that
             actually performs the adjustments.
-
     Example usage:
         optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
         lr_scheduler = LRScheduler(optimizer, patience=3, min_lr=1e-5, factor=0.5)
-
         for epoch in range(num_epochs):
             train_loss = train(model, train_data_loader)
             lr_scheduler(train_loss)
