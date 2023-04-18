@@ -16,6 +16,7 @@ import os
 import time
 
 import numpy as np
+import torch
 
 import modules.helper as helper
 
@@ -41,10 +42,12 @@ def main():
         helper.create_new_project(workspace_name, project_name)
     elif mode == "train":
         perform_training(output_path, config)
+    elif mode == "diagnose":
+        perform_diagnostics(output_path)
     elif mode == "compress":
         perform_compression(output_path, config)
     elif mode == "decompress":
-        perform_decompression(config.model_name, output_path, config)
+        perform_decompression(output_path, config)
     elif mode == "plot":
         perform_plotting(output_path, config)
     elif mode == "info":
@@ -121,6 +124,14 @@ def perform_training(output_path, config):
     )
 
 
+def perform_diagnostics(project_path):
+    print("Performing diagnostics...")
+    output_path = project_path + "diagnostics/"
+    if not os.path.exists(output_path):
+        os.makedirs(output_path)
+    input_path = project_path + "/training/activations.npy"
+    helper.diagnose(input_path, output_path)
+
 def perform_plotting(output_path, config):
     """Main function calling the two plotting functions, ran when --mode=plot is selected.
        The two main functions this calls are: `helper.plotter` and `helper.loss_plotter`
@@ -165,8 +176,7 @@ def perform_compression(output_path, config):
         model_path=os.path.join(output_path, "compressed_output", "model.pt"),
         config=config,
     )
-    # Converting back to numpyarray
-    compressed = helper.detacher(compressed)
+
     end = time.time()
 
     print("Compression took:", f"{(end - start) / 60:.3} minutes")
@@ -189,39 +199,48 @@ def perform_compression(output_path, config):
         )
 
 
-def perform_decompression(model_name, output_path, config):
+def perform_decompression(output_path, config):
     """Main function calling the decompression functions, ran when --mode=decompress is selected.
        The main function being called here is: `helper.decompress`
 
         If `config.apply_normalization=True` the output is un-normalized with the same normalization features saved from `perform_training()`.
 
     Args:
-        model_name (string): Name of the model you want to use for decompression
         output_path (path): Selects base path for determining output path
         config (dataClass): Base class selecting user inputs
     """
     print("Decompressing...")
 
     start = time.time()
+    model_name = config.model_name
     decompressed, names, normalization_features = helper.decompress(
         model_path=os.path.join(output_path, "compressed_output", "model.pt"),
         input_path=os.path.join(output_path, "compressed_output", "compressed.npz"),
         model_name=model_name,
+        config=config,
     )
-
-    # Converting back to numpyarray
-    decompressed = helper.detacher(decompressed)
 
     if config.apply_normalization:
         print("Un-normalizing...")
         normalization_features = np.load(
             os.path.join(output_path, "training", "normalization_features.npy"),
         )
-        decompressed = helper.renormalize(
-            decompressed,
-            normalization_features[0],
-            normalization_features[1],
-        )
+
+    decompressed = helper.renormalize(
+        decompressed,
+        normalization_features[0],
+        normalization_features[1],
+    )
+
+    try:
+        type_list = config.type_list
+        decompressed = np.transpose(decompressed)
+        for index, column in enumerate(decompressed):
+            decompressed[index] = decompressed[index].astype(type_list[index])
+        decompressed = np.transpose(decompressed)
+    except AttributeError:
+        pass
+
     end = time.time()
     print("Decompression took:", f"{(end - start) / 60:.3} minutes")
 

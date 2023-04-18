@@ -27,18 +27,16 @@ def mse_loss_emd_l1(model_children, true_data, reconstructed_data, reg_param, va
     Computes a sparse loss function consisting of three terms: the Earth Mover's Distance (EMD) loss between the
     true and reconstructed data, the mean squared error (MSE) loss between the reconstructed and true data, and a
     L1 regularization term on the output of a list of model children.
-
     Args: model_children (list): List of PyTorch modules representing the model architecture to be regularized.
     true_data (torch.Tensor): The ground truth data, with shape (batch_size, num_features). reconstructed_data (
     torch.Tensor): The reconstructed data, with shape (batch_size, num_features). reg_param (float): The weight of
     the L1 regularization term in the loss function. validate (bool): If True, returns only the EMD loss. If False,
     computes the full loss with the L1 regularization term.
-
     Returns:
         If validate is False, returns a tuple with three elements:
         - loss (torch.Tensor): The full sparse loss function, with shape ().
         - emd_loss (float): The EMD loss between the true and reconstructed data.
-        - l1_loss (float): The L1 regularization term on the output of the model children.
+        - l1_loss (torch.Tensor): The L1 regularization term on the output of the model children.
 
         If validate is True, returns only the EMD loss as a float.
     """
@@ -52,7 +50,7 @@ def mse_loss_emd_l1(model_children, true_data, reconstructed_data, reg_param, va
     ]
     emd_loss = sum(wasserstein_distance_list)
 
-    l1_loss = 0
+    l1_loss = torch.Tensor(0)
     values = true_data
     if not validate:
         for i in range(len(model_children)):
@@ -74,20 +72,21 @@ def mse_loss_l1(model_children, true_data, reconstructed_data, reg_param, valida
     """
     Computes a sparse loss function consisting of two terms: the mean squared error (MSE) loss between the
     reconstructed and true data, and a L1 regularization term on the output of a list of model children.
-
     Args: model_children (list): List of PyTorch modules representing the model architecture to be regularized.
     true_data (torch.Tensor): The ground truth data, with shape (batch_size, num_features). reconstructed_data (
     torch.Tensor): The reconstructed data, with shape (batch_size, num_features). reg_param (float): The weight of
     the L1 regularization term in the loss function. validate (bool): If True, returns only the MSE loss. If False,
     computes the full loss with the L1 regularization term.
-
     Returns:
         If validate is False, returns a tuple with three elements:
         - loss (torch.Tensor): The full sparse loss function, with shape ().
         - mse_loss (float): The MSE loss between the true and reconstructed data.
-        - l1_loss (float): The L1 regularization term on the output of the model children.
+        - l1_loss (torch.Tensor): The L1 regularization term on the output of the model children.
 
-        If validate is True, returns only the MSE loss as a float.
+        If validate is True, returns a tuple with three elements:
+        - mse_loss (torch.Tensor): The MSE loss between the true and reconstructed data.
+        - 0.
+        - 0.
     """
     mse = nn.MSELoss()
     mse_loss = mse(reconstructed_data, true_data)
@@ -108,14 +107,12 @@ def mse_loss_l1(model_children, true_data, reconstructed_data, reg_param, valida
 def mse_sum_loss_l1(model_children, true_data, reconstructed_data, reg_param, validate):
     """
     Computes the sum of mean squared error (MSE) loss and L1 regularization loss.
-
     Args:
         model_children (list): List of PyTorch modules representing the encoder network.
         true_data (tensor): Ground truth tensor of shape (batch_size, input_size).
         reconstructed_data (tensor): Reconstructed tensor of shape (batch_size, input_size).
         reg_param (float): Regularization parameter for L1 loss.
         validate (bool): Whether to return only MSE loss or both MSE and L1 losses.
-
     Returns:
         If validate is False:
             loss (tensor): Total loss consisting of MSE loss and L1 regularization loss.
@@ -152,11 +149,9 @@ def mse_sum_loss_l1(model_children, true_data, reconstructed_data, reg_param, va
 def accuracy(model, dataloader):
     """
     Computes the accuracy of a PyTorch model on a given dataset.
-
     Args:
         model (nn.Module): The PyTorch model to evaluate.
         dataloader (DataLoader): DataLoader object containing the dataset to evaluate on.
-
     Returns:
         accuracy_frac (float): The fraction of correctly classified instances in the dataset.
     """
@@ -184,7 +179,6 @@ def accuracy(model, dataloader):
 class EarlyStopping:
     """
     Class to perform early stopping during model training.
-
     Attributes:
         patience (int): The number of epochs to wait before stopping the training process if the
             validation loss doesn't improve.
@@ -222,22 +216,18 @@ class EarlyStopping:
 class LRScheduler:
     """
     A learning rate scheduler that adjusts the learning rate of an optimizer based on the training loss.
-
     Args:
         optimizer (torch.optim.Optimizer): The optimizer whose learning rate will be adjusted.
         patience (int): The number of epochs with no improvement in training loss after which the learning rate
             will be reduced.
         min_lr (float, optional): The minimum learning rate that can be reached (default: 1e-6).
         factor (float, optional): The factor by which the learning rate will be reduced (default: 0.1).
-
     Attributes:
         lr_scheduler (torch.optim.lr_scheduler.ReduceLROnPlateau): The PyTorch learning rate scheduler that
             actually performs the adjustments.
-
     Example usage:
         optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
         lr_scheduler = LRScheduler(optimizer, patience=3, min_lr=1e-5, factor=0.5)
-
         for epoch in range(num_epochs):
             train_loss = train(model, train_data_loader)
             lr_scheduler(train_loss)

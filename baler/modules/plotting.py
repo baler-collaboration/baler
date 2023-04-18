@@ -14,10 +14,11 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.backends.backend_pdf import PdfPages
 from tqdm import tqdm
 from tqdm import trange
-from matplotlib.backends.backend_pdf import PdfPages
 import os
+
 
 
 def loss_plot(path_to_loss_data, output_path, config):
@@ -72,7 +73,32 @@ def get_index_to_cut(column_index, cut, array):
     return indices_to_cut
 
 
-def plot_1D(output_path, config):
+def plot_box_and_whisker(names, residual, pdf):
+    """Plots Box and Whisker plots of 1D data
+
+    Args:
+        project_path (string): The path to the project directory
+        config (dataclass): The config class containing attributes set in the config file
+    """
+    column_names = [i.split(".")[-1] for i in names]
+
+    fig1, ax1 = plt.subplots()
+
+    boxes = ax1.boxplot(list(residual), showfliers=False, vert=False)
+    whiskers = np.concatenate([item.get_xdata() for item in boxes["whiskers"]])
+    edges = max([abs(min(whiskers)), max(whiskers)])
+
+    ax1.set_yticks(np.arange(1, len(column_names) + 1, 1))
+    ax1.set_yticklabels(column_names)
+
+    ax1.grid()
+    fig1.tight_layout()
+    ax1.set_xlabel("Residual")
+    ax1.set_xlim(-edges - edges * 0.1, edges + edges * 0.1)
+    pdf.savefig()
+
+
+def plot_1D(output_path: str, config):
     """General plotting for 1D data, for example data from a '.csv' file. This function generates a pdf
         document where each page contains the before/after performance
         of each column of the 1D data
@@ -97,6 +123,7 @@ def plot_1D(output_path, config):
     residual = np.subtract(after, before)
 
     with PdfPages(os.path.join(output_path, "plotting", "comparison.pdf")) as pdf:
+        plot_box_and_whisker(names, residual, pdf)
         fig = plt.figure(constrained_layout=True, figsize=(10, 4))
         subfigs = fig.subfigures(1, 2, wspace=0.07, width_ratios=[1, 1])
 
@@ -164,7 +191,7 @@ def plot_1D(output_path, config):
 
             # Response Histogram
             counts_response, bins_response = np.histogram(
-                response[index], bins=np.arange(-20, 20, 0.2)
+                response[index], bins=np.arange(-20, 20, 0.1)
             )
             ax2.hist(
                 bins_response[:-1],
@@ -270,19 +297,14 @@ def plot_2D(output_path, config):
 
         axs[2].set_title("Relative Diff. [%]", fontsize=11, y=-0.2)
         im3 = axs[2].imshow(
-            diff, vmin=-10, vmax=10, cmap="cool_r", interpolation="nearest"
+            diff, vmin=-50, vmax=50, cmap="cool_r", interpolation="nearest"
         )
         cb2 = plt.colorbar(im3, ax=[axs[2]], location="top")
 
         plt.ylim(0, 50)
         plt.xlim(0, 50)
         fig.suptitle(
-            "Compressed file is 10% the size of original,\n75 epochs (3.5 min)",
-            y=0.9,
-            fontsize=16,
-        )
-        fig.suptitle(
-            "Compressed file is 10% the size of original,\n500 epochs (20 min)",
+            "Compressed file is 10% the size of original,\n100 epochs (4.52 min)",
             y=0.9,
             fontsize=16,
         )
