@@ -16,6 +16,7 @@ import os
 import time
 
 import numpy as np
+import torch
 
 import modules.helper as helper
 
@@ -44,7 +45,7 @@ def main():
     elif mode == "compress":
         perform_compression(project_path, config)
     elif mode == "decompress":
-        perform_decompression(config.model_name, project_path, config)
+        perform_decompression(project_path, config)
     elif mode == "plot":
         perform_plotting(project_path, config)
     elif mode == "info":
@@ -118,6 +119,12 @@ def perform_training(project_path, config):
         )
     helper.model_saver(trained_model, project_path + "compressed_output/model.pt")
 
+def perform_diagnostics(project_path):
+    print("Performing diagnostics...")
+    output_path = project_path + "diagnostics/"
+    input_path = project_path + "/training/activations.npy"
+    helper.diagnose(input_path, output_path)
+    
 
 def perform_diagnostics(project_path):
     print("Performing diagnostics...")
@@ -168,11 +175,9 @@ def perform_compression(project_path, config):
         )
 
     compressed = helper.compress(
-        model_path=project_path + "compressed_output/model.pt",
-        config=config,
+        model_path=project_path + "compressed_output/model.pt", config=config
     )
-    # Converting back to numpyarray
-    compressed = helper.detacher(compressed)
+
     end = time.time()
 
     print("Compression took:", f"{(end - start) / 60:.3} minutes")
@@ -195,28 +200,26 @@ def perform_compression(project_path, config):
         )
 
 
-def perform_decompression(model_name, project_path, config):
+def perform_decompression(project_path, config):
     """Main function calling the decompression functions, ran when --mode=decompress is selected.
        The main function being called here is: `helper.decompress`
 
         If `config.apply_normalization=True` the output is un-normalized with the same normalization features saved from `perform_training()`.
 
     Args:
-        model_name (string): Name of the model you want to use for decompression
         project_path (string): Selects base path for determining output path
         config (dataClass): Base class selecting user inputs
     """
     print("Decompressing...")
 
     start = time.time()
+    model_name = config.model_name
     decompressed, names, normalization_features = helper.decompress(
         model_path=project_path + "compressed_output/model.pt",
         input_path=project_path + "compressed_output/compressed.npz",
         model_name=model_name,
+        config=config,
     )
-
-    # Converting back to numpyarray
-    decompressed = helper.detacher(decompressed)
 
     if config.apply_normalization:
         print("Un-normalizing...")
