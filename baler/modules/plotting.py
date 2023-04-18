@@ -18,8 +18,6 @@ from matplotlib.backends.backend_pdf import PdfPages
 from tqdm import tqdm
 from tqdm import trange
 
-from helper import Config
-
 
 def loss_plot(path_to_loss_data, output_path, config):
     """This function Plots the loss from the training and saves it
@@ -98,7 +96,7 @@ def plot_box_and_whisker(names, residual, pdf):
     pdf.savefig()
 
 
-def plot_1D(project_path: str, config: Config):
+def plot_1D(project_path: str, config):
     """General plotting for 1D data, for example data from a '.csv' file. This function generates a pdf
         document where each page contains the before/after performance
         of each column of the 1D data
