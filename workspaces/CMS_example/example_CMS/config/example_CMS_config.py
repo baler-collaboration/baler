@@ -7,7 +7,7 @@ def set_config(c):
     c.compression_ratio = 1.6
     c.apply_normalization = True
     c.model_name = "AE"
-    c.epochs = 1
+    c.epochs = 25
     c.lr = 0.001
     c.batch_size = 512
     c.early_stopping = True

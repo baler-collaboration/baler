@@ -1,6 +1,6 @@
-/projects/*/*
-/data/*
-!/projects/*/config.json
+/workspaces/*
+!workspaces/CMS_example/example_CMS/config/example_CMS_config.py
+!workspaces/CMS_example/example_CFD/config/example_CFD_config.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
