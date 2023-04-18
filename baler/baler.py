@@ -109,11 +109,13 @@ def perform_training(output_path, config):
     model = model_object(n_features=number_of_columns, z_dim=config.latent_space_size)
     model.to(device)
 
+    training_path = os.path.join(output_path, "training")
+    print("path:", training_path)
+
     trained_model = helper.train(
-        model, number_of_columns, train_set_norm, test_set_norm, output_path, config
+        model, number_of_columns, train_set_norm, test_set_norm, training_path, config
     )
 
-    training_path = os.path.join(output_path, "training")
     if config.apply_normalization:
         np.save(
             os.path.join(training_path, "normalization_features.npy"),
@@ -126,11 +128,12 @@ def perform_training(output_path, config):
 
 def perform_diagnostics(project_path):
     print("Performing diagnostics...")
-    output_path = project_path + "diagnostics/"
+    output_path = os.path.join(project_path, "plotting")
     if not os.path.exists(output_path):
         os.makedirs(output_path)
-    input_path = project_path + "/training/activations.npy"
+    input_path = os.path.join(project_path, "training", "activations.npy")
     helper.diagnose(input_path, output_path)
+
 
 def perform_plotting(output_path, config):
     """Main function calling the two plotting functions, ran when --mode=plot is selected.
@@ -261,7 +264,7 @@ def perform_decompression(output_path, config):
 def print_info(output_path, config):
     """Function which prints information about your total compression ratios and the file sizes.
 
-    Args:
+    Args:meta_data
         output_path (string): Selects path to project from which one wants to obtain file information
         config (dataClass): Base class selecting user inputs
     """
