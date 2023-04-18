@@ -37,6 +37,7 @@ def mse_loss_emd_l1(model_children, true_data, reconstructed_data, reg_param, va
         - loss (torch.Tensor): The full sparse loss function, with shape ().
         - emd_loss (float): The EMD loss between the true and reconstructed data.
         - l1_loss (torch.Tensor): The L1 regularization term on the output of the model children.
+
         If validate is True, returns only the EMD loss as a float.
     """
     mse = nn.MSELoss()
@@ -81,6 +82,7 @@ def mse_loss_l1(model_children, true_data, reconstructed_data, reg_param, valida
         - loss (torch.Tensor): The full sparse loss function, with shape ().
         - mse_loss (float): The MSE loss between the true and reconstructed data.
         - l1_loss (torch.Tensor): The L1 regularization term on the output of the model children.
+
         If validate is True, returns a tuple with three elements:
         - mse_loss (torch.Tensor): The MSE loss between the true and reconstructed data.
         - 0.
