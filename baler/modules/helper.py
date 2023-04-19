@@ -74,15 +74,15 @@ def get_arguments():
 
     workspace_name = args.project[0]
     project_name = args.project[1]
-    config_path = f"workspaces.{workspace_name}.{project_name}.config"
+    config_path = (
+        f"workspaces.{workspace_name}.{project_name}.config.{project_name}_config"
+    )
 
     if args.mode == "newProject":
         config = None
     else:
         config = Config
-        importlib.import_module(f"{config_path}.{project_name}_config").set_config(
-            config
-        )
+        importlib.import_module(config_path).set_config(config)
 
     return config, args.mode, workspace_name, project_name
 
