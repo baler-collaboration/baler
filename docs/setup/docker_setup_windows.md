@@ -1,4 +1,4 @@
-curl https://cernbox.cern.ch/remote.php/dav/public-files/21uZJO4hkqsQW6Z/baler.zip --output baler.zip
+curl https://cernbox.cern.ch/remote.php/dav/public-files/9T2zAjpvL2ee9jZ/baler.zip --output baler.zip
 tar -xf baler.zip
 cd baler
 docker run --mount type=bind,source=%cd%/projects/,target=/baler-root/projects --mount type=bind,source=%cd%/data/,target=/baler-root/data pekman/baler:latest --project=example_CFD --mode=train
@@ -12,7 +12,7 @@ docker run --mount type=bind,source=%cd%/projects/,target=/baler-root/projects -
 ## Download Data and Project Directory ##
 First download tutorial data and project directories.
 ```console
-curl https://cernbox.cern.ch/remote.php/dav/public-files/21uZJO4hkqsQW6Z/baler.zip --output baler.zip
+curl https://cernbox.cern.ch/remote.php/dav/public-files/9T2zAjpvL2ee9jZ/baler.zip --output baler.zip
 ```
 Unzip the files
 ```console
@@ -179,7 +179,7 @@ cd workspace
 
 Download and unzip the example datasets:
 ```console
-wget https://cernbox.cern.ch/remote.php/dav/public-files/21uZJO4hkqsQW6Z/baler.zip
+wget https://cernbox.cern.ch/remote.php/dav/public-files/9T2zAjpvL2ee9jZ/baler.zip
 unzip baler.zip
 ```
 By default, Apptainer/singularity will write to your home area, this is not desirable on most remote environments. To control this:

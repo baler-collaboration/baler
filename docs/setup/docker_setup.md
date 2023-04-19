@@ -9,7 +9,7 @@ Setup instructions for windows are available [here](docker_setup_windows.md)
 ## Download Data and Project Directory ##
 First download tutorial data and project directories.
 ```console
-wget https://cernbox.cern.ch/remote.php/dav/public-files/21uZJO4hkqsQW6Z/baler.zip
+wget https://cernbox.cern.ch/remote.php/dav/public-files/9T2zAjpvL2ee9jZ/baler.zip
 ```
 Unzip the files
 ```console
@@ -173,7 +173,7 @@ cd workspace
 
 Download and unzip the example datasets:
 ```console
-wget https://cernbox.cern.ch/remote.php/dav/public-files/21uZJO4hkqsQW6Z/baler.zip
+wget https://cernbox.cern.ch/remote.php/dav/public-files/9T2zAjpvL2ee9jZ/baler.zip
 unzip baler.zip
 ```
 By default, Apptainer/singularity will write to your home area, this is not desirable on most remote environments. To control this:
