@@ -59,13 +59,19 @@ def fit(
         # Compute the predicted outputs from the input data
         reconstructions = model(inputs)
 
+        # Set validation based on data dimension
+        if n_dimensions == 1:
+            validate = False
+        elif n_dimensions == 2:
+            validate = True
+
         # Compute how far off the prediction is
-        loss, mse_loss, l1_loss = utils.mse_loss_l1(
+        loss, mse_loss, l1_loss = utils.mse_sum_loss_l1(
             model_children=model_children,
             true_data=inputs,
             reconstructed_data=reconstructions,
             reg_param=regular_param,
-            validate=True,
+            validate=validate,
         )
 
         # Compute the loss-gradient with
@@ -98,17 +104,23 @@ def validate(model, test_dl, model_children, reg_param):
     running_loss = 0.0
     device = helper.get_device()
 
+    # Set validation based on data dimension
+    if n_dimensions == 1:
+        validate = False
+    elif n_dimensions == 2:
+        validate = True
+
     with torch.no_grad():
         for idx, inputs in enumerate(tqdm(test_dl)):
             inputs = inputs.to(device)
             reconstructions = model(inputs)
 
-            loss, _, _ = utils.mse_loss_l1(
+            loss, _, _ = utils.mse_sum_loss_l1(
                 model_children=model_children,
                 true_data=inputs,
                 reconstructed_data=reconstructions,
-                reg_param=reg_param,
-                validate=True,
+                reg_param=regular_param,
+                validate=validate,
             )
             running_loss += loss.item()
 
