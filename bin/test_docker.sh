@@ -1,33 +1,27 @@
 #!/bin/bash
 
-# This script servers as a wrapper around docker run to run the docker image
+# This script serves as a wrapper around docker run to run the docker image
 # It also tests the docker image
 
-WORKSPACE_NAME="CMS_example"
-PROJECT_NAME="example_CMS"
-DOCKERFILE="Dockerfile"
-ARCH="amd64"
+DOCKERFILE="${DOCKERFILE:-Dockerfile}"
+ARCH="${ARCH:-$(uname -m)}"
+WORKSPACE_NAME="${WORKSPACE_NAME:-CMS_example}"
+PROJECT_NAME="${PROJECT_NAME:-example_CMS}"
+DOCKER_IMAGE="baler-${ARCH}:latest"
 
-# Check if we're on ARM
-if [ "$(uname -m)" = "arm64" ]; then
-  ARCH="arm64"
-fi
+function run_docker() {
+  local mode="$1"
+  docker run -v "$(pwd)/workspaces:/baler-root/workspaces" \
+             ${DOCKER_IMAGE} --mode "${mode}" --project "${WORKSPACE_NAME}" "${PROJECT_NAME}"
+}
 
-# TODO Fix this
-# Run the docker image with --mode=train and --project=example_CMS
-# We need to mount the projects directory and the data directory
+echo "Training the project..."
+run_docker "train"
 
-wget https://cernbox.cern.ch/remote.php/dav/public-files/fOPNAJcX5qgF0Dw/workspaces.zip
-unzip workspaces.zip
+echo "Compressing the project..."
+run_docker "compress"
 
-docker run -v $(pwd)/workspaces:/baler-root/workspaces \
-           baler-${ARCH}:latest --mode train --project "${WORKSPACE_NAME}" "${PROJECT_NAME}"
+echo "Decompressing the project..."
+run_docker "decompress"
 
-docker run -v $(pwd)/workspaces:/baler-root/workspaces \
-           baler-${ARCH}:latest --mode train --project "${WORKSPACE_NAME}" "${PROJECT_NAME}"
-
-docker run -v $(pwd)/workspaces:/baler-root/workspaces \
-           baler-${ARCH}:latest --mode compress --project "${WORKSPACE_NAME}" "${PROJECT_NAME}"
-
-docker run -v $(pwd)/workspaces:/baler-root/workspaces \
-           baler-${ARCH}:latest --mode decompress --project "${WORKSPACE_NAME}" "${PROJECT_NAME}"
+echo "All tasks completed successfully."

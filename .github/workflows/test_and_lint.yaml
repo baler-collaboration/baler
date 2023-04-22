@@ -3,29 +3,65 @@ name: Code-Quality
 on: [pull_request, workflow_dispatch]
 
 jobs:
-  test_and_lint:
-    strategy:
-        fail-fast: false
+  lint:
     runs-on: ubuntu-latest
 
     steps:
-    - name: "checkout repository"
-      uses: actions/checkout@v3
+      - name: "checkout repository"
+        uses: actions/checkout@v3
 
-    - name: "install poetry"
-      uses: abatilo/actions-poetry@v2
-      with:
-        poetry-version: 1.3.2
+      - name: "set up python"
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.x
 
-    - name: "install dependencies"
-      run: poetry install
+      - name: "install poetry"
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 - --version 1.3.2
 
-    - name: "set python path"
-      run: echo "PYTHONPATH=.:baler" >> $GITHUB_ENV
-    - name: "run syntax check"
-      run: |
-        ./bin/syntax.sh
+      - name: "cache dependencies"
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pypoetry/virtualenvs
+          key: ${{ runner.os }}-poetry-${{ hashFiles('**/pyproject.toml') }}
+          restore-keys: ${{ runner.os }}-poetry-
 
-    - name: "run tests"
-      run: |
-        ./bin/tests.sh
+      - name: "install dependencies"
+        run: poetry install
+
+      - name: "run syntax check"
+        run: |
+          ./bin/syntax.sh
+
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: "checkout repository"
+        uses: actions/checkout@v3
+
+      - name: "set up python"
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.x
+
+      - name: "install poetry"
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 - --version 1.3.2
+
+      - name: "cache dependencies"
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pypoetry/virtualenvs
+          key: ${{ runner.os }}-poetry-${{ hashFiles('**/pyproject.toml') }}
+          restore-keys: ${{ runner.os }}-poetry-
+
+      - name: "install dependencies"
+        run: poetry install
+
+      - name: "set python path"
+        run: echo "PYTHONPATH=.:baler" >> $GITHUB_ENV
+
+      - name: "run tests"
+        run: |
+          ./bin/tests.sh

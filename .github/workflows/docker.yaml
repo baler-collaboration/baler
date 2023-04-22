@@ -1,13 +1,21 @@
-name: Docker-CI
-on: [pull_request, workflow_dispatch]
+name: Docker Build and Test
+
+on: [push, pull_request, workflow_dispatch]
 
 jobs:
-  build-docker-image:
+  build_and_test:
     runs-on: ubuntu-latest
+    env:
+      ARCH: amd64
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Build the Docker image
-      run: |
-        ./bin/build_docker.sh
-        ./bin/test_docker.sh
+      - name: "Checkout repository"
+        uses: actions/checkout@v3
+
+      - name: "Build Docker image"
+        run: |
+          env ARCH=${{ env.ARCH }} ./bin/build_docker.sh
+
+      - name: "Run Docker tests"
+        run: |
+          env ARCH=${{ env.ARCH }} ./bin/test_docker.sh
