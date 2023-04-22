@@ -209,7 +209,7 @@ def set_config(c):
 """
 
 
-def model_init(model_name):
+def model_init(model_name: str):
     """Calls `data_processing.initialise_model`.
 
     Args:

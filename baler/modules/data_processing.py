@@ -14,10 +14,12 @@
 
 import numpy as np
 import torch
+from numpy import ndarray
 from sklearn.model_selection import train_test_split
 
 from modules import helper
 from modules import models
+from typing import List, Tuple
 
 
 def save_model(model, model_path: str) -> None:
@@ -30,14 +32,14 @@ def save_model(model, model_path: str) -> None:
     Returns:
         None: Saved model state dictionary as `.pt` file.
     """
-    return torch.save(model.state_dict(), model_path)
+    torch.save(model.state_dict(), model_path)
 
 
-def initialise_model(model_name):
+def initialise_model(model_name: str):
     """Initializing the models attributes to a model_object variable.
 
     Args:
-        model_name (function): The name of the model you wish to initialize. This should correspond to what your Model name.
+        model_name (str): The name of the model you wish to initialize. This should correspond to what your Model name.
 
     Returns:
         class: Object with the models class attributes
@@ -46,17 +48,18 @@ def initialise_model(model_name):
     return model_object
 
 
-def load_model(model_object, model_path, n_features, z_dim):
-    """Loads the state dictionary of the trained model into a model variable. This variable is then used for passing data through the encoding and decoding functions.
+def load_model(model_object, model_path: str, n_features: int, z_dim: int):
+    """Loads the state dictionary of the trained model into a model variable. This variable is then used for passing
+    data through the encoding and decoding functions.
 
     Args:
-        model_object (object): Object with the models attributels
+        model_object (object): Object with the models attributes
         model_path (str): Path to model
         n_features (int): Input dimension size
         z_dim (int): Latent space size
 
-    Returns:
-        nn.Module: Returns a model object with the attributes of the model class, with the a selected state dictionary loaded into it.
+    Returns: nn.Module: Returns a model object with the attributes of the model class, with the selected state
+    dictionary loaded into it.
     """
     device = helper.get_device()
     model = model_object(n_features, z_dim)
@@ -68,13 +71,13 @@ def load_model(model_object, model_path, n_features, z_dim):
 
 
 def find_minmax(data):
-    """Obains the minimum and maximum values for each column.
+    """Obtains the minimum and maximum values for each column.
 
     Args:
         data (ndarray): Any dataset as a `ndarray` which one eventually wants to normalize using the Min-Max method.
 
-    Returns:
-        ndarray: An array of two lists. One of the lists contains the minimum of each column, while the other list contains `feature_range = max - min` for each column.
+    Returns: ndarray: An array of two lists. One of the lists contains the minimum of each column, while the other
+    list contains `feature_range = max - min` for each column.
     """
     data = list(data)
     true_max_list = np.apply_along_axis(np.max, axis=0, arr=data)
@@ -87,16 +90,16 @@ def find_minmax(data):
     return normalization_features
 
 
-def normalize(data, custom_norm):
-    """This function scales the data to be in the range [0,1], based on the Min Max normalization method. It finds the minimum and maximum values of each column
-        and computes the values according to: x_norm = (x - x_min) / (x_max - x_min).
+def normalize(data, custom_norm: bool):
+    """This function scales the data to be in the range [0,1], based on the Min Max normalization method. It finds
+    the minimum and maximum values of each column and computes the values according to: x_norm = (x - x_min) / (x_max
+    - x_min).
 
-    Args:
-        data (ndarray): A dataset of type `ndarray`.
-        custom_norm (boolean): If you want to do Min Max normalization or any custom normalization. Custom normalization is not supported at the moment.
+    Args: data (ndarray): A dataset of type `ndarray`. custom_norm (boolean): If you want to do Min Max normalization
+    or any custom normalization. Custom normalization is not supported at the moment.
 
-    Returns:
-        ndarray: If not custom_norm: Input data where every column is scaled to be in the range [0,1]. Otherwise, the input data is returned
+    Returns: ndarray: If not custom_norm: Input data where every column is scaled to be in the range [0,
+    1]. Otherwise, the input data is returned
     """
     data = np.array(data)
     if custom_norm:
@@ -110,40 +113,39 @@ def normalize(data, custom_norm):
     return data
 
 
-def split(data, test_size, random_state):
-    """Splits the given data according to a test size into two sets, train and test. This is sklearns function, opted from:
-    https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.train_test_split.html
+def split(data, test_size: float, random_state: int) -> Tuple[ndarray, ndarray]:
+    """Splits the given data according to a test size into two sets, train and test. This is a sklearn function,
+    opted from: https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.train_test_split.html
 
-    Args:
-        data (ndarray): Dataset which you want to split
-        test_size (float): Value between 0.0 and 1.0 determining how large the test size will be.
-                           Example: test_size = 0.15 randomly selectes 15% of the original dataset and puts it into a new array.
-        random_state (int): Shuffling control. Passing an int here shuffels the data the same way every time. Used for reproducibility.
+    Args: data (ndarray): Dataset which you want to split test_size (float): Value between 0.0 and 1.0 determining
+    how large the test size will be. Example: test_size = 0.15 randomly selects 15% of the original dataset and puts
+    it into a new array. random_state (int): Shuffling control. Passing an int here shuffles the data the same way
+    every time. Used for reproducibility.
 
     Returns:
-        ndarray, ndarray: Two datasets splitted in size according to the `test_size` value.
+        ndarray, ndarray: Two datasets split in size according to the `test_size` value.
     """
     return train_test_split(data, test_size=test_size, random_state=random_state)
 
 
-def renormalize_std(data, true_min, feature_range):
-    """Computes the un-normalization of normalized arrays. This function is used in combination with `renormalize_func` to perform this operation on an entire dataset.
+def renormalize_std(
+    input_data: ndarray, true_min: float, feature_range: float
+) -> ndarray:
+    """Computes the un-normalization of normalized arrays. This function is used in combination with
+    `renormalize_func` to perform this operation on an entire dataset.
 
     Args:
-        data (ndarray): Normalized data you want to un-normalize from the range [0,1]
+        input_data (ndarray): Normalized data you want to un-normalize from the range [0,1]
         true_min (float): A columns minimum
         feature_range (float): A columns feature range, computed as `max - min`
 
     Returns:
         ndarray: Un-normalized data array
     """
-    data = list(data)
-    data = [((i * feature_range) + true_min) for i in data]
-    data = np.array(data)
-    return data
+    return np.array([((i * feature_range) + true_min) for i in list(input_data)])
 
 
-def renormalize_func(norm_data, min_list, range_list):
+def renormalize_func(norm_data: ndarray, min_list: List, range_list: List) -> ndarray:
     """Un-normalizes an entire dataset. Applies the `renormalize_std`function across an entire dataset.
         `min_list` and `range_list` are obtained from the `normalization_features.npy` file.
 
