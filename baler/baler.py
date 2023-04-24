@@ -16,7 +16,6 @@ import os
 import time
 
 import numpy as np
-import torch
 
 import modules.helper as helper
 
@@ -34,22 +33,22 @@ def main():
     Raises:
         NameError: Raises error if the chosen mode does not exist.
     """
-    config, mode, workspace_name, project_name = helper.get_arguments()
+    config, mode, workspace_name, project_name, verbose = helper.get_arguments()
     project_path = os.path.join("workspaces", workspace_name, project_name)
     output_path = os.path.join(project_path, "output")
 
     if mode == "newProject":
-        helper.create_new_project(workspace_name, project_name)
+        helper.create_new_project(workspace_name, project_name, verbose)
     elif mode == "train":
-        perform_training(output_path, config)
+        perform_training(output_path, config, verbose)
     elif mode == "diagnose":
-        perform_diagnostics(output_path)
+        perform_diagnostics(output_path, verbose)
     elif mode == "compress":
-        perform_compression(output_path, config)
+        perform_compression(output_path, config, verbose)
     elif mode == "decompress":
-        perform_decompression(output_path, config)
+        perform_decompression(output_path, config, verbose)
     elif mode == "plot":
-        perform_plotting(output_path, config)
+        perform_plotting(output_path, config, verbose)
     elif mode == "info":
         print_info(output_path, config)
     else:
@@ -60,15 +59,16 @@ def main():
         )
 
 
-def perform_training(output_path, config):
+def perform_training(output_path, config, verbose: bool):
     """Main function calling the training functions, ran when --mode=train is selected.
-        The three main functions this calls are: `helper.process`, `helper.mode_init` and `helper.training`.
+        The three functions called are: `helper.process`, `helper.mode_init` and `helper.training`.
 
         Depending on `config.data_dimensions`, the calculated latent space size will differ.
 
     Args:
         output_path (path): Selects base path for determining output path
         config (dataClass): Base class selecting user inputs
+        verbose (bool): If True, prints out more information
 
     Raises:
         NameError: Baler currently only supports 1D (e.g. HEP) or 2D (e.g. CFD) data as inputs.
@@ -79,6 +79,9 @@ def perform_training(output_path, config):
         config.test_size,
         config.apply_normalization,
     )
+
+    if verbose:
+        print("Training and testing sets normalized")
 
     try:
         if config.data_dimension == 1:
@@ -100,56 +103,82 @@ def perform_training(output_path, config):
                 + str(config.data_dimension)
             )
     except AttributeError:
-        print(f"{config.number_of_columns} -> {config.latent_space_size} dimensions")
+        if verbose:
+            print(
+                f"{config.number_of_columns} -> {config.latent_space_size} dimensions"
+            )
         assert number_of_columns == config.number_of_columns
 
     device = helper.get_device()
+    if verbose:
+        print(f"Device used for training: {device}")
 
     model_object = helper.model_init(config.model_name)
     model = model_object(n_features=number_of_columns, z_dim=config.latent_space_size)
     model.to(device)
 
+    if verbose:
+        print(f"Model architecture:\n{model}")
+
     training_path = os.path.join(output_path, "training")
-    print("path:", training_path)
+    if verbose:
+        print(f"Training path: {training_path}")
 
     trained_model = helper.train(
         model, number_of_columns, train_set_norm, test_set_norm, training_path, config
     )
+
+    if verbose:
+        print("Training complete")
 
     if config.apply_normalization:
         np.save(
             os.path.join(training_path, "normalization_features.npy"),
             normalization_features,
         )
+        if verbose:
+            print(
+                f"Normalization features saved to {os.path.join(training_path, 'normalization_features.npy')}"
+            )
     helper.model_saver(
         trained_model, os.path.join(output_path, "compressed_output", "model.pt")
     )
+    if verbose:
+        print(
+            f"Model saved to {os.path.join(output_path, 'compressed_output', 'model.pt')}"
+        )
 
 
-def perform_diagnostics(project_path):
-    print("Performing diagnostics...")
+def perform_diagnostics(project_path, verbose: bool):
     output_path = os.path.join(project_path, "plotting")
+    if verbose:
+        print("Performing diagnostics")
+        print(f"Saving plots to {output_path}")
     if not os.path.exists(output_path):
         os.makedirs(output_path)
     input_path = os.path.join(project_path, "training", "activations.npy")
     helper.diagnose(input_path, output_path)
 
 
-def perform_plotting(output_path, config):
+def perform_plotting(output_path, config, verbose: bool):
     """Main function calling the two plotting functions, ran when --mode=plot is selected.
        The two main functions this calls are: `helper.plotter` and `helper.loss_plotter`
 
     Args:
         output_path (string): Selects base path for determining output path
         config (dataClass): Base class selecting user inputs
+        verbose (bool): If True, prints out more information
     """
+    if verbose:
+        print("Plotting...")
+        print(f"Saving plots to {output_path}")
     helper.loss_plotter(
         os.path.join(output_path, "training", "loss_data.npy"), output_path, config
     )
     helper.plotter(output_path, config)
 
 
-def perform_compression(output_path, config):
+def perform_compression(output_path, config, verbose: bool):
     """Main function calling the compression functions, ran when --mode=compress is selected.
        The main function being called here is: `helper.compress`
 
@@ -159,6 +188,7 @@ def perform_compression(output_path, config):
     Args:
         output_path (path): Selects base path for determining output path
         config (dataClass): Base class selecting user inputs
+        verbose (bool): If True, prints out more information
 
     Outputs:
         An `.npz` file which includes:
@@ -187,6 +217,11 @@ def perform_compression(output_path, config):
     names = np.load(config.input_path)["names"]
 
     if config.extra_compression:
+        if verbose:
+            print("Extra compression selected")
+            print(
+                f"Saving compressed file to {os.path.join(output_path, 'compressed_output', 'compressed.npz')}"
+            )
         np.savez_compressed(
             os.path.join(output_path, "compressed_output", "compressed.npz"),
             data=compressed,
@@ -194,6 +229,11 @@ def perform_compression(output_path, config):
             normalization_features=normalization_features,
         )
     else:
+        if verbose:
+            print("Extra compression not selected")
+            print(
+                f"Saving compressed file to {os.path.join(output_path, 'compressed_output', 'compressed.npz')}"
+            )
         np.savez(
             os.path.join(output_path, "compressed_output", "compressed.npz"),
             data=compressed,
@@ -202,7 +242,7 @@ def perform_compression(output_path, config):
         )
 
 
-def perform_decompression(output_path, config):
+def perform_decompression(output_path, config, verbose: bool):
     """Main function calling the decompression functions, ran when --mode=decompress is selected.
        The main function being called here is: `helper.decompress`
 
@@ -211,6 +251,7 @@ def perform_decompression(output_path, config):
     Args:
         output_path (path): Selects base path for determining output path
         config (dataClass): Base class selecting user inputs
+        verbose (bool): If True, prints out more information
     """
     print("Decompressing...")
 
@@ -222,12 +263,18 @@ def perform_decompression(output_path, config):
         model_name=model_name,
         config=config,
     )
+    if verbose:
+        print(f"Model used: {model_name}")
 
     if config.apply_normalization:
         print("Un-normalizing...")
         normalization_features = np.load(
             os.path.join(output_path, "training", "normalization_features.npy"),
         )
+        if verbose:
+            print(
+                f"Normalization features loaded from {os.path.join(output_path, 'training', 'normalization_features.npy')}"
+            )
 
         decompressed = helper.renormalize(
             decompressed,
@@ -236,6 +283,8 @@ def perform_decompression(output_path, config):
         )
 
     try:
+        if verbose:
+            print("Converting to original data types")
         type_list = config.type_list
         decompressed = np.transpose(decompressed)
         for index, column in enumerate(decompressed):
@@ -248,6 +297,11 @@ def perform_decompression(output_path, config):
     print("Decompression took:", f"{(end - start) / 60:.3} minutes")
 
     if config.extra_compression:
+        if verbose:
+            print("Extra compression selected")
+            print(
+                f"Saving decompressed file to {os.path.join(output_path, 'decompressed_output', 'decompressed.npz')}"
+            )
         np.savez_compressed(
             os.path.join(output_path, "decompressed_output", "decompressed.npz"),
             data=decompressed,

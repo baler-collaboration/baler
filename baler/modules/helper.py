@@ -17,6 +17,7 @@ import importlib
 import os
 import sys
 from dataclasses import dataclass
+
 from tqdm import tqdm
 
 sys.path.append(os.getcwd())
@@ -29,10 +30,11 @@ from modules import training, plotting, data_processing, diagnostics
 
 
 def get_arguments():
-    """Determines the arguments one is able to apply in the command line when running Baler. Use `--help` to see what options are avaliable.
+    """Determines the arguments one is able to apply in the command line when running Baler. Use `--help` to see what
+    options are available.
 
-    Returns:
-        .py, string, folder: `.py` file containing the config options, string determining what mode to run, projects directory where outputs go.
+    Returns: .py, string, folder: `.py` file containing the config options, string determining what mode to run,
+    projects directory where outputs go.
     """
     parser = argparse.ArgumentParser(
         prog="baler.py",
@@ -69,6 +71,10 @@ def get_arguments():
         "  2. If workspace exists but project does not, create project in workspace.\n"
         "  3. If workspace does not exist, create workspace directory and project.",
     )
+    parser.add_argument(
+        "--verbose", dest="verbose", action="store_true", help="Verbose mode"
+    )
+    parser.set_defaults(verbose=False)
 
     args = parser.parse_args()
 
@@ -84,15 +90,18 @@ def get_arguments():
         config = Config
         importlib.import_module(config_path).set_config(config)
 
-    return config, args.mode, workspace_name, project_name
+    return config, args.mode, workspace_name, project_name, args.verbose
 
 
-def create_new_project(workspace_name: str, project_name: str) -> None:
-    """Creates a new project directory output sub-directories and config files within a workspace.
+def create_new_project(
+    workspace_name: str, project_name: str, verbose: bool = False
+) -> None:
+    """Creates a new project directory output subdirectories and config files within a workspace.
 
     Args:
         workspace_name (str): Creates a workspace (dir) for storing data and projects with this name.
         project_name (str): Creates a project (dir) for storing configs and outputs with this name.
+        verbose (bool, optional): Whether to print out the progress. Defaults to False.
     """
 
     base_path = "workspaces"
@@ -115,7 +124,11 @@ def create_new_project(workspace_name: str, project_name: str) -> None:
         os.path.join(project_path, "output", "training"),
     ]
 
+    if verbose:
+        print(f"Creating project {project_name} in workspace {workspace_name}...")
     for directory in required_directories:
+        if verbose:
+            print(f"Creating directory {directory}...")
         os.makedirs(directory, exist_ok=True)
 
     # Populate default config
@@ -156,15 +169,12 @@ class Config:
 
 
 def create_default_config(workspace_name: str, project_name: str) -> str:
-    """Returns the string of a default config file, where the given project
-        name has been inserted in the data input path for convenience
-
+    """Creates a default config file for a project.
     Args:
-        project_name (str): The name of the new project, i.e. the name of the
-        directory for all the output
-
+        workspace_name (str): Name of the workspace.
+        project_name (str): Name of the project.
     Returns:
-        str: Returns a string of a default config which will be written to file
+        str: Default config file.
     """
 
     return f"""
@@ -224,7 +234,7 @@ def model_init(model_name: str):
 
 
 def numpy_to_tensor(data):
-    """Converts ndarrays to torch.Tensors.
+    """Converts ndarray to torch.Tensors.
 
     Args:
         data (ndarray): The data you wish to convert from ndarray to torch.Tensor.
@@ -252,7 +262,7 @@ def normalize(data, custom_norm):
 
 
 def process(input_path, custom_norm, test_size, apply_normalization):
-    """Loads the input data into an ndarray, splits it into train/test splits and normalizes if chosen.
+    """Loads the input data into a ndarray, splits it into train/test splits and normalizes if chosen.
 
     Args:
         input_path (string): Path to input data
@@ -260,13 +270,11 @@ def process(input_path, custom_norm, test_size, apply_normalization):
         test_size (float): How much of your data to use as validation.
         apply_normalization (boolean): `True` if you want to normalize. `False` if you don't want to normalize.
 
-    Returns:
-        ndarray, ndarray, ndarray: Array with the train set, array with the test set and array with the normalization features.
+    Returns: ndarray, ndarray, ndarray: Array with the train set, array with the test set and array with the
+    normalization features.
     """
     loaded = np.load(input_path)
     data = loaded["data"]
-    names = loaded["names"]
-    normalization_features = []
 
     normalization_features = data_processing.find_minmax(data)
     if apply_normalization:
@@ -378,7 +386,7 @@ def get_device():
         Otherwise it returns "cpu"
 
     Returns:
-        _type_: Device string, etiher "cpu" or "cuda:0"
+        _type_: Device string, either "cpu" or "cuda:0"
     """
     device = None
     if torch.cuda.is_available():
@@ -391,9 +399,10 @@ def get_device():
 
 
 def compress(model_path, config):
-    """Function which performs the compression of the input file. In order to compress, you must have a dataset whose path is
-        determined by `input_path` in the `config`. You also need a trained model from path `model_path`. The model path is then used to initialize the model
-        used for compression. The data is then converted into a `torch.tensor` and then passed through `model.encode`.
+    """Function which performs the compression of the input file. In order to compress, you must have a dataset whose
+    path is determined by `input_path` in the `config`. You also need a trained model from path `model_path`. The
+    model path is then used to initialize the model used for compression. The data is then converted into a
+    `torch.tensor` and then passed through `model.encode`.
 
     Args:
         model_path (string): Path to where the model is located
@@ -496,9 +505,10 @@ def compress(model_path, config):
 
 
 def decompress(model_path, input_path, model_name, config):
-    """Function which performs the decompression of the compressed file. In order to decompress, you must have a compressed file, whose path is
-        determined by `input_path`, a model from path `model_path` and a model_name. The model path and model names are used to initialize the model
-        used for decompression. The data is then converted into a `torch.tensor` and then passed through `model.decode`.
+    """Function which performs the decompression of the compressed file. In order to decompress, you must have a
+    compressed file, whose path is determined by `input_path`, a model from path `model_path` and a model_name. The
+    model path and model names are used to initialize the model used for decompression. The data is then converted
+    into a `torch.tensor` and then passed through `model.decode`.
 
     Args:
         model_path (string): Path to where the model is located
@@ -506,8 +516,8 @@ def decompress(model_path, input_path, model_name, config):
         model_name (string): Name of trained model from which you want to use decode
         config (dataClass): Base class selecting user inputs
 
-    Returns:
-        torch.tensor, ndarray, ndarray: decompressed data as tensor, ndarray of column names, ndarray of normalization features
+    Returns: torch.tensor, ndarray, ndarray: decompressed data as tensor, ndarray of column names, ndarray of
+    normalization features
     """
 
     # Load the data & define necessary variables
