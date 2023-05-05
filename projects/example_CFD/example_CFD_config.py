@@ -1,15 +1,15 @@
 def set_config(c):
     c.input_path = "data/example_CFD/example_CFD.npz"
-    c.compression_ratio = 10.0
+    c.compression_ratio = 10
     # c.number_of_columns = 24
     # c.latent_space_size = 15
-    c.epochs = 25
-    c.early_stopping = True
+    c.epochs = 100
+    c.early_stopping = False
     c.early_stopping_patience = 100
     c.min_delta = 0
-    c.lr_scheduler = False
-    c.lr_scheduler_patience = 100
-    c.model_name = "Conv_AE"
+    c.lr_scheduler = True
+    c.lr_scheduler_patience = 50
+    c.model_name = "AE"
     c.custom_norm = True
     c.l1 = True
     c.reg_param = 0.001

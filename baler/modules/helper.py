@@ -429,7 +429,7 @@ def decompress(model_path, input_path, model_name):
     names = loaded["names"]
     normalization_features = loaded["normalization_features"]
     latent_space_size = len(data[0])
-    model_dict = torch.load(str(model_path))
+    model_dict = torch.load(str(model_path), map_location=torch.device("cpu"))
     number_of_columns = len(model_dict[list(model_dict.keys())[-1]])
 
     # Initialise and load the model correctly.

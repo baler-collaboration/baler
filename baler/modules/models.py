@@ -17,6 +17,47 @@ from torch import nn
 from torch.nn import functional as F
 
 
+class ieee(nn.Module):
+    # This class is a modified version of the original class by George Dialektakis found at
+    # https://github.com/Autoencoders-compression-anomaly/Deep-Autoencoders-Data-Compression-GSoC-2021
+    # Released under the Apache License 2.0 found at https://www.apache.org/licenses/LICENSE-2.0.txt
+    # Copyright 2021 George Dialektakis
+
+    def __init__(self, n_features, z_dim, *args, **kwargs):
+        super(ieee, self).__init__(*args, **kwargs)
+
+        # encoder
+        self.en1 = nn.Linear(n_features, 200, dtype=torch.float)
+        self.en2 = nn.Linear(200, 100, dtype=torch.float)
+        self.en3 = nn.Linear(100, 50, dtype=torch.float)
+        self.en4 = nn.Linear(50, z_dim, dtype=torch.float)
+        # decoder
+        self.de1 = nn.Linear(z_dim, 50, dtype=torch.float)
+        self.de2 = nn.Linear(50, 100, dtype=torch.float)
+        self.de3 = nn.Linear(100, 200, dtype=torch.float)
+        self.de4 = nn.Linear(200, n_features, dtype=torch.float)
+
+        self.n_features = n_features
+        self.z_dim = z_dim
+
+    def encode(self, x):
+        h1 = F.leaky_relu(self.en1(x))
+        h2 = F.leaky_relu(self.en2(h1))
+        h3 = F.leaky_relu(self.en3(h2))
+        return self.en4(h3)
+
+    def decode(self, z):
+        h4 = F.leaky_relu(self.de1(z))
+        h5 = F.leaky_relu(self.de2(h4))
+        h6 = F.leaky_relu(self.de3(h5))
+        out = self.de4(h6)
+        return out
+
+    def forward(self, x):
+        z = self.encode(x)
+        return self.decode(z)
+
+
 class AE(nn.Module):
     # This class is a modified version of the original class by George Dialektakis found at
     # https://github.com/Autoencoders-compression-anomaly/Deep-Autoencoders-Data-Compression-GSoC-2021
@@ -27,15 +68,15 @@ class AE(nn.Module):
         super(AE, self).__init__(*args, **kwargs)
 
         # encoder
-        self.en1 = nn.Linear(n_features, 200, dtype=torch.float64)
-        self.en2 = nn.Linear(200, 100, dtype=torch.float64)
-        self.en3 = nn.Linear(100, 50, dtype=torch.float64)
-        self.en4 = nn.Linear(50, z_dim, dtype=torch.float64)
+        self.en1 = nn.Linear(n_features, 200, dtype=torch.float)
+        self.en2 = nn.Linear(200, 100, dtype=torch.float)
+        self.en3 = nn.Linear(100, 50, dtype=torch.float)
+        self.en4 = nn.Linear(50, z_dim, dtype=torch.float)
         # decoder
-        self.de1 = nn.Linear(z_dim, 50, dtype=torch.float64)
-        self.de2 = nn.Linear(50, 100, dtype=torch.float64)
-        self.de3 = nn.Linear(100, 200, dtype=torch.float64)
-        self.de4 = nn.Linear(200, n_features, dtype=torch.float64)
+        self.de1 = nn.Linear(z_dim, 50, dtype=torch.float)
+        self.de2 = nn.Linear(50, 100, dtype=torch.float)
+        self.de3 = nn.Linear(100, 200, dtype=torch.float)
+        self.de4 = nn.Linear(200, n_features, dtype=torch.float)
 
         self.n_features = n_features
         self.z_dim = z_dim
