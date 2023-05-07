@@ -568,6 +568,7 @@ def decompress(model_path, input_path, model_name, config):
         decompressed = decompressed.view(
             len(decompressed), number_of_columns, number_of_columns
         )
+    decompressed = decompressed.detach().numpy()
 
     return decompressed, names, normalization_features
 
