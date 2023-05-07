@@ -138,6 +138,7 @@ class Config:
     lr_scheduler_patience: int
     min_delta: int
     model_name: str
+    model_type = str
     custom_norm: bool
     l1: bool
     reg_param: float
@@ -176,6 +177,7 @@ def set_config(c):
     c.compression_ratio            = 2.0
     c.apply_normalization          = True
     c.model_name                   = "AE"
+    c.model_type                    = "dense"
     c.epochs                       = 5
     c.lr                           = 0.001
     c.batch_size                   = 512
