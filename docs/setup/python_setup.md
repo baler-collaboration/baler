@@ -31,27 +31,27 @@ Here we provide some instructions for our working examples.
 #### Training ####
 To train the autoencoder to compress your data, you run the following command. The config file `./workspaces/CFD_workspace/CFD_project_v1/config/CFD_project_v1_config.py`. This details the path of the data, the number of epochs, and all the other training parameters.
 ```console
-poetry run python baler --project CFD_workspace CFD_project_v1 --mode train
+poetry run python baler --project CFD_workspace CFD_project_animation --mode train
 ```
 
 #### Compressing ####
 To use the derived model for compression, you can now choose ``--mode compress``, which can be run as
 ```console
-poetry run python baler --project CFD_workspace CFD_project_v1 --mode compress
+poetry run python baler --project CFD_workspace CFD_project_animation --mode compress
 ```
 This will output a compressed file called "compressed.pickle", and this is the latent space representation of the input dataset. It will also output cleandata_pre_comp.pickle which is just the exact data being compressed.
 
 #### Decompressing ####
 To decompress the compressed file, we choose --mode decompress and run:
 ```console
-poetry run python baler --project CFD_workspace CFD_project_v1 --mode decompress
+poetry run python baler --project CFD_workspace CFD_project_animation --mode decompress
 ```
 
 #### Plotting ####
 To plot the difference of your variables before compression and after decompression, we can use the following command to generate a .pdf document under ``./workspaces/firstWorkspace/firstProject/output/plotting/comparison.pdf``
 
 ```console
-poetry run python baler --project CFD_workspace CFD_project_v1 --mode plot
+poetry run python baler --project CFD_workspace CFD_project_animation --mode plot
 ```
 
 ### High Energy Physics Example ###
