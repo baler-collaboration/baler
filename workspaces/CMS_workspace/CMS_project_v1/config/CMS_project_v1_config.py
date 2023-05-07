@@ -2,7 +2,7 @@
 
 
 def set_config(c):
-    c.input_path = "workspaces/CMS_example/data/example_CMS_data.npz"
+    c.input_path = "workspaces/CMS_workspace/data/example_CMS_data.npz"
     c.data_dimension = 1
     c.compression_ratio = 1.6
     c.apply_normalization = True
