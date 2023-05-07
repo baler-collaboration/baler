@@ -15,38 +15,23 @@ source ~/.profile
 ```
 Clone this repository
 ```console
-git clone https://github.com/baler-compressor/baler.git
+git clone https://github.com/baler-collaboration/baler.git
 ```
 Move into the Baler directory
 ```console
 cd baler
 ```
-Use Poetry to install the project dependencies
-```console
-poetry install
-```
-Download the tutorial dataset, this will take a while
-```console
-wget http://opendata.cern.ch/record/21856/files/assets/cms/mc/RunIIFall15MiniAODv2/ZprimeToTT_M-3000_W-30_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/10000/DAA238E5-29D6-E511-AE59-001E67DBE3EF.root -O workspaces/firstWorkspace/data/cms_data.root
-```
-Finally, verify that the download was successful
-```console 
-md5sum data/firstProject/cms_data.root 
-> 28910642bf94e0fa9442bc804830f88b  data/firstProject/cms_data.root
-```
 
 ## Working Example with Python
 
-#### Create New Project ####
-Start by creating a new project directory. This will create the standardized directory structure needed, and create a blank config and output directories. In this example, these will live under `./workspaces/firstWorkspace/firstProject/config.json`.
-```console
-poetry run python baler --project firstWorkspace firstProject --mode newProject
-```
+Here we provide some instructions for our working examples.
+
+### Computational Fluid Dynamics Example
 
 #### Training ####
-To train the autoencoder to compress your data, you run the following command. The config file `./workspaces/firstWorkspaces/firstProject/config/firstProject_config.py`. details the location of the path of the input data, the number of epochs, and all the other parameters.
+To train the autoencoder to compress your data, you run the following command. The config file `./workspaces/CFD_workspace/CFD_project_v1/config/CFD_project_v1_config.py`. This details the path of the data, the number of epochs, and all the other training parameters.
 ```console
-poetry run python baler --project firstWorkspace firstProject --mode train
+poetry run python baler --project CFD_workspace CFD_project_v1 --mode train
 ```
 
 #### Compressing ####
