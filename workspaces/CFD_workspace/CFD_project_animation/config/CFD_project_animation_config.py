@@ -1,6 +1,6 @@
 def set_config(c):
     c.input_path = "workspaces/CFD_workspace/data/CFD_animation.npz"
-    c.compression_ratio = 10
+    c.compression_ratio = 100
     # c.number_of_columns = 24
     # c.latent_space_size = 15
     c.epochs = 1000
