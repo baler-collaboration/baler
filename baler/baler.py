@@ -254,6 +254,7 @@ def perform_decompression(output_path, config):
             names=names,
         )
     else:
+        decompressed = decompressed.detach().numpy()
         np.savez(
             os.path.join(output_path, "decompressed_output", "decompressed.npz"),
             data=decompressed,

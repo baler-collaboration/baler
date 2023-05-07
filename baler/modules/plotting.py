@@ -244,21 +244,21 @@ def plot_1D(output_path: str, config):
             ax4.clear()
 
 
-def plot_2D(output_path, config):
+def plot_2D(project_path, config):
     """General plotting for 2D data, for example 2D arraysfrom computational fluid
         dynamics or other image like data. This function generates a pdf
         document where each page contains the before/after performance
         of each column of the 1D data
 
     Args:
-        output_path (path): The path to the output directory
+        project_path (string): The path to the project directory
         config (dataclass): The config class containing attributes set in the config file
     """
 
     data = np.load(config.input_path)["data"]
-    data_decompressed = np.load(
-        os.path.join(output_path, "decompressed_output", "decompressed.npz")
-    )["data"]
+    data_decompressed = np.load(project_path + "/decompressed_output/decompressed.npz")[
+        "data"
+    ]
 
     if data.shape[0] > 1:
         num_tiles = data.shape[0]
@@ -266,51 +266,96 @@ def plot_2D(output_path, config):
         num_tiles = 1
 
     print("=== Plotting ===")
-
     for ind in trange(num_tiles):
-        tile_data_decompressed = data_decompressed[ind].reshape(
-            data_decompressed.shape[2], data_decompressed.shape[3]
-        )
-        tile_data = data[ind].reshape(data.shape[1], data.shape[2])
+        if config.model_type == "convolutional":
+            tile_data_decompressed = data_decompressed[ind][0] * 0.04 * 1000
+        elif config.model_type == "dense":
+            tile_data_decompressed = data_decompressed[ind] * 0.04 * 1000
+        tile_data = data[ind] * 0.04 * 1000
 
-        diff = ((tile_data_decompressed - tile_data) / tile_data_decompressed) * 100
+        diff = tile_data - tile_data_decompressed
 
         fig, axs = plt.subplots(
-            1, 3, figsize=(29.7 * (1 / 2.54), 21 * (1 / 2.54)), sharey=True
+            1, 3, figsize=(29.7 * (1 / 2.54), 10 * (1 / 2.54)), sharey=True
         )
-        axs[0].set_title("Original", fontsize=11, y=-0.2)
+        axs[0].set_title("Original", fontsize=11)
         im1 = axs[0].imshow(
-            tile_data, vmin=-0.01, vmax=0.07, cmap="CMRmap", interpolation="nearest"
-        )
-        cb2 = plt.colorbar(im1, ax=[axs[0]], location="top")
-
-        axs[1].set_title("Decompressed", fontsize=11, y=-0.2)
-        im2 = axs[1].imshow(
-            tile_data_decompressed,
-            vmin=-0.01,
-            vmax=0.07,
+            tile_data,
+            vmin=-0.5,
+            vmax=3.0,
             cmap="CMRmap",
             interpolation="nearest",
         )
-        cb2 = plt.colorbar(im2, ax=[axs[1]], location="top")
-
-        axs[2].set_title("Relative Diff. [%]", fontsize=11, y=-0.2)
-        im3 = axs[2].imshow(
-            diff, vmin=-50, vmax=50, cmap="cool_r", interpolation="nearest"
-        )
-        cb2 = plt.colorbar(im3, ax=[axs[2]], location="top")
-
+        axis = axs[0]
+        axis.tick_params(axis="both", which="major")
         plt.ylim(0, 50)
         plt.xlim(0, 50)
-        fig.suptitle(
-            "Compressed file is 10% the size of original,\n100 epochs (4.52 min)",
-            y=0.9,
-            fontsize=16,
+        axis.set_ylabel("y [m]")
+        axis.set_xlabel("x [m]")
+        axis.set_xticks([10, 20, 30, 40, 50])
+        axis.set_xticklabels([0.4, 0.8, 1.2, 1.6, 2.0])
+        axis.set_yticks([10, 20, 30, 40, 50])
+        axis.set_yticklabels([0.4, 0.8, 1.2, 1.6, 2.0])
+
+        axs[1].set_title("Reconstructed", fontsize=11)
+        im2 = axs[1].imshow(
+            tile_data_decompressed,
+            vmin=-0.5,
+            vmax=3.0,
+            cmap="CMRmap",
+            interpolation="nearest",
         )
+        axis = axs[1]
+        axis.tick_params(axis="both", which="major")
+        plt.ylim(0, 50)
+        plt.xlim(0, 50)
+        axis.set_ylabel("y [m]")
+        axis.set_xlabel("x [m]")
+        axis.set_xticks([10, 20, 30, 40, 50])
+        axis.set_xticklabels([0.4, 0.8, 1.2, 1.6, 2.0])
+        axis.set_yticks([10, 20, 30, 40, 50])
+        axis.set_yticklabels([0.4, 0.8, 1.2, 1.6, 2.0])
+
+        axs[2].set_title("Difference", fontsize=11)
+        im3 = axs[2].imshow(
+            diff,
+            vmin=-0.5,
+            vmax=3.0,
+            cmap="CMRmap",
+            interpolation="nearest",
+        )
+        # cb2 = plt.colorbar(im3, ax=[axs[2]], location="right", fraction=0.046, pad=0.1)
+        # cb2.set_label("x-velocity [mm/s]")
+        axis = axs[2]
+        axis.tick_params(axis="both", which="major")
+        plt.ylim(0, 50)
+        plt.xlim(0, 50)
+        axis.set_ylabel("y [m]")
+        axis.set_xlabel("x [m]")
+        axis.set_xticks([10, 20, 30, 40, 50])
+        axis.set_xticklabels([0.4, 0.8, 1.2, 1.6, 2.0])
+        axis.set_yticks([10, 20, 30, 40, 50])
+        axis.set_yticklabels([0.4, 0.8, 1.2, 1.6, 2.0])
+
+        fig.subplots_adjust(right=0.8)
+        cbar_ax = fig.add_axes([0.815, 0.2, 0.02, 0.59])
+        cb2 = fig.colorbar(im3, cax=cbar_ax, location="right", aspect=10)
+        cb2.set_label("x-velocity [m/s]")
+        # fig.colorbar(im3, cax=cbar_ax)
 
         fig.savefig(
-            os.path.join(output_path, "plotting", f"CFD{ind}.jpg"), bbox_inches="tight"
+            project_path + "/plotting/CFD" + str(ind) + ".png", bbox_inches="tight"
         )
+        # sys.exit()
+
+    # import imageio.v2 as imageio
+
+    # with imageio.get_writer(project_path + "/plotting/CFD.gif", mode="I") as writer:
+    #     for i in range(0, 60):
+    #         path = project_path + "/plotting/CFD" + str(i) + ".jpg"
+    #         print(path)
+    #         image = imageio.imread(path)
+    #         writer.append_data(image)
 
 
 def plot(output_path, config):

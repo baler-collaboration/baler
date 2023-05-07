@@ -464,9 +464,14 @@ def compress(model_path, config):
     # elif config.data_dimension == 1:
     #     data_tensor = torch.from_numpy(data).to(device)
     if config.data_dimension == 2:
-        data_tensor = torch.tensor(data, dtype=torch.float32).view(
-            data.shape[0], 1, data.shape[1], data.shape[2]
-        )
+        if config.model_type == "convolutional":
+            data_tensor = torch.tensor(data, dtype=torch.float32).view(
+                data.shape[0], 1, data.shape[1], data.shape[2]
+            )
+        elif config.model_type == "dense":
+            data_tensor = torch.tensor(data, dtype=torch.float32).view(
+                data.shape[0], data.shape[1] * data.shape[2]
+            )
     elif config.data_dimension == 1:
         data_tensor = torch.tensor(data, dtype=torch.float64)
 
@@ -519,7 +524,10 @@ def decompress(model_path, input_path, model_name, config):
     latent_space_size = len(data[0])
     bs = config.batch_size
     model_dict = torch.load(str(model_path))
-    number_of_columns = len(model_dict[list(model_dict.keys())[-1]])
+    if config.data_dimension == 2 and config.model_type == "dense":
+        number_of_columns = int(np.sqrt(len(model_dict[list(model_dict.keys())[-1]])))
+    else:
+        number_of_columns = len(model_dict[list(model_dict.keys())[-1]])
 
     # Initialise and load the model correctly.
     device = get_device()
@@ -542,18 +550,24 @@ def decompress(model_path, input_path, model_name, config):
     )
 
     # Decompress the data using the trained models decode function
-    decompressed = []
-    with torch.no_grad():
-        for idx, data_batch in enumerate(tqdm(data_dl)):
-            data_batch = data_batch.to(device)
+    decompressed = model.decode(data_tensor)
+    # decompressed = []
+    # with torch.no_grad():
+    #     for idx, data_batch in enumerate(tqdm(data_dl)):
+    #         data_batch = data_batch.to(device)
 
-            out = model.decode(data_batch)
-            # Converting back to numpyarray
-            out = detacher(out)
-            if idx == 0:
-                decompressed = out
-            else:
-                decompressed = np.concatenate((decompressed, out))
+    #         out = model.decode(data_batch)
+    #         # Converting back to numpyarray
+    #         out = detacher(out)
+    #         if idx == 0:
+    #             decompressed = out
+    #         else:
+    #             decompressed = np.concatenate((decompressed, out))
+
+    if config.data_dimension == 2 and config.model_type == "dense":
+        decompressed = decompressed.view(
+            len(decompressed), number_of_columns, number_of_columns
+        )
 
     return decompressed, names, normalization_features
 
