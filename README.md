@@ -14,6 +14,8 @@ If you wish to contribute, please see the contribution guidelines [here](https:/
 
 
 # Getting Started #
+**NOTE:** For the same performance and version as presented in our Arxiv paper, please use release [v1.0.0](https://github.com/baler-collaboration/baler/tree/v1.0.0) and the setup instructions given there. v1.0.0 also has a working docker implementation. We are currently experiencing some performance issues on the main branch compared.
+
 In the links below we offer instructions on how to set up Baler and working tutorial examples to get you started. We offer two ways to run baler:
 * [Python](docs/setup/python_setup.md)
 * [Docker/Singularity/Apptainer](docs/setup/docker_setup.md)

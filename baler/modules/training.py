@@ -60,7 +60,7 @@ def fit(
         reconstructions = model(inputs)
 
         # Compute how far off the prediction is
-        loss, mse_loss, l1_loss = utils.mse_loss_l1(
+        loss, mse_loss, l1_loss = utils.mse_sum_loss_l1(
             model_children=model_children,
             true_data=inputs,
             reconstructed_data=reconstructions,
@@ -103,7 +103,7 @@ def validate(model, test_dl, model_children, reg_param):
             inputs = inputs.to(device)
             reconstructions = model(inputs)
 
-            loss, _, _ = utils.mse_loss_l1(
+            loss, _, _ = utils.mse_sum_loss_l1(
                 model_children=model_children,
                 true_data=inputs,
                 reconstructed_data=reconstructions,
@@ -172,12 +172,20 @@ def train(model, variables, train_data, test_data, project_path, config):
 
     # Converting data to tensors
     if config.data_dimension == 2:
-        train_ds = torch.tensor(train_data, dtype=torch.float32, device=device).view(
-            train_data.shape[0], 1, train_data.shape[1], train_data.shape[2]
-        )
-        valid_ds = torch.tensor(test_data, dtype=torch.float32, device=device).view(
-            test_data.shape[0], 1, test_data.shape[1], test_data.shape[2]
-        )
+        if config.model_type == "dense":
+            train_ds = torch.tensor(
+                train_data, dtype=torch.float32, device=device
+            ).view(train_data.shape[0], train_data.shape[1] * train_data.shape[2])
+            valid_ds = torch.tensor(test_data, dtype=torch.float32, device=device).view(
+                train_data.shape[0], train_data.shape[1] * train_data.shape[2]
+            )
+        elif config.model_type == "convolutional":
+            train_ds = torch.tensor(
+                train_data, dtype=torch.float32, device=device
+            ).view(train_data.shape[0], 1, train_data.shape[1], train_data.shape[2])
+            valid_ds = torch.tensor(test_data, dtype=torch.float32, device=device).view(
+                train_data.shape[0], 1, train_data.shape[1], train_data.shape[2]
+            )
     elif config.data_dimension == 1:
         train_ds = torch.tensor(train_data, dtype=torch.float64, device=device)
         valid_ds = torch.tensor(test_data, dtype=torch.float64, device=device)
