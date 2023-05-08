@@ -55,7 +55,7 @@ poetry run python baler --project CFD_workspace CFD_project_animation --mode plo
 ```
 
 ### High Energy Physics Example ###
-To run our High Energy Physics using CMS data (DOI:10.7483/OPENDATA.CMS.KL8H.HFVH) follow the above instructions but replace `--project CFD_workspace CFD_project_v1` with `--project CMS_workspace CMS_project_v1`
+To run our High Energy Physics using CMS data (DOI:10.7483/OPENDATA.CMS.KL8H.HFVH) follow the above instructions but replace `--project CFD_workspace CFD_project_animation` with `--project CMS_workspace CMS_project_v1`
 
 ## New project ##
 To create the folder structure and a skeleton config for your own project:
