@@ -68,10 +68,12 @@ def get_index_to_cut(column_index, cut, array):
     Returns:
         _type_: returns the index of the rows to be removed
     """
-    indices_to_cut = np.argwhere(array[column_index] < cut).flatten()
-    return indices_to_cut
-
-
+    if len(array) == 0:             # Edge case when the initial array is empty
+        return np.array([])
+    else:
+        indices_to_cut = np.argwhere(array[column_index] < cut).flatten()
+        return indices_to_cut
+    
 def plot_box_and_whisker(names, residual, pdf):
     """Plots Box and Whisker plots of 1D data
 
