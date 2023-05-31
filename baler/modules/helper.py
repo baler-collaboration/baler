@@ -553,7 +553,7 @@ def decompress(model_path, input_path, model_name, config):
     model.eval()
 
     # Load the data, convert to tensor and batch it to avoid memory leaks
-    data_tensor = torch.from_numpy(data)
+    data_tensor = torch.from_numpy(data).to(device)
     data_dl = DataLoader(
         data_tensor,
         batch_size=bs,
@@ -580,7 +580,7 @@ def decompress(model_path, input_path, model_name, config):
         decompressed = decompressed.view(
             len(decompressed), number_of_columns, number_of_columns
         )
-    decompressed = decompressed.detach().numpy()
+    decompressed = decompressed.detach().cpu().numpy()
 
     return decompressed, names, normalization_features
 
