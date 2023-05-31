@@ -18,6 +18,7 @@ import time
 import numpy as np
 
 import modules.helper as helper
+from math import ceil
 
 
 def main():
@@ -86,15 +87,15 @@ def perform_training(output_path, config, verbose: bool):
     try:
         if config.data_dimension == 1:
             number_of_columns = train_set_norm.shape[1]
-            config.latent_space_size = int(
-                number_of_columns // config.compression_ratio
+            config.latent_space_size = ceil(
+                number_of_columns / config.compression_ratio
             )
             config.number_of_columns = number_of_columns
         elif config.data_dimension == 2:
             number_of_rows = train_set_norm.shape[1]
             number_of_columns = train_set_norm.shape[2]
-            config.latent_space_size = int(
-                (number_of_rows * number_of_columns) // config.compression_ratio
+            config.latent_space_size = ceil(
+                (number_of_rows * number_of_columns) / config.compression_ratio
             )
             config.number_of_columns = number_of_columns
         else:
@@ -108,6 +109,9 @@ def perform_training(output_path, config, verbose: bool):
                 f"{config.number_of_columns} -> {config.latent_space_size} dimensions"
             )
         assert number_of_columns == config.number_of_columns
+
+    if verbose:
+        print(f"Intitalizing Model with Latent Size - {config.latent_space_size}")
 
     device = helper.get_device()
     if verbose:

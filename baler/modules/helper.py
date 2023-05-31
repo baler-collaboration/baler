@@ -17,6 +17,7 @@ import importlib
 import os
 import sys
 from dataclasses import dataclass
+from math import ceil
 
 from tqdm import tqdm
 
@@ -431,16 +432,16 @@ def compress(model_path, config):
         if config.data_dimension == 1:
             column_names = np.load(config.input_path)["names"]
             number_of_columns = len(column_names)
-            config.latent_space_size = int(
-                number_of_columns // config.compression_ratio
+            config.latent_space_size = ceil(
+                number_of_columns / config.compression_ratio
             )
             config.number_of_columns = number_of_columns
         elif config.data_dimension == 2:
             data = data_before
             number_of_rows = data.shape[1]
             config.number_of_columns = data.shape[2]
-            config.latent_space_size = int(
-                (number_of_rows * config.number_of_columns) // config.compression_ratio
+            config.latent_space_size = ceil(
+                (number_of_rows * config.number_of_columns) / config.compression_ratio
             )
         else:
             raise NameError(
