@@ -17,6 +17,8 @@ import torch
 from numpy import ndarray
 from sklearn.model_selection import train_test_split
 
+from tqdm import tqdm
+
 from modules import helper
 from modules import models
 from typing import List, Tuple
@@ -158,10 +160,6 @@ def renormalize_func(norm_data: ndarray, min_list: List, range_list: List) -> nd
         ndarray: Array with the un-normalized values.
     """
     norm_data = np.array(norm_data)
-    renormalized = [
-        renormalize_std(norm_data, min_list[i], range_list[i])
-        for i in range(len(min_list))
-    ]
-    renormalized_full = [(renormalized[i][:, i]) for i in range(len(renormalized))]
-    renormalized_full = np.array(renormalized_full).T
-    return renormalized_full
+    min_list = np.array(min_list)
+    range_list = np.array(range_list)
+    return norm_data * range_list + min_list
