@@ -562,27 +562,24 @@ def decompress(model_path, input_path, model_name, config):
         drop_last=False,
     )
 
-    # Decompress the data using the trained models decode function
-    decompressed = model.decode(data_tensor)
-    # decompressed = []
-    # with torch.no_grad():
-    #     for idx, data_batch in enumerate(tqdm(data_dl)):
-    #         data_batch = data_batch.to(device)
+    # Perform Decompression
+    decompressed = []
+    with torch.no_grad():
+        for idx, data_batch in enumerate(tqdm(data_dl)):
+            data_batch = data_batch.to(device)
 
-    #         out = model.decode(data_batch)
-    #         # Converting back to numpyarray
-    #         out = detacher(out)
-    #         if idx == 0:
-    #             decompressed = out
-    #         else:
-    #             decompressed = np.concatenate((decompressed, out))
+            out = model.decode(data_batch).to(device)
+            # Converting back to numpyarray
+            out = detacher(out)
+            if idx == 0:
+                decompressed = out
+            else:
+                decompressed = np.concatenate((decompressed, out))
 
     if config.data_dimension == 2 and config.model_type == "dense":
         decompressed = decompressed.view(
             len(decompressed), number_of_columns, number_of_columns
         )
-    decompressed = decompressed.detach().cpu().numpy()
-
     return decompressed, names, normalization_features
 
 
