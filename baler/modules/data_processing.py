@@ -68,7 +68,9 @@ def load_model(model_object, model_path: str, n_features: int, z_dim: int):
     model.to(device)
 
     # Loading the state_dict into the model
-    model.load_state_dict(torch.load(str(model_path)), strict=False)
+    model.load_state_dict(
+        torch.load(str(model_path), map_location=device), strict=False
+    )
     return model
 
 
