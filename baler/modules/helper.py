@@ -591,3 +591,64 @@ def diagnose(input_path: str, output_path: str) -> None:
         output_path (str): path to store the diagnostics pdf
     """
     diagnostics.diagnose(input_path, output_path)
+    
+    
+    
+    
+    
+    
+ 
+    
+def perform_hls4ml_conversion(output_path,config):
+    """Function which performs the conversion of the model to FPGA architecture using hls4ml. In order to convert, you must have a trained model.
+    The hls4ml project is located in hls4ml_project_path defined in the config file.
+
+    The model path is determined by the `output_path`. The 'output_path' should point to the output directory inside the project directory.
+
+    Args:
+    output_path (string): Path to the output directory inside the project directory.
+    config (dataClass): Base class selecting user inputs
+
+    Returns: None
+    """
+
+    import hls4ml
+ 
+    model_path=os.path.join(output_path, "compressed_output", "model.pt")
+
+    model_object = data_processing.initialise_model(config.model_name)
+    model = data_processing.load_model(
+        model_object,
+        model_path=model_path,
+        n_features=config.number_of_columns,
+        z_dim=config.latent_space_size	
+    )
+    model.to('cpu')
+
+
+    hls_config = hls4ml.utils.config_from_pytorch_model(model, granularity='name',default_reuse_factor=config.default_reuse_factor,
+	                                            default_precision=config.default_precision)
+
+    hls_config['Model']['Strategy'] = config.strategy
+
+    cfg = hls4ml.converters.create_config(backend='Vivado')
+    cfg['Part'] = config.part
+    cfg['ClockPeriod'] = config.clock_period
+    cfg['IOType']     =  config.io_type
+    cfg['HLSConfig']  = hls_config
+    cfg['PytorchModel'] = model
+    cfg['InputShape'] = config.input_shape
+    cfg['OutputDir']  = os.path.join(config.hls4ml_project_path,'hls4ml')
+    
+    if config.hls_input_data and config.hls_output_predictions:
+        cfg['InputData'] =  config.hls_input_data
+        cfg['OutputPredictions'] = config.hls_output_predictions
+    
+    hls_model = hls4ml.converters.pytorch_to_hls(cfg)
+    hls_model.config.config['ProjectName'] = config.project_name
+
+
+    hls_model.compile()
+
+    hls_model.build(csim=config.run_csim, synth=config.run_synth, cosim=config.run_cosim, export=config.run_export)
+
