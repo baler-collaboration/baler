@@ -14,7 +14,6 @@ scikit-learn = "^1.2.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.2.1"
-pre-commit = "^3.2.0"
 black = "^23.1.0"
 
 [tool.poetry.scripts]
