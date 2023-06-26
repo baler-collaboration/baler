@@ -536,7 +536,7 @@ def decompress(model_path, input_path, model_name, config):
     model_name = config.model_name
     latent_space_size = len(data[0])
     bs = config.batch_size
-    model_dict = torch.load(str(model_path))
+    model_dict = torch.load(str(model_path), map_location=get_device())
     if config.data_dimension == 2 and config.model_type == "dense":
         number_of_columns = int(np.sqrt(len(model_dict[list(model_dict.keys())[-1]])))
     else:
