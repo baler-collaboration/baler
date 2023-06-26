@@ -577,8 +577,8 @@ def decompress(model_path, input_path, model_name, config):
                 decompressed = np.concatenate((decompressed, out))
 
     if config.data_dimension == 2 and config.model_type == "dense":
-        decompressed = decompressed.view(
-            len(decompressed), number_of_columns, number_of_columns
+        decompressed = decompressed.reshape(
+            (len(decompressed), number_of_columns, number_of_columns)
         )
     return decompressed, names, normalization_features
 
