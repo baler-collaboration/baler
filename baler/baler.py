@@ -17,7 +17,7 @@ import time
 
 import numpy as np
 
-import modules.helper as helper
+from .modules import helper
 from math import ceil
 
 

@@ -15,19 +15,16 @@
 import argparse
 import importlib
 import os
-import sys
 from dataclasses import dataclass
 from math import ceil
 
-from tqdm import tqdm
-
-sys.path.append(os.getcwd())
 import numpy as np
 import torch
-from torch.utils.data import DataLoader
 from sklearn.model_selection import train_test_split
+from torch.utils.data import DataLoader
+from tqdm import tqdm
 
-from modules import training, plotting, data_processing, diagnostics
+from . import training, plotting, data_processing, diagnostics
 
 
 def get_arguments():

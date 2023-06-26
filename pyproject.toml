@@ -11,9 +11,14 @@ torch = ">=2.0.0, !=2.0.1"
 tqdm = "^4.64.1"
 matplotlib = "^3.6.2"
 scikit-learn = "^1.2.0"
+
+[tool.poetry.dev-dependencies]
 pytest = "^7.2.1"
 pre-commit = "^3.2.0"
 black = "^23.1.0"
+
+[tool.poetry.scripts]
+baler = 'baler.__main__:main'
 
 [tool.pytest.ini_options]
 addopts = [
