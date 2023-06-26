@@ -6,13 +6,8 @@ authors = ["Your Name <you@example.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-<<<<<<< HEAD
-python = ">=3.8,<3.11"
-torch = "^1.13.1"
-=======
-python = "^3.8"
+python = ">=3.8, <3.11"
 torch = ">=2.0.0, !=2.0.1"
->>>>>>> main
 tqdm = "^4.64.1"
 matplotlib = "^3.6.2"
 scikit-learn = "^1.2.0"
