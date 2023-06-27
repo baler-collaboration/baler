@@ -29,6 +29,7 @@ def main():
         - if --mode=compress: call `perform_compression` and compress the given data using the model trained in `--mode=train`
         - if --mode=decompress: call `perform_decompression` and decompress the compressed file outputted from `--mode=compress`
         - if --mode=plot: call `perform_plotting` and plot the comparison between the original data and the decompressed data from `--mode=decompress`. Also plots the loss plot from the trained network.
+        - if --mode=convert_with_hls4ml: call `helper.perform_hls4ml_conversion` and create an hls4ml project containing the converted model.
 
 
     Raises:
@@ -52,6 +53,8 @@ def main():
         perform_plotting(output_path, config, verbose)
     elif mode == "info":
         print_info(output_path, config)
+    elif mode == "convert_with_hls4ml":
+        helper.perform_hls4ml_conversion(output_path,config)
     else:
         raise NameError(
             "Baler mode "

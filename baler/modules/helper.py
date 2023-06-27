@@ -591,3 +591,114 @@ def diagnose(input_path: str, output_path: str) -> None:
         output_path (str): path to store the diagnostics pdf
     """
     diagnostics.diagnose(input_path, output_path)
+    
+    
+    
+    
+    
+    
+ 
+    
+def perform_hls4ml_conversion(output_path,config):
+    """Function which performs the conversion of the model to FPGA architecture using hls4ml. In order to convert, you must have a trained model.
+    
+    The output hls4ml project will be located in OutputDir defined in the config file.
+    The model path is determined by the `output_path`. The 'output_path' should point to the output directory inside the project directory.
+
+    Before running this function:
+    1. Install Vivado 2020.1 and add in to path.
+    2. Install hls4ml and tensorflow to the projects virtual environment.
+    3. Add the following configuration options to the projects config:
+    
+        c.default_reuse_factor         
+        c.default_precision            
+        c.Strategy                     
+        c.Part                         
+        c.ClockPeriod                  
+        c.IOType                        
+        c.InputShape                   
+        c.ProjectName                  
+        c.OutputDir                    
+        c.InputData                    
+        c.OutputPredictions            
+        c.csim                         
+        c.synth                        
+        c.cosim                        
+        c.export                       
+
+        This function was tested with the following configuration values:
+        
+        c.default_reuse_factor         = 1
+        c.default_precision            = "ap_fixed<16,8>"
+        c.Strategy                     = "latency"
+        c.Part                         = "xcvu9p-flga2104-2L-e"
+        c.ClockPeriod                  = 5
+        c.IOType                       = "io_parallel" 
+        c.InputShape                   = (1,16)
+        c.ProjectName                  = "tiny_test_model"
+        c.OutputDir                    = "workspaces/FPGA_compression_workspace/first_FPGA_Compression_project/output/hls4ml"
+        c.InputData                    = None
+        c.OutputPredictions            = None
+        c.csim                         = False
+        c.synth                        = True
+        c.cosim                        = False
+        c.export                       = False
+
+        Naming is based on the names used by hls4ml for easier reference. For more details please see hls4ml documentation.
+
+    4. The model to transform should be defined similarly to FPGA_prototype_model. Meaning:
+        a. Activations should be defined as layers and not functions.
+        b. If the model is defined as a class, each layer should be defined with an attribute. An attribute for the whole model instead of for each layer separately might cause errors in hls4ml compile function.
+        c. Not all types of layers are supported in hls4ml, check hls4ml for the supported layers. 
+       
+       
+
+    Args:
+    output_path (string): Path to the output directory inside the project directory.
+    config (dataClass): Base class selecting user inputs
+
+    Returns: None
+    
+    
+    """
+
+    import hls4ml
+ 
+    model_path=os.path.join(output_path, "compressed_output", "model.pt")
+
+    model_object = data_processing.initialise_model(config.model_name)
+    model = data_processing.load_model(
+        model_object,
+        model_path=model_path,
+        n_features=config.number_of_columns,
+        z_dim=config.latent_space_size	
+    )
+    model.to('cpu')
+
+
+    hls_config = hls4ml.utils.config_from_pytorch_model(model, granularity='name',default_reuse_factor=config.default_reuse_factor,
+	                                            default_precision=config.default_precision)
+
+    hls_config['Model']['Strategy'] = config.Strategy
+
+    cfg = hls4ml.converters.create_config(backend='Vivado')
+    cfg['Part'] = config.Part
+    cfg['ClockPeriod'] = config.ClockPeriod
+    cfg['IOType']     =  config.IOType
+    cfg['HLSConfig']  = hls_config
+    cfg['PytorchModel'] = model
+    cfg['InputShape'] = config.InputShape
+    cfg['OutputDir']  = config.OutputDir
+    
+    if config.InputData and config.OutputPredictions:
+        cfg['InputData'] =  config.InputData
+        cfg['OutputPredictions'] = config.OutputPredictions
+    
+    hls_model = hls4ml.converters.pytorch_to_hls(cfg)
+    hls_model.config.config['ProjectName'] = config.ProjectName
+
+
+    hls_model.compile()
+
+    hls_model.build(csim=config.csim, synth=config.synth, cosim=config.cosim, export=config.export)
+
