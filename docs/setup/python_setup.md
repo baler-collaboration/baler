@@ -13,11 +13,11 @@ Add poetry to path in your current session
 ```console
 source ~/.profile
 ```
-In case of you are using a bash shell, add poetry to path in your current session as 
+In case if you are using a bash shell, add poetry to path in your current session as 
 ```console
 source ~/.bashrc
 ```
-Or you may use the below command
+Or you may use the below command for the same
 ```console
 source ~/.bash_profile
 ```
