@@ -13,6 +13,14 @@ Add poetry to path in your current session
 ```console
 source ~/.profile
 ```
+In case of you are using a bash shell, add poetry in your current session as 
+```console
+source ~/.bashrc
+```
+Or,
+```console
+source ~/.bash_profile
+```
 Clone this repository
 ```console
 git clone https://github.com/baler-collaboration/baler.git
