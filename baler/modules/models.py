@@ -295,36 +295,31 @@ class Conv_AE(nn.Module):
         z = self.encode(x)
         out = self.decode(z)
         return out
-        
-        
-        
+
 
 class FPGA_prototype_model(nn.Module):
-    
     def __init__(self, n_features, z_dim, *args, **kwargs):
         super(FPGA_prototype_model, self).__init__(*args, **kwargs)
 
-       # encoder 
+        # encoder
         self.en1 = nn.Linear(n_features, 20, dtype=torch.float64)
         self.en_act1 = nn.ReLU()
         self.en2 = nn.Linear(20, 10, dtype=torch.float64)
         self.en_act2 = nn.ReLU()
         self.en3 = nn.Linear(10, z_dim, dtype=torch.float64)
 
-       # decoder
+        # decoder
         self.de1 = nn.Linear(z_dim, 10, dtype=torch.float64)
         self.de_act1 = nn.ReLU()
         self.de2 = nn.Linear(10, 20, dtype=torch.float64)
         self.de_act2 = nn.ReLU()
         self.de3 = nn.Linear(20, n_features, dtype=torch.float64)
 
-
         self.n_features = n_features
         self.z_dim = z_dim
 
-
     def encode(self, x):
-        s1 = self.en1(x) 
+        s1 = self.en1(x)
         s2 = self.en_act1(s1)
         s3 = self.en2(s2)
         s4 = self.en_act2(s3)
@@ -339,13 +334,20 @@ class FPGA_prototype_model(nn.Module):
         s10 = self.de3(s9)
         return s10
 
-
     def forward(self, x):
         z = self.encode(x)
         return self.decode(z)
 
-
     def get_layers(self) -> list:
-        return [self.en1, self.en_act1, self.en2, self.en_act2, self.en3, self.de1, self.de_act1, self.de2, self.de_act2, self.de3]
-
-
+        return [
+            self.en1,
+            self.en_act1,
+            self.en2,
+            self.en_act2,
+            self.en3,
+            self.de1,
+            self.de_act1,
+            self.de2,
+            self.de_act2,
+            self.de3,
+        ]

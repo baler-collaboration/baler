@@ -54,7 +54,7 @@ def main():
     elif mode == "info":
         print_info(output_path, config)
     elif mode == "convert_with_hls4ml":
-        helper.perform_hls4ml_conversion(output_path,config)
+        helper.perform_hls4ml_conversion(output_path, config)
     else:
         raise NameError(
             "Baler mode "
