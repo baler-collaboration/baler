@@ -1,3 +1,3 @@
-import baler
+from .baler import main
 
-baler.main()
+main()

@@ -17,7 +17,7 @@ import time
 
 import numpy as np
 
-import modules.helper as helper
+from .modules import helper
 from math import ceil
 
 
@@ -374,7 +374,3 @@ def print_info(output_path, config):
     print("\n ==================================")
 
     ## TODO: Add way to print how much your data has been distorted
-
-
-if __name__ == "__main__":
-    main()

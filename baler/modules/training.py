@@ -21,9 +21,9 @@ import torch
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-import modules.helper as helper
-import modules.utils as utils
-import modules.diagnostics as diagnostics
+from ..modules import helper
+from ..modules import utils
+from ..modules import diagnostics
 
 
 def fit(

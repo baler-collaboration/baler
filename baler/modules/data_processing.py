@@ -19,8 +19,8 @@ from sklearn.model_selection import train_test_split
 
 from tqdm import tqdm
 
-from modules import helper
-from modules import models
+from ..modules import helper
+from ..modules import models
 from typing import List, Tuple
 
 
