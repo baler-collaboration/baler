@@ -14,11 +14,11 @@
 
 import os
 import time
+from math import ceil
 
 import numpy as np
 
 from .modules import helper
-from math import ceil
 
 
 def main():

@@ -1,10 +1,10 @@
-import torch
-import matplotlib.pyplot as plt
+import os
+
 import matplotlib.colors
+import matplotlib.pyplot as plt
 import matplotlib.ticker
 import numpy as np
-from matplotlib.backends.backend_pdf import PdfPages
-import os
+import torch
 
 
 def get_mean_node_activations(input_dict: dict) -> dict:
