@@ -1,5 +1,3 @@
-from baler.baler import main
+from .baler import main
 
-
-if __name__ == "__main__":
-    main()
+main()

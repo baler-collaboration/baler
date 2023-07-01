@@ -56,7 +56,7 @@ RUN poetry remove torch && \
     poetry install --no-interaction --no-ansi
 
 # Creating folders, and files for the project:
-COPY ./baler/ __init__.py README.md ./tests/ ./
+COPY ./baler/ README.md ./tests/ ./
 
 # Creating python wheel
 RUN poetry build

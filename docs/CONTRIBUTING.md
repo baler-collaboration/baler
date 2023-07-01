@@ -21,7 +21,7 @@ If you would like to contribute code to the project, please follow these steps:
 3. Create a new branch for your changes, named after the issue you are addressing (e.g. issue-123)
 4. Make your changes on this branch, committing as you go
 5. Push your changes to your forked repository
-6. Create a pull request from your branch into the `development` branch of the main project repository
+6. Create a pull request from your branch into the `main` branch of the Baler project repository
 7. Wait for your pull request to be reviewed and merged
 
 
