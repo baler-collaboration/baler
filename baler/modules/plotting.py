@@ -12,12 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.backends.backend_pdf import PdfPages
 from tqdm import tqdm
 from tqdm import trange
-import os
 
 
 def loss_plot(path_to_loss_data, output_path, config):

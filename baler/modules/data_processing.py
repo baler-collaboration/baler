@@ -12,16 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import List, Tuple
+
 import numpy as np
 import torch
 from numpy import ndarray
 from sklearn.model_selection import train_test_split
 
-from tqdm import tqdm
-
 from ..modules import helper
 from ..modules import models
-from typing import List, Tuple
 
 
 def save_model(model, model_path: str) -> None:
