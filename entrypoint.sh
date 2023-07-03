@@ -2,4 +2,4 @@
 set -e
 
 eval $( fixuid -q )
-exec python baler "$@"
+exec python -m baler "$@"
