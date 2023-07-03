@@ -5,21 +5,24 @@ For some Linux users, disable the KDE keyring
 ```console
 export PYTHON_KEYRING_BACKEND=keyring.backends.null.Keyring
 ```
-Install poetry for managing the python environment
+
+1. Install [poetry](https://python-poetry.org/) for managing the python environment. 
+
+2. Clone this repository and move into the project
 ```console
-pip3 install poetry
+git clone https://github.com/baler-collaboration/baler.git && cd baler
 ```
-Add poetry to path in your current session
+
+3. Install dependencies using Poetry
 ```console
-source ~/.profile
+poetry install
 ```
-Clone this repository
+
+4. Try the installation with `poetry run python -m baler`, this should give the following output:
+
 ```console
-git clone https://github.com/baler-collaboration/baler.git
-```
-Move into the Baler directory
-```console
-cd baler
+usage: baler.py [-h] --mode MODE --project WORKSPACE PROJECT [--verbose]
+baler.py: error: the following arguments are required: --mode, --project
 ```
 
 ## Working Example with Python
@@ -36,22 +39,23 @@ poetry run python baler --project CFD_workspace CFD_project_animation --mode tra
 
 #### Compressing ####
 To use the derived model for compression, you can now choose ``--mode compress``, which can be run as
+
 ```console
-poetry run python baler --project CFD_workspace CFD_project_animation --mode compress
+poetry run python -m baler --project CFD_workspace CFD_project_animation --mode compress
 ```
 This will output a compressed file called "compressed.pickle", and this is the latent space representation of the input dataset. It will also output cleandata_pre_comp.pickle which is just the exact data being compressed.
 
 #### Decompressing ####
 To decompress the compressed file, we choose --mode decompress and run:
 ```console
-poetry run python baler --project CFD_workspace CFD_project_animation --mode decompress
+poetry run python -m baler --project CFD_workspace CFD_project_animation --mode decompress
 ```
 
 #### Plotting ####
 To plot the difference of your variables before compression and after decompression, we can use the following command to generate a .pdf document under ``./workspaces/firstWorkspace/firstProject/output/plotting/comparison.pdf``
 
 ```console
-poetry run python baler --project CFD_workspace CFD_project_animation --mode plot
+poetry run python -m baler --project CFD_workspace CFD_project_animation --mode plot
 ```
 
 ### High Energy Physics Example ###
@@ -60,5 +64,5 @@ To run our High Energy Physics using CMS data (DOI:10.7483/OPENDATA.CMS.KL8H.HFV
 ## New project ##
 To create the folder structure and a skeleton config for your own project:
 ```console
-poetry run python baler --project firstWorkspace firstProject --mode newProject
+poetry run python -m baler --project firstWorkspace firstProject --mode newProject
 ```
