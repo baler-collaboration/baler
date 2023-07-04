@@ -476,7 +476,11 @@ def compress(model_path, config):
     # elif config.data_dimension == 1:
     #     data_tensor = torch.from_numpy(data).to(device)
     if config.data_dimension == 2:
-        if config.model_type == "convolutional":
+        if config.model_type == "convolutional" and config.model_name == "Conv_AE_3D":
+            data_tensor = torch.tensor(data, dtype=torch.float32).view(
+                1, 1, data.shape[0], data.shape[1], data.shape[2]
+            )
+        elif config.model_type == "convolutional":
             data_tensor = torch.tensor(data, dtype=torch.float32).view(
                 data.shape[0], 1, data.shape[1], data.shape[2]
             )
