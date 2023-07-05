@@ -34,7 +34,7 @@ Here we provide some instructions for our working examples.
 #### Training ####
 To train the autoencoder to compress your data, you run the following command. The config file `./workspaces/CFD_workspace/CFD_project_v1/config/CFD_project_v1_config.py`. This details the path of the data, the number of epochs, and all the other training parameters.
 ```console
-poetry run python baler --project CFD_workspace CFD_project_animation --mode train
+poetry run python -m baler --project CFD_workspace CFD_project_animation --mode train
 ```
 
 #### Compressing ####
