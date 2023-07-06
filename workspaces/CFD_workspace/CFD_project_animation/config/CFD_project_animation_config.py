@@ -25,6 +25,7 @@ def set_config(c):
     c.intermittent_saving_patience = 100
     c.activation_extraction = False
     c.deterministic_algorithm = False
+    c.compress_to_latent_space = False
 
 
 # def set_config(c):

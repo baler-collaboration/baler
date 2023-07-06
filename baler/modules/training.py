@@ -179,6 +179,13 @@ def train(model, variables, train_data, test_data, project_path, config):
             valid_ds = torch.tensor(test_data, dtype=torch.float32, device=device).view(
                 train_data.shape[0], train_data.shape[1] * train_data.shape[2]
             )
+        elif config.model_type == "convolutional" and config.model_name == "Conv_AE_3D":
+            train_ds = torch.tensor(
+                train_data, dtype=torch.float32, device=device
+            ).view(1, 1, train_data.shape[0], train_data.shape[1], train_data.shape[2])
+            valid_ds = torch.tensor(test_data, dtype=torch.float32, device=device).view(
+                1, 1, train_data.shape[0], train_data.shape[1], train_data.shape[2]
+            )
         elif config.model_type == "convolutional":
             train_ds = torch.tensor(
                 train_data, dtype=torch.float32, device=device

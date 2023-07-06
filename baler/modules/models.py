@@ -351,3 +351,94 @@ class FPGA_prototype_model(nn.Module):
             self.de_act2,
             self.de3,
         ]
+
+
+class Conv_AE_3D(nn.Module):
+    def __init__(self, n_features, z_dim, *args, **kwargs):
+        super(Conv_AE_3D, self).__init__(*args, **kwargs)
+
+        self.q_z_mid_dim = 2000
+        self.q_z_output_dim = 0  # Please change this to 4800000
+        self.compress_to_latent_space = False
+
+        # Encoder
+
+        # Conv Layers
+        self.q_z_conv = nn.Sequential(
+            nn.Conv3d(1, 8, kernel_size=(1, 1, 1), stride=(1), padding=(1)),
+            # nn.BatchNorm2d(8),
+            nn.ReLU(),
+            nn.Conv3d(8, 16, kernel_size=(3), stride=(1), padding=(1)),
+            # nn.BatchNorm2d(16),
+            nn.ReLU(),
+            nn.Conv3d(16, 32, kernel_size=(3), stride=(1), padding=(0)),
+            # nn.BatchNorm2d(32),
+            nn.ReLU(),
+        )
+        # Flatten
+        self.flatten = nn.Flatten(start_dim=1)
+
+        # Linear layers
+        self.q_z_lin = nn.Sequential(
+            nn.Linear(self.q_z_output_dim, self.q_z_mid_dim),
+            nn.ReLU(),
+            # nn.BatchNorm1d(self.q_z_mid_dim),
+            nn.Linear(self.q_z_mid_dim, z_dim),
+            nn.ReLU(),
+        )
+
+        # Decoder
+
+        # Linear layers
+        self.p_x_lin = nn.Sequential(
+            nn.Linear(z_dim, self.q_z_mid_dim),
+            nn.ReLU(),
+            # nn.BatchNorm1d(self.q_z_mid_dim),
+            nn.Linear(self.q_z_mid_dim, self.q_z_output_dim),
+            nn.ReLU(),
+            # nn.BatchNorm1d(self.q_z_output_dim),
+        )
+
+        # Conv Layers
+        self.p_x_conv = nn.Sequential(
+            nn.ConvTranspose3d(32, 16, kernel_size=(3), stride=(1), padding=(0)),
+            nn.BatchNorm3d(16),
+            nn.ReLU(),
+            nn.ConvTranspose3d(16, 8, kernel_size=(3), stride=(1), padding=(1)),
+            nn.BatchNorm3d(8),
+            nn.ReLU(),
+            nn.ConvTranspose3d(8, 1, kernel_size=(1, 1, 1), stride=(1), padding=(1)),
+        )
+
+    def encode(self, x):
+        # Conv
+
+        out = self.q_z_conv(x)
+        # Flatten
+        out = self.flatten(out)
+
+        if self.compress_to_latent_space:
+            # Dense
+            out = self.q_z_lin(out)
+
+        return out
+
+    def decode(self, out):
+        # Unflatten
+        out = out.view(1, 32, 60, 50, 50)
+
+        if self.compress_to_latent_space:
+            out = self.p_x_lin(out)
+
+        # Conv transpose
+        out = self.p_x_conv(out)
+
+        return out
+
+    def forward(self, x):
+        z = self.encode(x)
+        out = self.decode(z)
+        return out
+
+    def set_compress_to_latent_space(self, compress_to_latent_space):
+        self.compress_to_latent_space = compress_to_latent_space
