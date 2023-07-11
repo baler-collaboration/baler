@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "baler"
-version = "1.1.0"
+version = "1.3.0"
 description = "Baler aims to be a tool which will use lossy machine learning based compression methods to compress multi-dimensional data and evaluate the accuracy of the compressed data. The compression “algorithm” is derived by training an auto-encoder to compress and decompress multidimensional data."
 authors = ["Your Name <you@example.com>"]
 readme = "README.md"
