@@ -26,6 +26,8 @@ def set_config(c):
     c.activation_extraction = False
     c.deterministic_algorithm = False
     c.compress_to_latent_space = False
+    c.save_error_bounded_deltas = True
+    c.error_bounded_requirement = 1
 
 
 # def set_config(c):

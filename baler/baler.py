@@ -19,6 +19,7 @@ from math import ceil
 import numpy as np
 
 from .modules import helper
+import gzip
 
 
 def main():
@@ -217,7 +218,12 @@ def perform_compression(output_path, config, verbose: bool):
             os.path.join(output_path, "training", "normalization_features.npy")
         )
 
-    compressed = helper.compress(
+    (
+        compressed,
+        error_bound_batch,
+        error_bound_deltas,
+        error_bound_index,
+    ) = helper.compress(
         model_path=os.path.join(output_path, "compressed_output", "model.pt"),
         config=config,
     )
@@ -252,6 +258,29 @@ def perform_compression(output_path, config, verbose: bool):
             names=names,
             normalization_features=normalization_features,
         )
+    if config.save_error_bounded_deltas:
+        error_bound_batch_index = np.array(
+            [error_bound_batch, error_bound_index], dtype=object
+        )
+        f_batch_index = gzip.GzipFile(
+            os.path.join(
+                output_path,
+                "compressed_output",
+                "compressed_batch_index_metadata.npz.gz",
+            ),
+            "w",
+        )
+        f_deltas = gzip.GzipFile(
+            os.path.join(output_path, "compressed_output", "compressed_deltas.npz.gz"),
+            "w",
+        )
+        np.save(file=f_deltas, arr=error_bound_deltas)
+        np.save(
+            file=f_batch_index,
+            arr=error_bound_batch_index,
+        )
+        f_batch_index.close()
+        f_deltas.close()
 
 
 def perform_decompression(output_path, config, verbose: bool):
@@ -272,6 +301,12 @@ def perform_decompression(output_path, config, verbose: bool):
     decompressed, names, normalization_features = helper.decompress(
         model_path=os.path.join(output_path, "compressed_output", "model.pt"),
         input_path=os.path.join(output_path, "compressed_output", "compressed.npz"),
+        input_path_deltas=os.path.join(
+            output_path, "compressed_output", "compressed_deltas.npz.gz"
+        ),
+        input_batch_index=os.path.join(
+            output_path, "compressed_output", "compressed_batch_index_metadata.npz.gz"
+        ),
         model_name=model_name,
         config=config,
     )
