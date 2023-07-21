@@ -12,6 +12,8 @@ def set_config(c):
     c.batch_size = 512
     c.early_stopping = True
     c.lr_scheduler = True
+    c.save_error_bounded_deltas = True
+    c.error_bounded_requirement = 10
 
     # === Additional configuration options ===
 
