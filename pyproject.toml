@@ -5,6 +5,9 @@ description = "Baler aims to be a tool which will use lossy machine learning bas
 authors = ["Your Name <you@example.com>"]
 readme = "README.md"
 
+[tool.poetry.scripts]
+baler = "baler.baler:main"
+
 [tool.poetry.dependencies]
 python = ">=3.8, <3.11"
 torch = ">=2.0.0, !=2.0.1"
