@@ -21,6 +21,15 @@ import numpy as np
 from .modules import helper
 import gzip
 
+__all__ = (
+    "perform_compression",
+    "perform_decompression",
+    "perform_diagnostics",
+    "perform_plotting",
+    "perform_training",
+    "print_info",
+)
+
 
 def main():
     """Calls different functions depending on argument parsed in command line.
