@@ -39,7 +39,7 @@ def get_arguments():
     projects directory where outputs go.
     """
     parser = argparse.ArgumentParser(
-        prog="baler.py",
+        prog="baler",
         description=(
             "Baler is a machine learning based compression tool for big data.\n\n"
             "Baler has three running modes:\n\n"
