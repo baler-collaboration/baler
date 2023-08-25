@@ -362,11 +362,11 @@ class Conv_AE_3D(nn.Module):
         self.compress_to_latent_space = True
         self.debug = False
 
-         # Encoder
+        # Encoder
 
         # Conv Layers
         self.q_z_conv = nn.Sequential(
-            nn.Conv3d(1, 4, kernel_size=(1,3,5), stride=(1), padding=(0)),
+            nn.Conv3d(1, 4, kernel_size=(1, 3, 5), stride=(1), padding=(0)),
             # nn.BatchNorm2d(8),
             nn.ReLU(),
             nn.Conv3d(4, 8, kernel_size=(3), stride=(1), padding=(0)),
@@ -383,7 +383,7 @@ class Conv_AE_3D(nn.Module):
             nn.ReLU(),
             nn.Conv3d(64, 64, kernel_size=(1, 3, 3), stride=(1), padding=(0)),
             # nn.BatchNorm2d(16),
-            nn.ReLU()
+            nn.ReLU(),
         )
         # Flatten
         self.flatten = nn.Flatten(start_dim=1)
@@ -425,7 +425,7 @@ class Conv_AE_3D(nn.Module):
             nn.ConvTranspose3d(8, 4, kernel_size=(3), stride=(1), padding=(0)),
             nn.BatchNorm3d(4),
             nn.ReLU(),
-            nn.ConvTranspose3d(4, 1, kernel_size=(1,3,5), stride=(1), padding=(0)),
+            nn.ConvTranspose3d(4, 1, kernel_size=(1, 3, 5), stride=(1), padding=(0)),
         )
 
     def encode(self, x):
@@ -444,7 +444,7 @@ class Conv_AE_3D(nn.Module):
     def decode(self, out):
         if self.compress_to_latent_space:
             out = self.p_x_lin(out)
-        
+
         out = out.view(4, 64, 7, 38, 36)
 
         # Conv transpose
