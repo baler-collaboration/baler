@@ -21,8 +21,8 @@ poetry install
 4. Try the installation with `poetry run baler`, this should give the following output:
 
 ```console
-usage: baler.py [-h] --mode MODE --project WORKSPACE PROJECT [--verbose]
-baler.py: error: the following arguments are required: --mode, --project
+usage: baler [-h] --mode MODE --project WORKSPACE PROJECT [--verbose]
+baler: error: the following arguments are required: --mode, --project
 ```
 
 ## Working Example with Python
