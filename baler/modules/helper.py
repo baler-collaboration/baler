@@ -510,7 +510,7 @@ def compress(model_path, config):
     if config.data_dimension == 2:
         if config.model_type == "convolutional" and config.model_name == "Conv_AE_3D":
             data_tensor = torch.tensor(data, dtype=torch.float32).view(
-                1, 1, data.shape[0], data.shape[1], data.shape[2]
+                data.shape[0] // bs, 1, bs, data.shape[1], data.shape[2]
             )
         elif config.model_type == "convolutional":
             data_tensor = torch.tensor(data, dtype=torch.float32).view(

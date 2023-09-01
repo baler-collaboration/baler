@@ -266,11 +266,17 @@ def plot_2D(project_path, config):
     else:
         num_tiles = 1
 
+    if config.model_type == "convolutional" and config.model_name == "Conv_AE_3D":
+        data_decompressed = data_decompressed.reshape(
+            data_decompressed.shape[0] * data_decompressed.shape[2],
+            1,
+            data_decompressed.shape[3],
+            data_decompressed.shape[4],
+        )
+
     print("=== Plotting ===")
     for ind in trange(num_tiles):
-        if config.model_type == "convolutional" and config.model_name == "Conv_AE_3D":
-            tile_data_decompressed = data_decompressed[0][0][ind] * 0.04 * 1000
-        elif config.model_type == "convolutional":
+        if config.model_type == "convolutional":
             tile_data_decompressed = data_decompressed[ind][0] * 0.04 * 1000
         elif config.model_type == "dense":
             tile_data_decompressed = data_decompressed[ind] * 0.04 * 1000
