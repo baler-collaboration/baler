@@ -358,21 +358,31 @@ class Conv_AE_3D(nn.Module):
         super(Conv_AE_3D, self).__init__(*args, **kwargs)
 
         self.q_z_mid_dim = 2000
-        self.q_z_output_dim = 0  # Please change this to 4800000
-        self.compress_to_latent_space = False
+        self.q_z_output_dim = 612864
+        self.compress_to_latent_space = True
+        self.debug = False
 
         # Encoder
 
         # Conv Layers
         self.q_z_conv = nn.Sequential(
-            nn.Conv3d(1, 8, kernel_size=(1, 1, 1), stride=(1), padding=(1)),
+            nn.Conv3d(1, 4, kernel_size=(1, 3, 5), stride=(1), padding=(0)),
             # nn.BatchNorm2d(8),
             nn.ReLU(),
-            nn.Conv3d(8, 16, kernel_size=(3), stride=(1), padding=(1)),
+            nn.Conv3d(4, 8, kernel_size=(3), stride=(1), padding=(0)),
+            # nn.BatchNorm2d(16),
+            nn.ReLU(),
+            nn.Conv3d(8, 16, kernel_size=(3), stride=(1), padding=(0)),
             # nn.BatchNorm2d(16),
             nn.ReLU(),
             nn.Conv3d(16, 32, kernel_size=(3), stride=(1), padding=(0)),
-            # nn.BatchNorm2d(32),
+            # nn.BatchNorm2d(16),
+            nn.ReLU(),
+            nn.Conv3d(32, 64, kernel_size=(3), stride=(1), padding=(0)),
+            # nn.BatchNorm2d(16),
+            nn.ReLU(),
+            nn.Conv3d(64, 64, kernel_size=(1, 3, 3), stride=(1), padding=(0)),
+            # nn.BatchNorm2d(16),
             nn.ReLU(),
         )
         # Flatten
@@ -396,18 +406,26 @@ class Conv_AE_3D(nn.Module):
             # nn.BatchNorm1d(self.q_z_mid_dim),
             nn.Linear(self.q_z_mid_dim, self.q_z_output_dim),
             nn.ReLU(),
-            # nn.BatchNorm1d(self.q_z_output_dim),
         )
 
         # Conv Layers
         self.p_x_conv = nn.Sequential(
+            nn.ConvTranspose3d(64, 64, kernel_size=(1, 3, 3), stride=(1), padding=(0)),
+            nn.BatchNorm3d(64),
+            nn.ReLU(),
+            nn.ConvTranspose3d(64, 32, kernel_size=(3), stride=(1), padding=(0)),
+            nn.BatchNorm3d(32),
+            nn.ReLU(),
             nn.ConvTranspose3d(32, 16, kernel_size=(3), stride=(1), padding=(0)),
             nn.BatchNorm3d(16),
             nn.ReLU(),
-            nn.ConvTranspose3d(16, 8, kernel_size=(3), stride=(1), padding=(1)),
+            nn.ConvTranspose3d(16, 8, kernel_size=(3), stride=(1), padding=(0)),
             nn.BatchNorm3d(8),
             nn.ReLU(),
-            nn.ConvTranspose3d(8, 1, kernel_size=(1, 1, 1), stride=(1), padding=(1)),
+            nn.ConvTranspose3d(8, 4, kernel_size=(3), stride=(1), padding=(0)),
+            nn.BatchNorm3d(4),
+            nn.ReLU(),
+            nn.ConvTranspose3d(4, 1, kernel_size=(1, 3, 5), stride=(1), padding=(0)),
         )
 
     def encode(self, x):
@@ -424,11 +442,10 @@ class Conv_AE_3D(nn.Module):
         return out
 
     def decode(self, out):
-        # Unflatten
-        out = out.view(1, 32, 60, 50, 50)
-
         if self.compress_to_latent_space:
             out = self.p_x_lin(out)
+
+        out = out.view(4, 64, 7, 38, 36)
 
         # Conv transpose
         out = self.p_x_conv(out)
