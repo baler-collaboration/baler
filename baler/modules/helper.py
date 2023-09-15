@@ -265,7 +265,7 @@ def normalize(data, custom_norm):
     return data
 
 
-def process(input_path, custom_norm, test_size, apply_normalization):
+def process(input_path, custom_norm, test_size, apply_normalization, convert_to_blocks):
     """Loads the input data into a ndarray, splits it into train/test splits and normalizes if chosen.
 
     Args:
@@ -279,6 +279,9 @@ def process(input_path, custom_norm, test_size, apply_normalization):
     """
     loaded = np.load(input_path)
     data = loaded["data"]
+
+    if convert_to_blocks:
+        data = data_processing.convert_to_blocks_util(convert_to_blocks, data)
 
     normalization_features = data_processing.find_minmax(data)
     if apply_normalization:
@@ -453,6 +456,12 @@ def compress(model_path, config):
     # Loads the data and applies normalization if config.apply_normalization = True
     loaded = np.load(config.input_path)
     data_before = loaded["data"]
+
+    if config.convert_to_blocks:
+        data_before = data_processing.convert_to_blocks_util(
+            config.convert_to_blocks, data_before
+        )
+
     if config.apply_normalization:
         print("Normalizing...")
         data = normalize(data_before, config.custom_norm)
@@ -474,6 +483,7 @@ def compress(model_path, config):
             config.latent_space_size = ceil(
                 (number_of_rows * config.number_of_columns) / config.compression_ratio
             )
+            config.latent_space_size = 2500
         else:
             raise NameError(
                 "Data dimension can only be 1 or 2. Got config.data_dimension = "
@@ -612,6 +622,7 @@ def decompress(
 
     model_name = config.model_name
     latent_space_size = len(data[0])
+    latent_space_size = 2500
     bs = config.batch_size
     model_dict = torch.load(str(model_path), map_location=get_device())
     if config.data_dimension == 2 and config.model_type == "dense":

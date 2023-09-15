@@ -92,6 +92,7 @@ def perform_training(output_path, config, verbose: bool):
         config.custom_norm,
         config.test_size,
         config.apply_normalization,
+        config.convert_to_blocks,
     )
 
     if verbose:
@@ -110,6 +111,7 @@ def perform_training(output_path, config, verbose: bool):
             config.latent_space_size = ceil(
                 (number_of_rows * number_of_columns) / config.compression_ratio
             )
+            config.latent_space_size = 2500
             config.number_of_columns = number_of_columns
         else:
             raise NameError(
