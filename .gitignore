@@ -1,4 +1,5 @@
 /workspaces/*
+!/workspaces/public_datasets
 !workspaces/CMS_example/example_CMS/config/example_CMS_config.py
 !workspaces/CMS_example/example_CFD/config/example_CFD_config.py
 
