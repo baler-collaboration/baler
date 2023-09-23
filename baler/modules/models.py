@@ -17,6 +17,100 @@ from torch import nn
 from torch.nn import functional as F
 
 
+import torch.utils.data
+from torch.nn import functional as F
+from torch.autograd import Function
+
+
+class LowerBound(Function):
+    @staticmethod
+    def forward(ctx, inputs, bound):
+        b = torch.ones(inputs.size(), device=inputs.device) * bound
+        b = b.to(inputs.device)
+        ctx.save_for_backward(inputs, b)
+        return torch.max(inputs, b)
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        inputs, b = ctx.saved_tensors
+
+        pass_through_1 = inputs >= b
+        pass_through_2 = grad_output < 0
+
+        pass_through = pass_through_1 | pass_through_2
+        return pass_through.type(grad_output.dtype) * grad_output, None
+
+
+class GDN(nn.Module):
+    """Generalized divisive normalization layer.
+    y[i] = x[i] / sqrt(beta[i] + sum_j(gamma[j, i] * x[j]^2))
+    """
+
+    def __init__(
+        self,
+        ch,
+        inverse=False,
+        beta_min=1e-6,
+        gamma_init=0.1,
+        reparam_offset=2**-18,
+    ):
+        super(GDN, self).__init__()
+        self.inverse = inverse
+        self.beta_min = beta_min
+        self.gamma_init = gamma_init
+        self.reparam_offset = torch.tensor([reparam_offset])
+
+        self.build(ch)
+
+    def build(self, ch):
+        self.pedestal = self.reparam_offset**2
+        self.beta_bound = (self.beta_min + self.reparam_offset**2) ** 0.5
+        self.gamma_bound = self.reparam_offset
+
+        # Create beta param
+        beta = torch.sqrt(torch.ones(ch) + self.pedestal)
+        self.beta = nn.Parameter(beta)
+
+        # Create gamma param
+        eye = torch.eye(ch)
+        g = self.gamma_init * eye
+        g = g + self.pedestal
+        gamma = torch.sqrt(g)
+        self.gamma = nn.Parameter(gamma)
+
+    def forward(self, inputs):
+        unfold = False
+        if inputs.dim() == 5:
+            unfold = True
+            bs, ch, d, w, h = inputs.size()
+            inputs = inputs.view(bs, ch, d * w, h)
+
+        _, ch, _, _ = inputs.size()
+
+        # Beta bound and reparam
+        beta = LowerBound.apply(self.beta, self.beta_bound)
+        beta = beta**2 - self.pedestal
+
+        # Gamma bound and reparam
+        gamma = LowerBound.apply(self.gamma, self.gamma_bound)
+        gamma = gamma**2 - self.pedestal
+        gamma = gamma.view(ch, ch, 1, 1)
+
+        # Norm pool calc
+        norm_ = nn.functional.conv2d(inputs**2, gamma, beta)
+        norm_ = torch.sqrt(norm_)
+
+        # Apply norm
+        if self.inverse:
+            outputs = inputs * norm_
+        else:
+            outputs = inputs / norm_
+
+        if unfold:
+            outputs = outputs.view(bs, ch, d, w, h)
+        return outputs
+
+
 class AE(nn.Module):
     # This class is a modified version of the original class by George Dialektakis found at
     # https://github.com/Autoencoders-compression-anomaly/Deep-Autoencoders-Data-Compression-GSoC-2021
@@ -97,6 +191,7 @@ class CFD_dense_AE(nn.Module):
         super(CFD_dense_AE, self).__init__(*args, **kwargs)
 
         self.activations = {}
+        self.gdn = GDN(1)
 
         n_features = n_features * n_features
 
@@ -115,7 +210,8 @@ class CFD_dense_AE(nn.Module):
         self.z_dim = z_dim
 
     def encode(self, x):
-        h1 = F.leaky_relu(self.en1(x))
+        h1 = self.gdn(self.en1(x))
+        # h1 = F.leaky_relu(self.en1(x))
         h2 = F.leaky_relu(self.en2(h1))
         h3 = F.leaky_relu(self.en3(h2))
         return self.en4(h3)
@@ -224,7 +320,8 @@ class Conv_AE(nn.Module):
         super(Conv_AE, self).__init__(*args, **kwargs)
 
         self.q_z_mid_dim = 2000
-        self.q_z_output_dim = 72128
+        self.q_z_output_dim = 128
+        self.conv_output_shape = None
 
         # Encoder
 
@@ -242,6 +339,7 @@ class Conv_AE(nn.Module):
         )
         # Flatten
         self.flatten = nn.Flatten(start_dim=1)
+
         # Linear layers
         self.q_z_lin = nn.Sequential(
             nn.Linear(self.q_z_output_dim, self.q_z_mid_dim),
@@ -276,6 +374,9 @@ class Conv_AE(nn.Module):
     def encode(self, x):
         # Conv
         out = self.q_z_conv(x)
+        self.conv_op_shape = out.shape
+        self.q_z_output_dim = out.shape[1] * out.shape[2] * out.shape[3]
+
         # Flatten
         out = self.flatten(out)
         # Dense
@@ -286,7 +387,12 @@ class Conv_AE(nn.Module):
         # Dense
         out = self.p_x_lin(z)
         # Unflatten
-        out = out.view(out.size(0), 32, 49, 46)
+        out = out.view(
+            self.conv_op_shape[0],
+            self.conv_op_shape[1],
+            self.conv_op_shape[2],
+            self.conv_op_shape[3],
+        )
         # Conv transpose
         out = self.p_x_conv(out)
         return out
