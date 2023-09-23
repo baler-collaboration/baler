@@ -469,7 +469,6 @@ def compress(model_path, config):
             )
             config.number_of_columns = number_of_columns
         elif config.data_dimension == 2:
-            data = data_before
             number_of_rows = data.shape[1]
             config.number_of_columns = data.shape[2]
             config.latent_space_size = ceil(
