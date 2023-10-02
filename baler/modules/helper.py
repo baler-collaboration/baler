@@ -585,7 +585,13 @@ def compress(model_path, config):
 
 
 def decompress(
-    model_path, input_path, input_path_deltas, input_batch_index, model_name, config
+    model_path,
+    input_path,
+    input_path_deltas,
+    input_batch_index,
+    model_name,
+    config,
+    output_path,
 ):
     """Function which performs the decompression of the compressed file. In order to decompress, you must have a
     compressed file, whose path is determined by `input_path`, a model from path `model_path` and a model_name. The
@@ -608,6 +614,11 @@ def decompress(
     names = loaded["names"]
     normalization_features = loaded["normalization_features"]
 
+    if config.model_type == "convolutional":
+        final_layer_details = np.load(
+            os.path.join(output_path, "training", "final_layer.npy"),
+        )
+
     if config.save_error_bounded_deltas:
         loaded_deltas = np.load(
             gzip.GzipFile(input_path_deltas, "r"), allow_pickle=True
@@ -622,7 +633,6 @@ def decompress(
 
     model_name = config.model_name
     latent_space_size = len(data[0])
-    latent_space_size = 2500
     bs = config.batch_size
     model_dict = torch.load(str(model_path), map_location=get_device())
     if config.data_dimension == 2 and config.model_type == "dense":
@@ -640,6 +650,9 @@ def decompress(
         z_dim=latent_space_size,
     )
     model.eval()
+
+    if config.model_type == "convolutional":
+        model.set_final_layer_dims(final_layer_details)
 
     # Load the data, convert to tensor and batch it to avoid memory leaks
     data_tensor = torch.from_numpy(data).to(device)

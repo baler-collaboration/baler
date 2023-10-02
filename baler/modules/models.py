@@ -20,6 +20,7 @@ from torch.nn import functional as F
 import torch.utils.data
 from torch.nn import functional as F
 from torch.autograd import Function
+from ..modules import helper
 
 
 class LowerBound(Function):
@@ -58,7 +59,8 @@ class GDN(nn.Module):
         self.inverse = inverse
         self.beta_min = beta_min
         self.gamma_init = gamma_init
-        self.reparam_offset = torch.tensor([reparam_offset])
+        self.device = helper.get_device()
+        self.reparam_offset = torch.tensor([reparam_offset], device=self.device)
 
         self.build(ch)
 
@@ -68,11 +70,11 @@ class GDN(nn.Module):
         self.gamma_bound = self.reparam_offset
 
         # Create beta param
-        beta = torch.sqrt(torch.ones(ch) + self.pedestal)
+        beta = torch.sqrt(torch.ones(ch, device=self.device) + self.pedestal)
         self.beta = nn.Parameter(beta)
 
         # Create gamma param
-        eye = torch.eye(ch)
+        eye = torch.eye(ch, device=self.device)
         g = self.gamma_init * eye
         g = g + self.pedestal
         gamma = torch.sqrt(g)
@@ -321,7 +323,7 @@ class Conv_AE(nn.Module):
 
         self.q_z_mid_dim = 2000
         self.q_z_output_dim = 128
-        self.conv_output_shape = None
+        self.conv_op_shape = None
 
         # Encoder
 
@@ -401,6 +403,12 @@ class Conv_AE(nn.Module):
         z = self.encode(x)
         out = self.decode(z)
         return out
+
+    def get_final_layer_dims(self):
+        return self.conv_op_shape
+
+    def set_final_layer_dims(self, conv_op_shape):
+        self.conv_op_shape = conv_op_shape
 
 
 class FPGA_prototype_model(nn.Module):
@@ -565,3 +573,97 @@ class Conv_AE_3D(nn.Module):
 
     def set_compress_to_latent_space(self, compress_to_latent_space):
         self.compress_to_latent_space = compress_to_latent_space
+
+
+class Conv_AE_GDN(nn.Module):
+    def __init__(self, n_features, z_dim, *args, **kwargs):
+        super(Conv_AE_GDN, self).__init__(*args, **kwargs)
+
+        self.q_z_mid_dim = 2000
+        self.q_z_output_dim = 128
+        self.conv_op_shape = None
+
+        # Encoder
+
+        # Conv Layers
+        self.q_z_conv = nn.Sequential(
+            nn.Conv2d(1, 8, kernel_size=(2, 5), stride=(1), padding=(1)),
+            # nn.BatchNorm2d(8),
+            GDN(8),
+            nn.Conv2d(8, 16, kernel_size=(3), stride=(1), padding=(1)),
+            nn.BatchNorm2d(16),
+            GDN(16),
+            nn.Conv2d(16, 32, kernel_size=(3), stride=(1), padding=(0)),
+            # nn.BatchNorm2d(32),
+            GDN(32),
+        )
+        # Flatten
+        self.flatten = nn.Flatten(start_dim=1)
+
+        # Linear layers
+        self.q_z_lin = nn.Sequential(
+            nn.Linear(self.q_z_output_dim, self.q_z_mid_dim),
+            nn.ReLU(),
+            # nn.BatchNorm1d(self.q_z_output_dim),
+            nn.Linear(self.q_z_mid_dim, z_dim),
+            nn.ReLU(),
+        )
+
+        # Decoder
+
+        # Linear layers
+        self.p_x_lin = nn.Sequential(
+            nn.Linear(z_dim, self.q_z_mid_dim),
+            nn.ReLU(),
+            # nn.BatchNorm1d(self.q_z_output_dim),
+            nn.Linear(self.q_z_mid_dim, self.q_z_output_dim),
+            nn.ReLU()
+            # nn.BatchNorm1d(42720)
+        )
+        # Conv Layers
+        self.p_x_conv = nn.Sequential(
+            nn.ConvTranspose2d(32, 16, kernel_size=(3), stride=(1), padding=(0)),
+            # nn.BatchNorm2d(16),
+            GDN(16, inverse=True),
+            nn.ConvTranspose2d(16, 8, kernel_size=(3), stride=(1), padding=(1)),
+            # nn.BatchNorm2d(8),
+            GDN(8, inverse=True),
+            nn.ConvTranspose2d(8, 1, kernel_size=(2, 5), stride=(1), padding=(1)),
+        )
+
+    def encode(self, x):
+        # Conv
+        out = self.q_z_conv(x)
+        self.conv_op_shape = out.shape
+        self.q_z_output_dim = out.shape[1] * out.shape[2] * out.shape[3]
+
+        # Flatten
+        out = self.flatten(out)
+        # Dense
+        out = self.q_z_lin(out)
+        return out
+
+    def decode(self, z):
+        # Dense
+        out = self.p_x_lin(z)
+        # Unflatten
+        out = out.view(
+            self.conv_op_shape[0],
+            self.conv_op_shape[1],
+            self.conv_op_shape[2],
+            self.conv_op_shape[3],
+        )
+        # Conv transpose
+        out = self.p_x_conv(out)
+        return out
+
+    def forward(self, x):
+        z = self.encode(x)
+        out = self.decode(z)
+        return out
+
+    def get_final_layer_dims(self):
+        return self.conv_op_shape
+
+    def set_final_layer_dims(self, conv_op_shape):
+        self.conv_op_shape = conv_op_shape

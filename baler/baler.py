@@ -320,6 +320,7 @@ def perform_decompression(output_path, config, verbose: bool):
         ),
         model_name=model_name,
         config=config,
+        output_path=output_path,
     )
     if verbose:
         print(f"Model used: {model_name}")
