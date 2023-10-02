@@ -25,13 +25,10 @@ from ..modules import models
 
 def convert_to_blocks_util(blocks, data):
     print("Converted Dataset to Blocks of Size - ", blocks)
-    print("Test1 - ", np.sum(data[0]))
     blocks = np.array(blocks)
     original_shape = np.array(data.shape)
     total_size = np.prod(original_shape)
     data = data.reshape((total_size // (blocks[1] * blocks[2])), blocks[1], blocks[2])
-    print("Final Dataset Size - ", data.shape)
-    print("Test2 - ", np.sum(data[0]))
     return data
 
 

@@ -193,7 +193,6 @@ class CFD_dense_AE(nn.Module):
         super(CFD_dense_AE, self).__init__(*args, **kwargs)
 
         self.activations = {}
-        self.gdn = GDN(1)
 
         n_features = n_features * n_features
 
@@ -212,8 +211,7 @@ class CFD_dense_AE(nn.Module):
         self.z_dim = z_dim
 
     def encode(self, x):
-        h1 = self.gdn(self.en1(x))
-        # h1 = F.leaky_relu(self.en1(x))
+        h1 = F.leaky_relu(self.en1(x))
         h2 = F.leaky_relu(self.en2(h1))
         h3 = F.leaky_relu(self.en3(h2))
         return self.en4(h3)

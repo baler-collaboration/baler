@@ -483,7 +483,6 @@ def compress(model_path, config):
             config.latent_space_size = ceil(
                 (number_of_rows * config.number_of_columns) / config.compression_ratio
             )
-            config.latent_space_size = 2500
         else:
             raise NameError(
                 "Data dimension can only be 1 or 2. Got config.data_dimension = "
