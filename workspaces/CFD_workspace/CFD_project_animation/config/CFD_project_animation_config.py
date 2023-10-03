@@ -3,7 +3,7 @@ def set_config(c):
     c.compression_ratio = 100
     # c.number_of_columns = 24
     # c.latent_space_size = 15
-    c.epochs = 1000
+    c.epochs = 2000
     c.early_stopping = False
     c.early_stopping_patience = 100
     c.min_delta = 0
@@ -16,7 +16,7 @@ def set_config(c):
     c.reg_param = 0.001
     c.RHO = 0.05
     c.lr = 0.001
-    c.batch_size = 60
+    c.batch_size = 6000
     c.test_size = 0
     c.data_dimension = 2
     c.apply_normalization = False
@@ -28,6 +28,7 @@ def set_config(c):
     c.compress_to_latent_space = False
     c.save_error_bounded_deltas = False
     c.error_bounded_requirement = 1
+    c.convert_to_blocks = [5, 5, 5]
 
 
 # def set_config(c):

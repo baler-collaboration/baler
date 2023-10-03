@@ -317,4 +317,8 @@ def train(model, variables, train_data, test_data, project_path, config):
         os.path.join(project_path, "loss_data.npy"), np.array([train_loss, val_loss])
     )
 
+    if config.model_type == "convolutional":
+        final_layer = model.get_final_layer_dims()
+        np.save(os.path.join(project_path, "final_layer.npy"), np.array(final_layer))
+
     return trained_model

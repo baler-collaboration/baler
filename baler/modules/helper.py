@@ -265,7 +265,7 @@ def normalize(data, custom_norm):
     return data
 
 
-def process(input_path, custom_norm, test_size, apply_normalization):
+def process(input_path, custom_norm, test_size, apply_normalization, convert_to_blocks):
     """Loads the input data into a ndarray, splits it into train/test splits and normalizes if chosen.
 
     Args:
@@ -279,6 +279,9 @@ def process(input_path, custom_norm, test_size, apply_normalization):
     """
     loaded = np.load(input_path)
     data = loaded["data"]
+
+    if convert_to_blocks:
+        data = data_processing.convert_to_blocks_util(convert_to_blocks, data)
 
     normalization_features = data_processing.find_minmax(data)
     if apply_normalization:
@@ -453,6 +456,12 @@ def compress(model_path, config):
     # Loads the data and applies normalization if config.apply_normalization = True
     loaded = np.load(config.input_path)
     data_before = loaded["data"]
+
+    if config.convert_to_blocks:
+        data_before = data_processing.convert_to_blocks_util(
+            config.convert_to_blocks, data_before
+        )
+
     if config.apply_normalization:
         print("Normalizing...")
         data = normalize(data_before, config.custom_norm)
@@ -575,7 +584,13 @@ def compress(model_path, config):
 
 
 def decompress(
-    model_path, input_path, input_path_deltas, input_batch_index, model_name, config
+    model_path,
+    input_path,
+    input_path_deltas,
+    input_batch_index,
+    model_name,
+    config,
+    output_path,
 ):
     """Function which performs the decompression of the compressed file. In order to decompress, you must have a
     compressed file, whose path is determined by `input_path`, a model from path `model_path` and a model_name. The
@@ -597,6 +612,11 @@ def decompress(
     data = loaded["data"]
     names = loaded["names"]
     normalization_features = loaded["normalization_features"]
+
+    if config.model_type == "convolutional":
+        final_layer_details = np.load(
+            os.path.join(output_path, "training", "final_layer.npy"),
+        )
 
     if config.save_error_bounded_deltas:
         loaded_deltas = np.load(
@@ -629,6 +649,9 @@ def decompress(
         z_dim=latent_space_size,
     )
     model.eval()
+
+    if config.model_type == "convolutional":
+        model.set_final_layer_dims(final_layer_details)
 
     # Load the data, convert to tensor and batch it to avoid memory leaks
     data_tensor = torch.from_numpy(data).to(device)
