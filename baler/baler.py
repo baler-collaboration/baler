@@ -97,7 +97,7 @@ def perform_training(output_path, config, verbose: bool):
         config.custom_norm,
         config.test_size,
         config.apply_normalization,
-        config.convert_to_blocks,
+        config.convert_to_blocks if hasattr(config, "convert_to_blocks") else None,
     )
 
     if verbose:
