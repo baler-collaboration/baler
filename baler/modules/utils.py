@@ -17,9 +17,78 @@ import torch.nn as nn
 from scipy.stats import wasserstein_distance
 from torch.nn import functional
 from tqdm import tqdm
+from torch.nn import functional as F
+from torch import distributions as dist
 
 factor = 0.5
 min_lr = 1e-6
+
+
+def loss_function_swae(
+    inputs,
+    z,
+    reconstructions,
+    latent_dim,
+    reg_weight=100,
+    wasserstein_deg=2.0,
+    num_projections=2000,
+    projection_dist="normal",
+):
+    batch_size = inputs.shape[0]
+    bias_corr = batch_size * (batch_size - 1)
+    reg_weight = reg_weight / bias_corr
+
+    mse_sum = nn.MSELoss(reduction="sum")
+    mse_loss = mse_sum(reconstructions, inputs)
+    number_of_columns = inputs.shape[1]
+    mse_sum_loss = mse_loss / number_of_columns
+    # recons_loss_l1 = F.l1_loss(reconstructions, inputs)
+    recons_loss_l1 = 0
+    swd_loss = compute_swd(
+        z, wasserstein_deg, reg_weight, latent_dim, num_projections, projection_dist
+    )
+    loss = mse_sum_loss + recons_loss_l1 + swd_loss
+    SWD = swd_loss
+    return loss, mse_sum_loss, SWD
+
+
+def compute_swd(z, p, reg_weight, latent_dim, num_projections, proj_dist):
+    prior_z = torch.randn_like(z)  # [N x D]
+    device = z.device
+
+    proj_matrix = (
+        get_random_projections(proj_dist, latent_dim, num_samples=num_projections)
+        .transpose(0, 1)
+        .to(device)
+    )
+
+    latent_projections = z.matmul(proj_matrix)  # [N x S]
+    prior_projections = prior_z.matmul(proj_matrix)  # [N x S]
+
+    # The Wasserstein distance is computed by sorting the two projections
+    # across the batches and computing their element-wise distance
+    w_dist = (
+        torch.sort(latent_projections.t(), dim=1)[0]
+        - torch.sort(prior_projections.t(), dim=1)[0]
+    )
+    w_dist = w_dist.pow(p)
+    return reg_weight * w_dist.mean()
+
+
+def get_random_projections(proj_dist, latent_dim, num_samples):
+    if proj_dist == "normal":
+        rand_samples = torch.randn(num_samples, latent_dim)
+    elif proj_dist == "cauchy":
+        rand_samples = (
+            dist.Cauchy(torch.tensor([0.0]), torch.tensor([1.0]))
+            .sample((num_samples, latent_dim))
+            .squeeze()
+        )
+    else:
+        raise ValueError("Unknown projection distribution.")
+
+    rand_proj = rand_samples / rand_samples.norm(dim=1).view(-1, 1)
+    return rand_proj  # [S x D]
 
 
 def mse_loss_emd_l1(model_children, true_data, reconstructed_data, reg_param, validate):
