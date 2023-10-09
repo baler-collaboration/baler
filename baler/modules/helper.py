@@ -279,6 +279,7 @@ def process(input_path, custom_norm, test_size, apply_normalization, convert_to_
     """
     loaded = np.load(input_path)
     data = loaded["data"]
+    original_shape = data.shape
 
     if convert_to_blocks:
         data = data_processing.convert_to_blocks_util(convert_to_blocks, data)
@@ -295,11 +296,7 @@ def process(input_path, custom_norm, test_size, apply_normalization, convert_to_
             data, test_size=test_size, random_state=1
         )
 
-    return (
-        train_set,
-        test_set,
-        normalization_features,
-    )
+    return (train_set, test_set, normalization_features, original_shape)
 
 
 def renormalize(data, true_min_list, feature_range_list):
@@ -456,6 +453,7 @@ def compress(model_path, config):
     # Loads the data and applies normalization if config.apply_normalization = True
     loaded = np.load(config.input_path)
     data_before = loaded["data"]
+    original_shape = data_before.shape
 
     if config.convert_to_blocks:
         data_before = data_processing.convert_to_blocks_util(
@@ -478,8 +476,12 @@ def compress(model_path, config):
             )
             config.number_of_columns = number_of_columns
         elif config.data_dimension == 2:
-            number_of_rows = data.shape[1]
-            config.number_of_columns = data.shape[2]
+            if config.model_type == "dense":
+                number_of_rows = data.shape[1]
+                config.number_of_columns = data.shape[2]
+            else:
+                number_of_rows = original_shape[1]
+                config.number_of_columns = original_shape[2]
             config.latent_space_size = ceil(
                 (number_of_rows * config.number_of_columns) / config.compression_ratio
             )
@@ -695,6 +697,7 @@ def decompress(
         decompressed = decompressed.reshape(
             (len(decompressed), number_of_columns, number_of_columns)
         )
+
     return decompressed, names, normalization_features
 
 

@@ -87,7 +87,12 @@ def perform_training(output_path, config, verbose: bool):
     Raises:
         NameError: Baler currently only supports 1D (e.g. HEP) or 2D (e.g. CFD) data as inputs.
     """
-    train_set_norm, test_set_norm, normalization_features = helper.process(
+    (
+        train_set_norm,
+        test_set_norm,
+        normalization_features,
+        original_shape,
+    ) = helper.process(
         config.input_path,
         config.custom_norm,
         config.test_size,
@@ -106,8 +111,12 @@ def perform_training(output_path, config, verbose: bool):
             )
             config.number_of_columns = number_of_columns
         elif config.data_dimension == 2:
-            number_of_rows = train_set_norm.shape[1]
-            number_of_columns = train_set_norm.shape[2]
+            if config.model_type == "dense":
+                number_of_rows = train_set_norm.shape[1]
+                number_of_columns = train_set_norm.shape[2]
+            else:
+                number_of_rows = original_shape[1]
+                number_of_columns = original_shape[2]
             config.latent_space_size = ceil(
                 (number_of_rows * number_of_columns) / config.compression_ratio
             )
@@ -323,6 +332,23 @@ def perform_decompression(output_path, config, verbose: bool):
     )
     if verbose:
         print(f"Model used: {model_name}")
+
+    if config.convert_to_blocks:
+        data_before = np.load(config.input_path)["data"]
+        print(
+            "Converting Blocked Data into Standard Format. Old Shape - ",
+            decompressed.shape,
+            "Target Shape - ",
+            data_before.shape,
+        )
+        if config.model_type == "dense":
+            decompressed = decompressed.reshape(
+                data_before.shape[0], data_before.shape[1], data_before.shape[2]
+            )
+        else:
+            decompressed = decompressed.reshape(
+                data_before.shape[0], 1, data_before.shape[1], data_before.shape[2]
+            )
 
     if config.apply_normalization:
         print("Un-normalizing...")

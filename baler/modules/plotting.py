@@ -261,16 +261,6 @@ def plot_2D(project_path, config):
         "data"
     ]
 
-    if config.convert_to_blocks:
-        if config.model_type == "dense":
-            data_decompressed = data_decompressed.reshape(
-                data.shape[0], data.shape[1], data.shape[2]
-            )
-        else:
-            data_decompressed = data_decompressed.reshape(
-                data.shape[0], 1, data.shape[1], data.shape[2]
-            )
-
     if data.shape[0] > 1:
         num_tiles = data.shape[0]
     else:
