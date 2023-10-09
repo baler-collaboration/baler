@@ -92,6 +92,7 @@ def perform_training(output_path, config, verbose: bool):
         config.custom_norm,
         config.test_size,
         config.apply_normalization,
+        config.convert_to_blocks,
     )
 
     if verbose:
@@ -318,6 +319,7 @@ def perform_decompression(output_path, config, verbose: bool):
         ),
         model_name=model_name,
         config=config,
+        output_path=output_path,
     )
     if verbose:
         print(f"Model used: {model_name}")
