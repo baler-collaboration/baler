@@ -24,10 +24,20 @@ from tqdm import tqdm
 from ..modules import diagnostics
 from ..modules import helper
 from ..modules import utils
+from torch.nn import functional as F
 
 
 def fit(
-    model, train_dl, model_children, regular_param, optimizer, RHO, l1, n_dimensions
+    config,
+    model,
+    train_dl,
+    model_children,
+    regular_param,
+    optimizer,
+    latent_dim,
+    RHO,
+    l1,
+    n_dimensions,
 ):
     """This function trains the model on the train set. It computes the losses and does the backwards propagation, and updates the optimizer as well.
     Args:
@@ -59,14 +69,23 @@ def fit(
         # Compute the predicted outputs from the input data
         reconstructions = model(inputs)
 
-        # Compute how far off the prediction is
-        loss, mse_loss, l1_loss = utils.mse_sum_loss_l1(
-            model_children=model_children,
-            true_data=inputs,
-            reconstructed_data=reconstructions,
-            reg_param=regular_param,
-            validate=True,
-        )
+        if (
+            hasattr(config, "custom_loss_function")
+            and config.custom_loss_function == "loss_function_swae"
+        ):
+            z = model.encode(inputs)
+            loss, mse_loss, l1_loss = utils.loss_function_swae(
+                inputs, z, reconstructions, latent_dim
+            )
+        else:
+            # Compute how far off the prediction is
+            loss, mse_loss, l1_loss = utils.mse_sum_loss_l1(
+                model_children=model_children,
+                true_data=inputs,
+                reconstructed_data=reconstructions,
+                reg_param=regular_param,
+                validate=True,
+            )
 
         # Compute the loss-gradient with
         loss.backward()
@@ -267,16 +286,17 @@ def train(model, variables, train_data, test_data, project_path, config):
         print(f"Epoch {epoch + 1} of {epochs}")
 
         train_epoch_loss, mse_loss_fit, regularizer_loss_fit, trained_model = fit(
+            config=config,
             model=model,
             train_dl=train_dl,
             model_children=model_children,
-            optimizer=optimizer,
-            RHO=rho,
             regular_param=reg_param,
+            optimizer=optimizer,
+            latent_dim=latent_space_size,
+            RHO=rho,
             l1=l1,
             n_dimensions=config.data_dimension,
         )
-
         train_loss.append(train_epoch_loss)
 
         if test_size:
