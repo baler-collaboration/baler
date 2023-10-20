@@ -48,14 +48,29 @@ def main():
     Raises:
         NameError: Raises error if the chosen mode does not exist.
     """
-    config, mode, workspace_name, project_name, verbose, pytorch_profile, energy_profile = helper.get_arguments()
+    (
+        config,
+        mode,
+        workspace_name,
+        project_name,
+        verbose,
+        pytorch_profile,
+        energy_profile,
+    ) = helper.get_arguments()
     project_path = os.path.join("workspaces", workspace_name, project_name)
     output_path = os.path.join(project_path, "output")
 
     if mode == "newProject":
         helper.create_new_project(workspace_name, project_name, verbose)
     elif mode == "train":
-        check_enabled_profilers(perform_training, pytorch_profile, energy_profile, output_path, config, verbose)
+        check_enabled_profilers(
+            perform_training,
+            pytorch_profile,
+            energy_profile,
+            output_path,
+            config,
+            verbose,
+        )
     elif mode == "diagnose":
         perform_diagnostics(output_path, verbose)
     elif mode == "compress":
@@ -75,86 +90,41 @@ def main():
             + " not recognised. Use baler --help to see available modes."
         )
 
-def check_enabled_profilers(function, pytorch_profile, energy_profile, *args, **kwargs):
-    '''
-    Executes the provided function with profiling based on the specified profile flags.
 
-    This function checks the given profiling flags (`pytorch_profile` and `energy_profile`)
-    and, based on their values, executes the input `function` with the appropriate profiling
-    mode. If neither profile is enabled, the function is executed without any profiling.
+def check_enabled_profilers(
+    f, pytorchProfile=False, energyProfile=False, *args, **kwargs
+):
+    """
+    Conditionally apply profiling based on the given boolean flags.
 
-    Parameters:
-    -----------
-    function : callable
-        The primary function to be executed with or without profiling.
-    pytorch_profile : bool
-        If True, the function is executed with PyTorch profiling.
-    energy_profile : bool
-        If True, the function is executed with energy profiling.
-    *args : tuple
-        Variable length argument list to be passed to the input `function`.
-    **kwargs : dict
-        Arbitrary keyword arguments to be passed to the input `function`.
+    Args:
+        f (callable): The function to be potentially profiled.
+        pytorchProfile (bool): Whether to apply PyTorch profiling.
+        energyProfile (bool): Whether to apply energy profiling.
 
-    Behavior:
-    ---------
-    - If only `pytorch_profile` is enabled, the function executes with PyTorch profiling.
-    - If only `energy_profile` is enabled, the function executes with energy profiling.
-    - If both profiles are enabled, the function executes with both PyTorch and energy profiling.
-    - If neither profile is enabled, the function executes without any profiling.
-    '''
-    if pytorch_profile and not energy_profile:
-        perform_function_with_pytorch_profile(function, *args, **kwargs)
-    elif energy_profile and not pytorch_profile:
-        perform_function_with_energy_profiling(function, *args, **kwargs)
-    elif energy_profile and pytorch_profile:
-        perform_function_with_both_profilers(function, *args, **kwargs)
-    else:
-        function(*args, **kwargs)
+    Returns:
+        result: The result of the function `f` execution.
+    """
 
-@pytorch_profile
-def perform_function_with_pytorch_profile(function, *args, **kwargs):
-    '''
-    Executes the given function with PyTorch profiling enabled.
+    # Placeholder function to avoid nested conditions
+    def identity_func(fn, *a, **kw):
+        return fn(*a, **kw)
 
-    Parameters:
-    -----------
-    function : callable
-        Function to be profiled with PyTorch.
-    *args, **kwargs : 
-        Arguments and keyword arguments for `function`.
-    '''
-    return function(*args, **kwargs)
+    # Set the outer and inner functions based on the flags
+    inner_function = pytorch_profile if pytorchProfile else identity_func
+    outer_function = (
+        (
+            lambda fn: energy_profiling(
+                fn, project_name="baler_training", measure_power_secs=1
+            )
+        )
+        if energyProfile
+        else identity_func
+    )
 
-@energy_profiling(project_name="baler_training", measure_power_secs=1)
-def perform_function_with_energy_profiling(function, *args, **kwargs):
-    '''
-    Executes the function with energy profiling enabled.
+    # Nest the profiling steps and run the function only once
+    return outer_function(lambda: inner_function(f, *args, **kwargs))()
 
-    Parameters:
-    -----------
-    function : callable
-        Function to be profiled for energy usage.
-    *args, **kwargs : 
-        Arguments and keyword arguments for `function`.
-    '''
-    return function(*args, **kwargs)
-
-@pytorch_profile
-@energy_profiling(project_name="baler_training", measure_power_secs=1)
-def perform_function_with_both_profilers(function, *args, **kwargs):
-    '''
-    Executes the function with both PyTorch and energy profiling enabled.
-
-    Parameters:
-    -----------
-    function : callable
-        Function to be profiled with both methods.
-    *args, **kwargs : 
-        Arguments and keyword arguments for `function`.
-    '''
-    return function(*args, **kwargs)
-    
 
 def perform_training(output_path, config, verbose: bool):
     """Main function calling the training functions, ran when --mode=train is selected.

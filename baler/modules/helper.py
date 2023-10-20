@@ -73,8 +73,12 @@ def get_arguments():
         "  2. If workspace exists but project does not, create project in workspace.\n"
         "  3. If workspace does not exist, create workspace directory and project.",
     )
-    parser.add_argument("--pytorchProfile", action="store_true", help="Enable PyTorch profiling")
-    parser.add_argument("--energyProfile", action="store_true", help="Enable Energy profiling")
+    parser.add_argument(
+        "--pytorchProfile", action="store_true", help="Enable PyTorch profiling"
+    )
+    parser.add_argument(
+        "--energyProfile", action="store_true", help="Enable Energy profiling"
+    )
     parser.add_argument(
         "--verbose", dest="verbose", action="store_true", help="Verbose mode"
     )
@@ -94,7 +98,15 @@ def get_arguments():
         config = Config
         importlib.import_module(config_path).set_config(config)
 
-    return config, args.mode, workspace_name, project_name, args.verbose, args.pytorchProfile, args.energyProfile
+    return (
+        config,
+        args.mode,
+        workspace_name,
+        project_name,
+        args.verbose,
+        args.pytorchProfile,
+        args.energyProfile,
+    )
 
 
 def create_new_project(
