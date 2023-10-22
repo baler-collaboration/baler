@@ -31,3 +31,4 @@ def set_config(c):
     c.compress_to_latent_space = False
     c.save_error_bounded_deltas = False
     c.error_bounded_requirement = 1
+    c.convert_to_blocks = False
