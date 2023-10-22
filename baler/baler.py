@@ -98,25 +98,30 @@ def perform_training(output_path, config, verbose: bool):
         config.test_size,
         config.apply_normalization,
         config.convert_to_blocks if hasattr(config, "convert_to_blocks") else None,
+        verbose,
     )
 
     if verbose:
         print("Training and testing sets normalized")
 
     try:
+        n_features = 0
         if config.data_dimension == 1:
             number_of_columns = train_set_norm.shape[1]
             config.latent_space_size = ceil(
                 number_of_columns / config.compression_ratio
             )
             config.number_of_columns = number_of_columns
+            n_features = number_of_columns
         elif config.data_dimension == 2:
             if config.model_type == "dense":
                 number_of_rows = train_set_norm.shape[1]
                 number_of_columns = train_set_norm.shape[2]
+                n_features = number_of_columns * number_of_rows
             else:
                 number_of_rows = original_shape[1]
                 number_of_columns = original_shape[2]
+                n_features = number_of_columns
             config.latent_space_size = ceil(
                 (number_of_rows * number_of_columns) / config.compression_ratio
             )
@@ -134,14 +139,16 @@ def perform_training(output_path, config, verbose: bool):
         assert number_of_columns == config.number_of_columns
 
     if verbose:
-        print(f"Intitalizing Model with Latent Size - {config.latent_space_size}")
+        print(
+            f"Intitalizing Model with Latent Size - {config.latent_space_size} and Features - {n_features}"
+        )
 
     device = helper.get_device()
     if verbose:
         print(f"Device used for training: {device}")
 
     model_object = helper.model_init(config.model_name)
-    model = model_object(n_features=number_of_columns, z_dim=config.latent_space_size)
+    model = model_object(n_features=n_features, z_dim=config.latent_space_size)
     model.to(device)
 
     if config.model_name == "Conv_AE_3D" and hasattr(
@@ -317,6 +324,7 @@ def perform_decompression(output_path, config, verbose: bool):
 
     start = time.time()
     model_name = config.model_name
+    data_before = np.load(config.input_path)["data"]
     decompressed, names, normalization_features = helper.decompress(
         model_path=os.path.join(output_path, "compressed_output", "model.pt"),
         input_path=os.path.join(output_path, "compressed_output", "compressed.npz"),
@@ -329,12 +337,12 @@ def perform_decompression(output_path, config, verbose: bool):
         model_name=model_name,
         config=config,
         output_path=output_path,
+        original_shape=data_before.shape,
     )
     if verbose:
         print(f"Model used: {model_name}")
 
-    if config.convert_to_blocks:
-        data_before = np.load(config.input_path)["data"]
+    if hasattr(config, "convert_to_blocks") and config.convert_to_blocks:
         print(
             "Converting Blocked Data into Standard Format. Old Shape - ",
             decompressed.shape,
