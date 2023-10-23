@@ -194,8 +194,6 @@ class CFD_dense_AE(nn.Module):
 
         self.activations = {}
 
-        n_features = n_features * n_features
-
         # encoder
         self.en1 = nn.Linear(n_features, 200, dtype=torch.float)
         self.en2 = nn.Linear(200, 100, dtype=torch.float)

@@ -265,7 +265,14 @@ def normalize(data, custom_norm):
     return data
 
 
-def process(input_path, custom_norm, test_size, apply_normalization, convert_to_blocks):
+def process(
+    input_path,
+    custom_norm,
+    test_size,
+    apply_normalization,
+    convert_to_blocks,
+    verbose,
+):
     """Loads the input data into a ndarray, splits it into train/test splits and normalizes if chosen.
 
     Args:
@@ -279,6 +286,10 @@ def process(input_path, custom_norm, test_size, apply_normalization, convert_to_
     """
     loaded = np.load(input_path)
     data = loaded["data"]
+
+    if verbose:
+        print("Original Dataset Shape - ", data.shape)
+
     original_shape = data.shape
 
     if convert_to_blocks:
@@ -455,7 +466,7 @@ def compress(model_path, config):
     data_before = loaded["data"]
     original_shape = data_before.shape
 
-    if config.convert_to_blocks:
+    if hasattr(config, "convert_to_blocks") and config.convert_to_blocks:
         data_before = data_processing.convert_to_blocks_util(
             config.convert_to_blocks, data_before
         )
@@ -467,7 +478,7 @@ def compress(model_path, config):
         data = data_before
     number_of_columns = 0
     try:
-        print("compression ratio:", config.compression_ratio)
+        n_features = 0
         if config.data_dimension == 1:
             column_names = np.load(config.input_path)["names"]
             number_of_columns = len(column_names)
@@ -475,13 +486,16 @@ def compress(model_path, config):
                 number_of_columns / config.compression_ratio
             )
             config.number_of_columns = number_of_columns
+            n_features = number_of_columns
         elif config.data_dimension == 2:
             if config.model_type == "dense":
                 number_of_rows = data.shape[1]
                 config.number_of_columns = data.shape[2]
+                n_features = number_of_rows * config.number_of_columns
             else:
                 number_of_rows = original_shape[1]
                 config.number_of_columns = original_shape[2]
+                n_features = config.number_of_columns
             config.latent_space_size = ceil(
                 (number_of_rows * config.number_of_columns) / config.compression_ratio
             )
@@ -503,20 +517,11 @@ def compress(model_path, config):
     model = data_processing.load_model(
         model_object,
         model_path=model_path,
-        n_features=config.number_of_columns,
+        n_features=n_features,
         z_dim=config.latent_space_size,
     )
     model.eval()
 
-    # Give the encoding function the correct input as tensor
-    # if config.data_dimension == 2:
-    #     data_tensor = (
-    #         torch.from_numpy(data.astype("float32", casting="same_kind"))
-    #         .to(device)
-    #         .view(data.shape[0], 1, data.shape[1], data.shape[2])
-    #     )
-    # elif config.data_dimension == 1:
-    #     data_tensor = torch.from_numpy(data).to(device)
     if config.data_dimension == 2:
         if config.model_type == "convolutional" and config.model_name == "Conv_AE_3D":
             data_tensor = torch.tensor(data, dtype=torch.float32).view(
@@ -593,6 +598,7 @@ def decompress(
     model_name,
     config,
     output_path,
+    original_shape,
 ):
     """Function which performs the decompression of the compressed file. In order to decompress, you must have a
     compressed file, whose path is determined by `input_path`, a model from path `model_path` and a model_name. The
@@ -637,7 +643,7 @@ def decompress(
     bs = config.batch_size
     model_dict = torch.load(str(model_path), map_location=get_device())
     if config.data_dimension == 2 and config.model_type == "dense":
-        number_of_columns = int(np.sqrt(len(model_dict[list(model_dict.keys())[-1]])))
+        number_of_columns = int((len(model_dict[list(model_dict.keys())[-1]])))
     else:
         number_of_columns = len(model_dict[list(model_dict.keys())[-1]])
 
@@ -695,7 +701,7 @@ def decompress(
 
     if config.data_dimension == 2 and config.model_type == "dense":
         decompressed = decompressed.reshape(
-            (len(decompressed), number_of_columns, number_of_columns)
+            (len(decompressed), original_shape[1], original_shape[2])
         )
 
     return decompressed, names, normalization_features
