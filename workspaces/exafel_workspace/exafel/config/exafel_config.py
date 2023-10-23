@@ -1,5 +1,5 @@
 def set_config(c):
-    c.input_path = "workspaces/public_datasets/data/exafel_data.npz"
+    c.input_path = "workspaces/exafel_workspace/data/exafel_data.npz"
     c.compression_ratio = 100
     # c.number_of_columns = 24
     # c.latent_space_size = 15

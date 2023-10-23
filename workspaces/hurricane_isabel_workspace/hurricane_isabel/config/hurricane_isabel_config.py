@@ -2,11 +2,13 @@
 
 
 def set_config(c):
-    c.input_path = "workspaces/public_datasets/data/hurricane_isabel_data_small.npz"
+    c.input_path = (
+        "workspaces/hurricane_isabel_workspace/data/hurricane_isabel_data_small.npz"
+    )
     c.compression_ratio = 100
     # c.number_of_columns = 24
     # c.latent_space_size = 15
-    c.epochs = 10000
+    c.epochs = 5000
     c.early_stopping = False
     c.early_stopping_patience = 100
     c.min_delta = 0
