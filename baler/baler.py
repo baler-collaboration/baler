@@ -38,7 +38,7 @@ def main():
     """Calls different functions depending on argument parsed in command line.
 
         - if --mode=newProject: call `helper.create_new_project` and create a new project sub directory with config file
-        - if --mode=train: call `perform_training` and train the network on given data and based on the config file
+        - if --mode=train: call `perform_training` and train the network on given data and based on the config file and check if profilers are enabled
         - if --mode=compress: call `perform_compression` and compress the given data using the model trained in `--mode=train`
         - if --mode=decompress: call `perform_decompression` and decompress the compressed file outputted from `--mode=compress`
         - if --mode=plot: call `perform_plotting` and plot the comparison between the original data and the decompressed data from `--mode=decompress`. Also plots the loss plot from the trained network.
@@ -48,14 +48,29 @@ def main():
     Raises:
         NameError: Raises error if the chosen mode does not exist.
     """
-    config, mode, workspace_name, project_name, verbose = helper.get_arguments()
+    (
+        config,
+        mode,
+        workspace_name,
+        project_name,
+        verbose,
+        pytorch_profile,
+        energy_profile,
+    ) = helper.get_arguments()
     project_path = os.path.join("workspaces", workspace_name, project_name)
     output_path = os.path.join(project_path, "output")
 
     if mode == "newProject":
         helper.create_new_project(workspace_name, project_name, verbose)
     elif mode == "train":
-        perform_training(output_path, config, verbose)
+        check_enabled_profilers(
+            perform_training,
+            pytorch_profile,
+            energy_profile,
+            output_path,
+            config,
+            verbose,
+        )
     elif mode == "diagnose":
         perform_diagnostics(output_path, verbose)
     elif mode == "compress":
@@ -76,8 +91,41 @@ def main():
         )
 
 
-@pytorch_profile
-@energy_profiling(project_name="baler_training", measure_power_secs=1)
+def check_enabled_profilers(
+    f, pytorchProfile=False, energyProfile=False, *args, **kwargs
+):
+    """
+    Conditionally apply profiling based on the given boolean flags.
+
+    Args:
+        f (callable): The function to be potentially profiled.
+        pytorchProfile (bool): Whether to apply PyTorch profiling.
+        energyProfile (bool): Whether to apply energy profiling.
+
+    Returns:
+        result: The result of the function `f` execution.
+    """
+
+    # Placeholder function to avoid nested conditions
+    def identity_func(fn, *a, **kw):
+        return fn(*a, **kw)
+
+    # Set the outer and inner functions based on the flags
+    inner_function = pytorch_profile if pytorchProfile else identity_func
+    outer_function = (
+        (
+            lambda fn: energy_profiling(
+                fn, project_name="baler_training", measure_power_secs=1
+            )
+        )
+        if energyProfile
+        else identity_func
+    )
+
+    # Nest the profiling steps and run the function only once
+    return outer_function(lambda: inner_function(f, *args, **kwargs))()
+
+
 def perform_training(output_path, config, verbose: bool):
     """Main function calling the training functions, ran when --mode=train is selected.
         The three functions called are: `helper.process`, `helper.mode_init` and `helper.training`.
