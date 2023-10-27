@@ -76,8 +76,8 @@ def main():
         )
 
 
-@pytorch_profile
-@energy_profiling(project_name="baler_training", measure_power_secs=1)
+#@pytorch_profile
+#@energy_profiling(project_name="baler_training", measure_power_secs=1)
 def perform_training(output_path, config, verbose: bool):
     """Main function calling the training functions, ran when --mode=train is selected.
         The three functions called are: `helper.process`, `helper.mode_init` and `helper.training`.

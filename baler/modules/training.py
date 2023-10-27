@@ -15,6 +15,7 @@
 import os
 import random
 import time
+import sys
 
 import numpy as np
 import torch
@@ -192,11 +193,14 @@ def train(model, variables, train_data, test_data, project_path, config):
     # Converting data to tensors
     if config.data_dimension == 2:
         if config.model_type == "dense":
+            # print(train_data.shape)
+            # print(test_data.shape)
+            # sys.exit()
             train_ds = torch.tensor(
                 train_data, dtype=torch.float32, device=device
             ).view(train_data.shape[0], train_data.shape[1] * train_data.shape[2])
             valid_ds = torch.tensor(test_data, dtype=torch.float32, device=device).view(
-                train_data.shape[0], train_data.shape[1] * train_data.shape[2]
+                test_data.shape[0], test_data.shape[1] * test_data.shape[2]
             )
         elif config.model_type == "convolutional" and config.model_name == "Conv_AE_3D":
             train_ds = torch.tensor(
