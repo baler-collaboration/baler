@@ -90,7 +90,6 @@ def main():
             + " not recognised. Use baler --help to see available modes."
         )
 
-
 def check_enabled_profilers(
     f, pytorchProfile=False, energyProfile=False, *args, **kwargs
 ):
@@ -124,7 +123,6 @@ def check_enabled_profilers(
 
     # Nest the profiling steps and run the function only once
     return outer_function(lambda: inner_function(f, *args, **kwargs))()
-
 
 def perform_training(output_path, config, verbose: bool):
     """Main function calling the training functions, ran when --mode=train is selected.
