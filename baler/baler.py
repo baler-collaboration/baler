@@ -38,7 +38,7 @@ def main():
     """Calls different functions depending on argument parsed in command line.
 
         - if --mode=newProject: call `helper.create_new_project` and create a new project sub directory with config file
-        - if --mode=train: call `perform_training` and train the network on given data and based on the config file
+        - if --mode=train: call `perform_training` and train the network on given data and based on the config file and check if profilers are enabled
         - if --mode=compress: call `perform_compression` and compress the given data using the model trained in `--mode=train`
         - if --mode=decompress: call `perform_decompression` and decompress the compressed file outputted from `--mode=compress`
         - if --mode=plot: call `perform_plotting` and plot the comparison between the original data and the decompressed data from `--mode=decompress`. Also plots the loss plot from the trained network.
@@ -48,14 +48,29 @@ def main():
     Raises:
         NameError: Raises error if the chosen mode does not exist.
     """
-    config, mode, workspace_name, project_name, verbose = helper.get_arguments()
+    (
+        config,
+        mode,
+        workspace_name,
+        project_name,
+        verbose,
+        pytorch_profile,
+        energy_profile,
+    ) = helper.get_arguments()
     project_path = os.path.join("workspaces", workspace_name, project_name)
     output_path = os.path.join(project_path, "output")
 
     if mode == "newProject":
         helper.create_new_project(workspace_name, project_name, verbose)
     elif mode == "train":
-        perform_training(output_path, config, verbose)
+        check_enabled_profilers(
+            perform_training,
+            pytorch_profile,
+            energy_profile,
+            output_path,
+            config,
+            verbose,
+        )
     elif mode == "diagnose":
         perform_diagnostics(output_path, verbose)
     elif mode == "compress":
@@ -75,9 +90,40 @@ def main():
             + " not recognised. Use baler --help to see available modes."
         )
 
+def check_enabled_profilers(
+    f, pytorchProfile=False, energyProfile=False, *args, **kwargs
+):
+    """
+    Conditionally apply profiling based on the given boolean flags.
 
-#@pytorch_profile
-#@energy_profiling(project_name="baler_training", measure_power_secs=1)
+    Args:
+        f (callable): The function to be potentially profiled.
+        pytorchProfile (bool): Whether to apply PyTorch profiling.
+        energyProfile (bool): Whether to apply energy profiling.
+
+    Returns:
+        result: The result of the function `f` execution.
+    """
+
+    # Placeholder function to avoid nested conditions
+    def identity_func(fn, *a, **kw):
+        return fn(*a, **kw)
+
+    # Set the outer and inner functions based on the flags
+    inner_function = pytorch_profile if pytorchProfile else identity_func
+    outer_function = (
+        (
+            lambda fn: energy_profiling(
+                fn, project_name="baler_training", measure_power_secs=1
+            )
+        )
+        if energyProfile
+        else identity_func
+    )
+
+    # Nest the profiling steps and run the function only once
+    return outer_function(lambda: inner_function(f, *args, **kwargs))()
+
 def perform_training(output_path, config, verbose: bool):
     """Main function calling the training functions, ran when --mode=train is selected.
         The three functions called are: `helper.process`, `helper.mode_init` and `helper.training`.
@@ -103,25 +149,30 @@ def perform_training(output_path, config, verbose: bool):
         config.test_size,
         config.apply_normalization,
         config.convert_to_blocks if hasattr(config, "convert_to_blocks") else None,
+        verbose,
     )
 
     if verbose:
         print("Training and testing sets normalized")
 
     try:
+        n_features = 0
         if config.data_dimension == 1:
             number_of_columns = train_set_norm.shape[1]
             config.latent_space_size = ceil(
                 number_of_columns / config.compression_ratio
             )
             config.number_of_columns = number_of_columns
+            n_features = number_of_columns
         elif config.data_dimension == 2:
             if config.model_type == "dense":
                 number_of_rows = train_set_norm.shape[1]
                 number_of_columns = train_set_norm.shape[2]
+                n_features = number_of_columns * number_of_rows
             else:
                 number_of_rows = original_shape[1]
                 number_of_columns = original_shape[2]
+                n_features = number_of_columns
             config.latent_space_size = ceil(
                 (number_of_rows * number_of_columns) / config.compression_ratio
             )
@@ -139,14 +190,16 @@ def perform_training(output_path, config, verbose: bool):
         assert number_of_columns == config.number_of_columns
 
     if verbose:
-        print(f"Intitalizing Model with Latent Size - {config.latent_space_size}")
+        print(
+            f"Intitalizing Model with Latent Size - {config.latent_space_size} and Features - {n_features}"
+        )
 
     device = helper.get_device()
     if verbose:
         print(f"Device used for training: {device}")
 
     model_object = helper.model_init(config.model_name)
-    model = model_object(n_features=number_of_columns, z_dim=config.latent_space_size)
+    model = model_object(n_features=n_features, z_dim=config.latent_space_size)
     model.to(device)
 
     if config.model_name == "Conv_AE_3D" and hasattr(
@@ -322,6 +375,7 @@ def perform_decompression(output_path, config, verbose: bool):
 
     start = time.time()
     model_name = config.model_name
+    data_before = np.load(config.input_path)["data"]
     decompressed, names, normalization_features = helper.decompress(
         model_path=os.path.join(output_path, "compressed_output", "model.pt"),
         input_path=os.path.join(output_path, "compressed_output", "compressed.npz"),
@@ -334,12 +388,12 @@ def perform_decompression(output_path, config, verbose: bool):
         model_name=model_name,
         config=config,
         output_path=output_path,
+        original_shape=data_before.shape,
     )
     if verbose:
         print(f"Model used: {model_name}")
 
-    if config.convert_to_blocks:
-        data_before = np.load(config.input_path)["data"]
+    if hasattr(config, "convert_to_blocks") and config.convert_to_blocks:
         print(
             "Converting Blocked Data into Standard Format. Old Shape - ",
             decompressed.shape,

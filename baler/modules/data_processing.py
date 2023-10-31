@@ -24,7 +24,9 @@ from ..modules import models
 
 
 def convert_to_blocks_util(blocks, data):
-    print("Converted Dataset to Blocks of Size - ", blocks)
+    print(
+        "Converted Dataset to Blocks of Size - ", blocks, " from original ", data.shape
+    )
     blocks = np.array(blocks)
     original_shape = np.array(data.shape)
     total_size = np.prod(original_shape)
