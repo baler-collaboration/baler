@@ -80,7 +80,7 @@ def fit(
             )
         else:
             # Compute how far off the prediction is
-            loss, mse_loss, l1_loss = utils.mse_sum_loss_l1(
+            loss, mse_loss, l1_loss = utils.mse_loss_l1(
                 model_children=model_children,
                 true_data=inputs,
                 reconstructed_data=reconstructions,
@@ -123,7 +123,7 @@ def validate(model, test_dl, model_children, reg_param):
             inputs = inputs.to(device)
             reconstructions = model(inputs)
 
-            loss, _, _ = utils.mse_sum_loss_l1(
+            loss, _, _ = utils.mse_loss_l1(
                 model_children=model_children,
                 true_data=inputs,
                 reconstructed_data=reconstructions,
@@ -280,6 +280,8 @@ def train(model, variables, train_data, test_data, project_path, config):
     # Training and Validation of the model
     train_loss = []
     val_loss = []
+    mse_loss = []
+    reg_loss = []
     start = time.time()
 
     # Registering hooks for activation extraction
@@ -302,6 +304,8 @@ def train(model, variables, train_data, test_data, project_path, config):
             n_dimensions=config.data_dimension,
         )
         train_loss.append(train_epoch_loss)
+        mse_loss.append(mse_loss_fit.detach().numpy())
+        reg_loss.append(regularizer_loss_fit.detach().numpy())
 
         if test_size:
             val_epoch_loss = validate(
@@ -338,7 +342,8 @@ def train(model, variables, train_data, test_data, project_path, config):
 
     print(f"{(end - start) / 60:.3} minutes")
     np.save(
-        os.path.join(project_path, "loss_data.npy"), np.array([train_loss, val_loss])
+        os.path.join(project_path, "loss_data.npy"),
+        np.array([train_loss, val_loss, mse_loss, reg_loss]),
     )
 
     if config.model_type == "convolutional":

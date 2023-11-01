@@ -50,11 +50,26 @@ def loss_plot(path_to_loss_data, output_path, config):
     for i in range(len(conf_list)):
         plt.plot([], [], " ", label=str_list[i] + " " + str(conf_list[i]))
     plt.xlabel("Epochs")
-    plt.yscale("log")
+    # plt.yscale("log")
     plt.ylabel("Loss")
     plt.legend(loc="best")
-    plt.savefig(os.path.join(output_path, "plotting", "Loss_plot.pdf"))
+    plt.savefig(os.path.join(output_path, "plotting", "loss_plot.png"))
     # plt.show()
+
+    mse_loss = loss_data[2]
+    reg_loss = loss_data[3]
+    plt.figure(figsize=(10, 7))
+    plt.title("mse_reg_loss")
+    plt.plot(mse_loss, color="orange", label="MSE Loss")
+    if config.test_size:
+        plt.plot(reg_loss, color="red", label="L1 Reg. Loss")
+    for i in range(len(conf_list)):
+        plt.plot([], [], " ", label=str_list[i] + " " + str(conf_list[i]))
+    plt.xlabel("Epochs")
+    # plt.yscale("log")
+    plt.ylabel("Loss")
+    plt.legend(loc="best")
+    plt.savefig(os.path.join(output_path, "plotting", "mse_reg_loss.png"))
 
 
 def get_index_to_cut(column_index, cut, array):
@@ -390,6 +405,9 @@ def plot_2D(project_path, config):
             data.shape[0], data.shape[1], data.shape[2]
         )
 
+    max_value = np.amax([np.amax(data), np.amax(data_decompressed)])
+    min_value = np.amin([np.amin(data), np.amin(data_decompressed)])
+
     if data.shape[0] > 1:
         num_tiles = data.shape[0]
     else:
@@ -414,9 +432,6 @@ def plot_2D(project_path, config):
 
         diff = tile_data - tile_data_decompressed
 
-        max_value = np.amax([np.amax(tile_data), np.amax(tile_data_decompressed)])
-        min_value = np.amin([np.amin(tile_data), np.amin(tile_data_decompressed)])
-
         fig, axs = plt.subplots(
             1, 3, figsize=(29.7 * (1 / 2.54), 10 * (1 / 2.54)), sharey=True
         )
@@ -434,6 +449,7 @@ def plot_2D(project_path, config):
         fig.savefig(
             project_path + "/plotting/CFD" + str(ind) + ".png", bbox_inches="tight"
         )
+        # break
         # sys.exit()
 
 

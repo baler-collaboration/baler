@@ -162,15 +162,15 @@ def mse_loss_l1(model_children, true_data, reconstructed_data, reg_param, valida
 
     l1_loss = 0
     values = true_data
-    if not validate:
-        for i in range(len(model_children)):
-            values = functional.relu(model_children[i](values))
-            l1_loss += torch.mean(torch.abs(values))
+    # if not validate:
+    for i in range(len(model_children)):
+        values = functional.relu(model_children[i](values))
+        l1_loss += torch.mean(torch.abs(values))
 
-        loss = mse_loss + reg_param * l1_loss
-        return loss, mse_loss, l1_loss
-    else:
-        return mse_loss, 0, 0
+    loss = mse_loss + reg_param * l1_loss
+    return loss, mse_loss, l1_loss
+    # else:
+    #    return mse_loss, 0, 0
 
 
 def mse_sum_loss_l1(model_children, true_data, reconstructed_data, reg_param, validate):
