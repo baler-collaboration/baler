@@ -90,6 +90,7 @@ def main():
             + " not recognised. Use baler --help to see available modes."
         )
 
+
 def check_enabled_profilers(
     f, pytorchProfile=False, energyProfile=False, *args, **kwargs
 ):
@@ -104,25 +105,17 @@ def check_enabled_profilers(
     Returns:
         result: The result of the function `f` execution.
     """
-
-    # Placeholder function to avoid nested conditions
-    def identity_func(fn, *a, **kw):
-        return fn(*a, **kw)
-
-    # Set the outer and inner functions based on the flags
-    inner_function = pytorch_profile if pytorchProfile else identity_func
-    outer_function = (
-        (
-            lambda fn: energy_profiling(
-                fn, project_name="baler_training", measure_power_secs=1
-            )
+    if pytorchProfile and not energyProfile:
+        return pytorch_profile(f, *args, **kwargs)
+    elif energyProfile and not pytorchProfile:
+        return energy_profiling(f, "baler_training", 1, *args, **kwargs)
+    elif pytorchProfile and energyProfile:
+        return pytorch_profile(
+            energy_profiling, f, "baler_training", 1, *args, **kwargs
         )
-        if energyProfile
-        else identity_func
-    )
+    else:
+        return f(*args, **kwargs)
 
-    # Nest the profiling steps and run the function only once
-    return outer_function(lambda: inner_function(f, *args, **kwargs))()
 
 def perform_training(output_path, config, verbose: bool):
     """Main function calling the training functions, ran when --mode=train is selected.
