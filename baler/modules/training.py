@@ -304,8 +304,8 @@ def train(model, variables, train_data, test_data, project_path, config):
             n_dimensions=config.data_dimension,
         )
         train_loss.append(train_epoch_loss)
-        mse_loss.append(mse_loss_fit.detach().numpy())
-        reg_loss.append(regularizer_loss_fit.detach().numpy())
+        mse_loss.append(mse_loss_fit.cpu().detach().numpy())
+        reg_loss.append(regularizer_loss_fit.cpu().detach().numpy())
 
         if test_size:
             val_epoch_loss = validate(
