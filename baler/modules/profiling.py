@@ -5,6 +5,8 @@ from pstats import SortKey
 import torch
 from torch.profiler import profile, record_function, ProfilerActivity
 import codecarbon
+from ..modules import profile_plotting
+
 
 
 def pytorch_profile(f, *args, **kwargs):
@@ -70,21 +72,41 @@ def energy_profiling(f, project_name, measure_power_secs, *args, **kwargs):
     """
 
     tracker = codecarbon.EmissionsTracker(
-        project_name=project_name, measure_power_secs=measure_power_secs
+        project_name=project_name, measure_power_secs=measure_power_secs,
+        save_to_file = True, output_dir = "./profiling/codecarbon",
+        co2_signal_api_token = "script-overwrite",
+# experiment_id = "235b1da5-aaaa-aaaa-aaaa-893681599d2c",
+log_level = "DEBUG",
+tracking_mode = "process"
     )
     tracker.start_task(f"{f.__name__}")
 
     # Execute the function and get its result
     result = f(*args, **kwargs)
 
-    emissions = tracker.stop_task()
-    print("CO2 emission [kg]: ", emissions.emissions)
-    print("CO2 emission rate [kg/h]: ", 3600 * emissions.emissions_rate)
-    print("CPU energy consumed [kWh]: ", emissions.cpu_energy)
-    print("GPU energy consumed [kWh]: ", emissions.gpu_energy)
-    print("RAM energy consumed [kWh]: ", emissions.ram_energy)
+    tracker.stop_task()
+    emissions = tracker.stop()
 
-    return result
+    print("----------------------------------Energy Profile-----------------------------------------------")
+    print("-----------------------------------------------------------------------------------------------")
+    print(f"Emissions : {1000 * emissions} g CO₂")
+    for task_name, task in tracker._tasks.items():
+        print(
+            f"Emissions : {1000 * task.emissions_data.emissions} g CO₂ for task {task_name} \nEmission Rate : {3600*task.emissions_data.emissions_rate} Kg/h"
+        )
+        print("-----------------------------------------------------------------------------------------------")
+        print("Energy Consumption")
+        print(
+            f"CPU : {1000 * task.emissions_data.cpu_energy} Wh \nGPU : {1000 * task.emissions_data.gpu_energy} Wh \nRAM : {1000 * task.emissions_data.ram_energy} Wh"
+        )
+        print("-----------------------------------------------------------------------------------------------")
+        print("Power Consumption")
+        print(
+            f"CPU : { task.emissions_data.cpu_power} W \nGPU : { task.emissions_data.gpu_power} W \nRAM : { task.emissions_data.ram_power} W"
+            +  f"\nduring {task.emissions_data.duration} seconds."
+        )
+    path = "./profiling/codecarbon/emissions.csv"
+    return result, profile_plotting.plot(path,f)
 
 
 def c_profile(func, *args, **kwargs):
