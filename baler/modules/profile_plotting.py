@@ -45,7 +45,7 @@ def plot(profiling_path, func):
     data[columns_to_scale] *= scaling_factor
 
     # Convert the 'timestamp' column to datetime
-    data["timestamp"] = pd.to_datetime(data["timestamp"])
+    data["timestamp"] = pd.to_datetime(data["timestamp"], errors='coerce')
 
     # Plot 1: Time series graph for 'timestamp' vs 'duration'
     plt.figure(figsize=(10, 6))
