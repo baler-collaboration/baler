@@ -1,4 +1,5 @@
 import io
+import os
 import pstats
 import cProfile
 from pstats import SortKey
@@ -55,7 +56,7 @@ def pytorch_profile(f, *args, **kwargs):
     return result
 
 
-def energy_profiling(f, project_name, measure_power_secs, *args, **kwargs):
+def energy_profiling(f, output_path, project_name, measure_power_secs, *args, **kwargs):
     """
     Energy Profiling measures the amount of electricity that
     was consumed by the given function f and the amount of CO2 emission.
@@ -70,11 +71,12 @@ def energy_profiling(f, project_name, measure_power_secs, *args, **kwargs):
         result: The result of the function `f` execution.
     """
 
+    profiling_path = os.path.join(output_path,"profiling")
     tracker = codecarbon.EmissionsTracker(
         project_name=project_name,
         measure_power_secs=measure_power_secs,
         save_to_file=True,
-        output_dir="./profiling/codecarbon",
+        output_dir=profiling_path,
         co2_signal_api_token="script-overwrite",
         experiment_id = "235b1da5-aaaa-aaaa-aaaa-893681599d2c",
         log_level="DEBUG",
@@ -114,10 +116,8 @@ def energy_profiling(f, project_name, measure_power_secs, *args, **kwargs):
             f"CPU : { task.emissions_data.cpu_power} W \nGPU : { task.emissions_data.gpu_power} W \nRAM : { task.emissions_data.ram_power} W"
             + f"\nduring {task.emissions_data.duration} seconds."
         )
-
-    path = "./profiling/codecarbon/emissions.csv"
     
-    return result, profile_plotting.plot(path, f)
+    return result, profile_plotting.plot(profiling_path, f)
 
 
 def c_profile(func, *args, **kwargs):

@@ -65,6 +65,7 @@ def main():
     elif mode == "train":
         check_enabled_profilers(
             perform_training,
+            output_path,
             pytorch_profile,
             energy_profile,
             output_path,
@@ -92,7 +93,7 @@ def main():
 
 
 def check_enabled_profilers(
-    f, pytorchProfile=False, energyProfile=False, *args, **kwargs
+    f, output_path='/', pytorchProfile=False, energyProfile=False, *args, **kwargs
 ):
     """
     Conditionally apply profiling based on the given boolean flags.
@@ -108,10 +109,10 @@ def check_enabled_profilers(
     if pytorchProfile and not energyProfile:
         return pytorch_profile(f, *args, **kwargs)
     elif energyProfile and not pytorchProfile:
-        return energy_profiling(f, "baler_training", 1, *args, **kwargs)
+        return energy_profiling(f, output_path,"baler_training", 1, *args, **kwargs)
     elif pytorchProfile and energyProfile:
         return pytorch_profile(
-            energy_profiling, f, "baler_training", 1, *args, **kwargs
+            energy_profiling, f, output_path, "baler_training", 1, *args, **kwargs
         )
     else:
         return f(*args, **kwargs)

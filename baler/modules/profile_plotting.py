@@ -2,9 +2,10 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.dates import date2num
 import seaborn as sns
+import os
 
 
-def plot(path, func):
+def plot(profiling_path, func):
     """
     Visualizes the data that is generated from .CSV logs
     of codecarbon by plotting graphs .The codecarbon package
@@ -16,12 +17,12 @@ def plot(path, func):
         func (callable): The function to be profiled.
 
     Returns:
-        result: Void. The plots are stored in the image_path location
+        result: Void. The plots are stored in the profiling_pathlocation
     """
 
-    image_path = "./profiling/codecarbon/"
     # Load CSV data into a DataFrame
-    data = pd.read_csv(path)
+    emission_csv_path = os.path.join(profiling_path,"emissions.csv")
+    data = pd.read_csv(emission_csv_path)
 
     # Define the scaling factor (adjust this value according to your needs)
     scaling_factor = 10**6
@@ -55,7 +56,7 @@ def plot(path, func):
     plt.xticks(rotation=45)
     plt.grid(True)
     plt.tight_layout()
-    plt.savefig(image_path + f"{func.__name__}" + "_" + "plot1.png")
+    plt.savefig(os.path.join(profiling_path, f"{func.__name__}" + "_" + "plot1.png"))
     plt.close()
     # plt.show()
 
@@ -77,7 +78,7 @@ def plot(path, func):
 
     plt.xticks(rotation=45)
     plt.tight_layout()
-    plt.savefig(image_path + f"{func.__name__}" + "_" + "plot2.png")
+    plt.savefig(os.path.join(profiling_path, f"{func.__name__}" + "_" + "plot2.png"))
     plt.close()
     # plt.show()
 
@@ -116,7 +117,7 @@ def plot(path, func):
 
     plt.xticks(rotation=45)
     plt.tight_layout()
-    plt.savefig(image_path + f"{func.__name__}" + "_" + "plot3.png")
+    plt.savefig(os.path.join(profiling_path, f"{func.__name__}" + "_" + "plot3.png"))
     plt.close()
     # plt.show()
 
@@ -244,8 +245,8 @@ def plot(path, func):
     plt.legend()
 
     plt.tight_layout()
-    plt.savefig(image_path + f"{func.__name__}" + "_" + "plot4.png")
+    plt.savefig(os.path.join(profiling_path, f"{func.__name__}" + "_" + "plot4.png"))
     plt.close()
     # plt.show()
 
-    print(f"Your codecarbon profiling plots are available at {image_path}")
+    print(f"Your codecarbon profiling plots are available at {profiling_path}")
