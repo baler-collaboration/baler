@@ -71,14 +71,14 @@ def energy_profiling(f, output_path, project_name, measure_power_secs, *args, **
         result: The result of the function `f` execution.
     """
 
-    profiling_path = os.path.join(output_path,"profiling")
+    profiling_path = os.path.join(output_path, "profiling")
     tracker = codecarbon.EmissionsTracker(
         project_name=project_name,
         measure_power_secs=measure_power_secs,
         save_to_file=True,
         output_dir=profiling_path,
         co2_signal_api_token="script-overwrite",
-        experiment_id = "235b1da5-aaaa-aaaa-aaaa-893681599d2c",
+        experiment_id="235b1da5-aaaa-aaaa-aaaa-893681599d2c",
         log_level="DEBUG",
         tracking_mode="process",
     )
@@ -116,7 +116,7 @@ def energy_profiling(f, output_path, project_name, measure_power_secs, *args, **
             f"CPU : { task.emissions_data.cpu_power} W \nGPU : { task.emissions_data.gpu_power} W \nRAM : { task.emissions_data.ram_power} W"
             + f"\nduring {task.emissions_data.duration} seconds."
         )
-    
+
     return result, profile_plotting.plot(profiling_path, f)
 
 

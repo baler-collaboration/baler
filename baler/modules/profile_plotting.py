@@ -21,7 +21,7 @@ def plot(profiling_path, func):
     """
 
     # Load CSV data into a DataFrame
-    emission_csv_path = os.path.join(profiling_path,"emissions.csv")
+    emission_csv_path = os.path.join(profiling_path, "emissions.csv")
     data = pd.read_csv(emission_csv_path)
 
     # Define the scaling factor (adjust this value according to your needs)
