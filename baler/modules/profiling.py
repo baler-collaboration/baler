@@ -172,6 +172,7 @@ def generate_call_graphs(func, profiling_path_pstats, output_path):
 
     Note:
     - This function requires Graphviz to be installed and configured separately.
+    - Graphviz can be installed from here - https://graphviz.gitlab.io/download/
     - Ensure that the 'dot' executable from Graphviz is in the system's PATH.
 
     """
