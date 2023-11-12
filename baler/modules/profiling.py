@@ -64,6 +64,7 @@ def energy_profiling(f, output_path, project_name, measure_power_secs, *args, **
 
     Args:
         f (callable): The function to be profiled.
+        output_path (str): The path where the profiling logs and reports are to be saved.
         project_name (str): The name of the project.
         measure_power_secs (int): The number of seconds to measure power.
 

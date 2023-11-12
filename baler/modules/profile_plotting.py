@@ -13,11 +13,11 @@ def plot(profiling_path, func):
     consumed by the given function and the amount of CO2 emission.
 
     Args:
-        path: Specifies the path where the .CSV logs are generated
+        profiling_path (str): The path where the .CSV logs are generated
         func (callable): The function to be profiled.
 
     Returns:
-        result: Void. The plots are stored in the profiling_pathlocation
+        result: Void. The plots are stored in the profiling_path location
     """
 
     # Load CSV data into a DataFrame
@@ -45,7 +45,7 @@ def plot(profiling_path, func):
     data[columns_to_scale] *= scaling_factor
 
     # Convert the 'timestamp' column to datetime
-    data["timestamp"] = pd.to_datetime(data["timestamp"], errors='coerce')
+    data["timestamp"] = pd.to_datetime(data["timestamp"], errors="coerce")
 
     # Plot 1: Time series graph for 'timestamp' vs 'duration'
     plt.figure(figsize=(10, 6))

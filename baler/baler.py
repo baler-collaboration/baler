@@ -100,6 +100,7 @@ def check_enabled_profilers(
 
     Args:
         f (callable): The function to be potentially profiled.
+        output_path (str): The path where the profiling logs and reports are to be saved.
         pytorchProfile (bool): Whether to apply PyTorch profiling.
         energyProfile (bool): Whether to apply energy profiling.
 
