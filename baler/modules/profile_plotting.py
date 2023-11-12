@@ -17,7 +17,7 @@ def plot(profiling_path, func):
         func (callable): The function to be profiled.
 
     Returns:
-        result: Void. The plots are stored in the profiling_path location
+        Void. The plots are stored in the `profiling_path` location
     """
 
     # Load CSV data into a DataFrame

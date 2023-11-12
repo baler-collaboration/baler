@@ -70,6 +70,7 @@ def energy_profiling(f, output_path, project_name, measure_power_secs, *args, **
 
     Returns:
         result: The result of the function `f` execution.
+        profile_plotting.plot(profiling_path, f): Subsequently called to generate plots from the codecarbon log files.
     """
 
     profiling_path = os.path.join(output_path, "profiling")
