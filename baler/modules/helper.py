@@ -110,7 +110,10 @@ def get_arguments():
 
 
 def create_new_project(
-    workspace_name: str, project_name: str, verbose: bool = False
+    workspace_name: str,
+    project_name: str,
+    verbose: bool = False,
+    base_path: str = "workspaces",
 ) -> None:
     """Creates a new project directory output subdirectories and config files within a workspace.
 
@@ -119,8 +122,6 @@ def create_new_project(
         project_name (str): Creates a project (dir) for storing configs and outputs with this name.
         verbose (bool, optional): Whether to print out the progress. Defaults to False.
     """
-
-    base_path = "workspaces"
 
     # Create full project path
     workspace_path = os.path.join(base_path, workspace_name)
