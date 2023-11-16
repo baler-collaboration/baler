@@ -21,7 +21,7 @@ from baler.modules import helper
 def test_create_new_project():
     workspace_name = "test_workspace"
     project_name = "test_project"
-    base_path = os.path.join("workspaces")
+    base_path = os.path.join("test_workspaces")
     workspace_path = os.path.join(base_path, workspace_name)
     project_path = os.path.join(workspace_path, project_name)
 
@@ -29,7 +29,7 @@ def test_create_new_project():
     if os.path.exists(workspace_path):
         shutil.rmtree(workspace_path)
 
-    helper.create_new_project(workspace_name, project_name)
+    helper.create_new_project(workspace_name, project_name, base_path=base_path)
 
     # Verify that the project was created successfully
     assert os.path.exists(workspace_path)
