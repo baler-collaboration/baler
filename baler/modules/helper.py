@@ -80,6 +80,9 @@ def get_arguments():
         "--energyProfile", action="store_true", help="Enable Energy profiling"
     )
     parser.add_argument(
+        "--cProfile", action="store_true", help="Enable profiling with cProfile"
+    )
+    parser.add_argument(
         "--verbose", dest="verbose", action="store_true", help="Verbose mode"
     )
     parser.set_defaults(verbose=False)
@@ -106,6 +109,7 @@ def get_arguments():
         args.verbose,
         args.pytorchProfile,
         args.energyProfile,
+        args.cProfile,
     )
 
 

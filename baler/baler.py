@@ -22,7 +22,7 @@ from .modules import helper
 import gzip
 from .modules.profiling import energy_profiling
 from .modules.profiling import pytorch_profile
-
+from .modules.profiling import c_profile
 
 __all__ = (
     "perform_compression",
@@ -56,6 +56,7 @@ def main():
         verbose,
         pytorch_profile,
         energy_profile,
+        c_profile,
     ) = helper.get_arguments()
     project_path = os.path.join("workspaces", workspace_name, project_name)
     output_path = os.path.join(project_path, "output")
@@ -65,8 +66,10 @@ def main():
     elif mode == "train":
         check_enabled_profilers(
             perform_training,
+            output_path,
             pytorch_profile,
             energy_profile,
+            c_profile,
             output_path,
             config,
             verbose,
@@ -92,26 +95,35 @@ def main():
 
 
 def check_enabled_profilers(
-    f, pytorchProfile=False, energyProfile=False, *args, **kwargs
+    f,
+    output_path="/",
+    pytorchProfile=False,
+    energyProfile=False,
+    cProfile=False,
+    *args,
+    **kwargs,
 ):
     """
     Conditionally apply profiling based on the given boolean flags.
 
     Args:
         f (callable): The function to be potentially profiled.
+        output_path (str): The path where the profiling logs and reports are to be saved.
         pytorchProfile (bool): Whether to apply PyTorch profiling.
         energyProfile (bool): Whether to apply energy profiling.
 
     Returns:
         result: The result of the function `f` execution.
     """
-    if pytorchProfile and not energyProfile:
+    if cProfile:
+        return c_profile(f, output_path, *args, **kwargs)
+    elif pytorchProfile and not energyProfile:
         return pytorch_profile(f, *args, **kwargs)
     elif energyProfile and not pytorchProfile:
-        return energy_profiling(f, "baler_training", 1, *args, **kwargs)
+        return energy_profiling(f, output_path, "baler_training", 1, *args, **kwargs)
     elif pytorchProfile and energyProfile:
         return pytorch_profile(
-            energy_profiling, f, "baler_training", 1, *args, **kwargs
+            energy_profiling, f, output_path, "baler_training", 1, *args, **kwargs
         )
     else:
         return f(*args, **kwargs)
