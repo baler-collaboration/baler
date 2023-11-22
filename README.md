@@ -10,8 +10,6 @@ Baler is a tool used to test the feasibility of compressing different types of s
 3. Decompress the file using the model at a later time
 4. Plot the performance of the compression/decompression
 
-If you wish to contribute, please see the contribution guidelines [here](https://github.com/baler-collaboration/baler/blob/main/docs/CONTRIBUTING.md)
-
 
 # Getting Started #
 **NOTE:** For the same performance and version as presented in our [Arxiv](https://arxiv.org/abs/2305.02283) paper, please use release [v1.0.0](https://github.com/baler-collaboration/baler/tree/v1.0.0) and the setup instructions given there. v1.0.0 also has a working docker implementation. We are currently experiencing some performance issues on the main branch compared.
