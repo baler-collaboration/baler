@@ -1,10 +1,12 @@
 import io
+import os
 import pstats
 import cProfile
 from pstats import SortKey
 import torch
 from torch.profiler import profile, record_function, ProfilerActivity
 import codecarbon
+from ..modules import profile_plotting
 
 
 def pytorch_profile(f, *args, **kwargs):
@@ -54,7 +56,7 @@ def pytorch_profile(f, *args, **kwargs):
     return result
 
 
-def energy_profiling(f, project_name, measure_power_secs, *args, **kwargs):
+def energy_profiling(f, output_path, project_name, measure_power_secs, *args, **kwargs):
     """
     Energy Profiling measures the amount of electricity that
     was consumed by the given function f and the amount of CO2 emission.
@@ -62,29 +64,62 @@ def energy_profiling(f, project_name, measure_power_secs, *args, **kwargs):
 
     Args:
         f (callable): The function to be profiled.
+        output_path (str): The path where the profiling logs and reports are to be saved.
         project_name (str): The name of the project.
         measure_power_secs (int): The number of seconds to measure power.
 
     Returns:
         result: The result of the function `f` execution.
+        profile_plotting.plot(profiling_path, f): Subsequently called to generate plots from the codecarbon log files.
     """
 
+    profiling_path = os.path.join(output_path, "profiling")
     tracker = codecarbon.EmissionsTracker(
-        project_name=project_name, measure_power_secs=measure_power_secs
+        project_name=project_name,
+        measure_power_secs=measure_power_secs,
+        save_to_file=True,
+        output_dir=profiling_path,
+        co2_signal_api_token="script-overwrite",
+        experiment_id="235b1da5-aaaa-aaaa-aaaa-893681599d2c",
+        log_level="DEBUG",
+        tracking_mode="process",
     )
     tracker.start_task(f"{f.__name__}")
 
     # Execute the function and get its result
     result = f(*args, **kwargs)
 
-    emissions = tracker.stop_task()
-    print("CO2 emission [kg]: ", emissions.emissions)
-    print("CO2 emission rate [kg/h]: ", 3600 * emissions.emissions_rate)
-    print("CPU energy consumed [kWh]: ", emissions.cpu_energy)
-    print("GPU energy consumed [kWh]: ", emissions.gpu_energy)
-    print("RAM energy consumed [kWh]: ", emissions.ram_energy)
+    tracker.stop_task()
+    emissions = tracker.stop()
 
-    return result
+    print(
+        "----------------------------------Energy Profile-----------------------------------------------"
+    )
+    print(
+        "-----------------------------------------------------------------------------------------------"
+    )
+    print(f"Emissions : {1000 * emissions} g CO₂")
+    for task_name, task in tracker._tasks.items():
+        print(
+            f"Emissions : {1000 * task.emissions_data.emissions} g CO₂ for task {task_name} \nEmission Rate : {3600*task.emissions_data.emissions_rate} Kg/h"
+        )
+        print(
+            "-----------------------------------------------------------------------------------------------"
+        )
+        print("Energy Consumption")
+        print(
+            f"CPU : {1000 * task.emissions_data.cpu_energy} Wh \nGPU : {1000 * task.emissions_data.gpu_energy} Wh \nRAM : {1000 * task.emissions_data.ram_energy} Wh"
+        )
+        print(
+            "-----------------------------------------------------------------------------------------------"
+        )
+        print("Power Consumption")
+        print(
+            f"CPU : { task.emissions_data.cpu_power} W \nGPU : { task.emissions_data.gpu_power} W \nRAM : { task.emissions_data.ram_power} W"
+            + f"\nduring {task.emissions_data.duration} seconds."
+        )
+
+    return result, profile_plotting.plot(profiling_path, f)
 
 
 def c_profile(func, *args, **kwargs):
