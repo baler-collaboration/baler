@@ -265,7 +265,7 @@ def numpy_to_tensor(data):
     return torch.from_numpy(data)
 
 
-@jit(cache=True, parallel=True, nopython=False)
+@jit(cache=True, parallel=True, forceobj=True)
 def normalize(data, custom_norm):
     """Applies `data_processing.normalize()` along every axis of given data
 
@@ -282,7 +282,7 @@ def normalize(data, custom_norm):
     return data
 
 
-@jit(cache=True, parallel=True, nopython=False)
+@jit(cache=True, parallel=True, forceobj=True)
 def process(
     input_path,
     custom_norm,
@@ -413,7 +413,7 @@ def get_device():
     return device
 
 
-@jit(cache=True, parallel=True, nopython=False)
+@jit(cache=True, parallel=True, forceobj=True)
 def save_error_bounded_requirement(config, decoded_output, data_batch):
     rms_pred_error = (
         np.divide(
