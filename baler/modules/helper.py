@@ -29,6 +29,7 @@ from torch.utils.data import DataLoader
 from sklearn.model_selection import train_test_split
 
 from ..modules import training, plotting, data_processing, diagnostics
+from numba import jit
 
 
 def get_arguments():
@@ -264,6 +265,7 @@ def numpy_to_tensor(data):
     return torch.from_numpy(data)
 
 
+@jit(cache=True, parallel=True, nopython=False)
 def normalize(data, custom_norm):
     """Applies `data_processing.normalize()` along every axis of given data
 
@@ -275,11 +277,12 @@ def normalize(data, custom_norm):
         ndarray: Normalized data
     """
     data = np.apply_along_axis(
-        data_processing.normalize, axis=0, arr=data, custom_norm=custom_norm
+        data_processing.normalize, axis=0, arr=np.array(data), custom_norm=custom_norm
     )
     return data
 
 
+@jit(cache=True, parallel=True, nopython=False)
 def process(
     input_path,
     custom_norm,
@@ -428,6 +431,7 @@ def get_device():
     return device
 
 
+@jit(cache=True, parallel=True, nopython=False)
 def save_error_bounded_requirement(config, decoded_output, data_batch):
     rms_pred_error = (
         np.divide(
