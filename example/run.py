@@ -1,15 +1,19 @@
+import sys
+sys.path.append("../src/")
+
+# import baler
 import baler_compressor.config as config_module
 import baler_compressor.trainer as trainer_module
 import baler_compressor.compressor as compressor_module
 import baler_compressor.decompressor as decompressor_module
 import baler_compressor.helper as baler_helper
 
-# import helper
+# import helper for plotting
+import helper
+
+# import others
 import torch
 import numpy as np
-
-import sys
-import helper
 import imageio.v2 as imageio
 import matplotlib.pyplot as plt
 from tqdm import tqdm
