@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "baler-compressor"
-version = "0.0.1"
+version = "0.0.5"
 authors = [
   { name="Alexander Ekman", email="alexander.ekman@fysik.lu.se" },
 ]
@@ -20,3 +20,6 @@ classifiers = [
 [project.urls]
 Homepage = "https://github.com/baler-collaboration/baler"
 Issues = "https://github.com/baler-collaboration/baler/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/baler_compressor"]
