@@ -20,7 +20,7 @@ from dataclasses import dataclass
 from math import ceil
 import gzip
 
-from tqdm import tqdm
+from tqdm.autonotebook import tqdm
 
 sys.path.append(os.getcwd())
 import numpy as np
@@ -28,7 +28,7 @@ import torch
 from torch.utils.data import DataLoader
 from sklearn.model_selection import train_test_split
 
-from ..modules import training, plotting, data_processing, diagnostics
+from baler_compressor import data_processing
 from numba import jit
 
 
@@ -277,7 +277,7 @@ def normalize(data, custom_norm):
         ndarray: Normalized data
     """
     data = np.apply_along_axis(
-        data_processing.normalize, axis=0, arr=np.array(data), custom_norm=custom_norm
+        data_processing.normalize, axis=0, arr=data, custom_norm=custom_norm
     )
     return data
 
@@ -341,24 +341,6 @@ def renormalize(data, true_min_list, feature_range_list):
     """
     return data_processing.renormalize_func(data, true_min_list, feature_range_list)
 
-
-def train(model, number_of_columns, train_set, test_set, project_path, config):
-    """Calls `training.train()`
-
-    Args:
-        model (modelObject): The model you wish to train
-        number_of_columns (int): Amount of columns in the initial dataset
-        train_set (ndarray): Array consisting of the train set
-        test_set (ndarray): Array consisting of the test set
-        project_path (string): Path to the project directory
-        config (dataClass): Base class selecting user inputs
-
-    Returns:
-        _type_: _description_
-    """
-    return training.train(
-        model, number_of_columns, train_set, test_set, project_path, config
-    )
 
 
 def plotter(output_path, config):
@@ -579,34 +561,40 @@ def compress(model_path, config):
 
             compressed_output = model.encode(data_batch)
 
-            if config.save_error_bounded_deltas:
-                decoded_output = model.decode(compressed_output)
-                decoded_output = detacher(decoded_output)
-                deltas_compressed = 0
+#            if config.save_error_bounded_deltas:
+#                decoded_output = model.decode(compressed_output)
+#                decoded_output = detacher(decoded_output)
+#                deltas_compressed = 0
             # Converting back to numpyarray
             compressed_output = detacher(compressed_output)
             data_batch = detacher(data_batch)
 
-            if config.save_error_bounded_deltas:
-                (
-                    deltas,
-                    rms_pred_error_index,
-                ) = save_error_bounded_requirement(config, decoded_output, data_batch)
-                if len(rms_pred_error_index) > 0:
-                    error_bound_batch.append(idx)
-                    error_bound_deltas.append(deltas)
-                    error_bound_index.append(rms_pred_error_index)
-                    deltas_compressed += len(rms_pred_error_index[0])
+#            if config.save_error_bounded_deltas:
+#                (
+#                    deltas,
+#                    rms_pred_error_index,
+#                ) = save_error_bounded_requirement(config, decoded_output, data_batch)
+#                if len(rms_pred_error_index) > 0:
+#                    error_bound_batch.append(idx)
+#                    error_bound_deltas.append(deltas)
+#                    error_bound_index.append(rms_pred_error_index)
+#                    deltas_compressed += len(rms_pred_error_index[0])
 
             if idx == 0:
                 compressed = compressed_output
             else:
                 compressed = np.concatenate((compressed, compressed_output))
 
-    if config.save_error_bounded_deltas:
-        print("Total Deltas Found - ", deltas_compressed)
+#    if config.save_error_bounded_deltas:
+#        print("Total Deltas Found - ", deltas_compressed)
 
-    return (compressed, error_bound_batch, error_bound_deltas, error_bound_index)
+    return (
+        compressed,
+        error_bound_batch,
+        error_bound_deltas,
+        error_bound_index,
+        original_shape,
+    )
 
 
 def decompress(
@@ -617,7 +605,6 @@ def decompress(
     model_name,
     config,
     output_path,
-    original_shape,
 ):
     """Function which performs the decompression of the compressed file. In order to decompress, you must have a
     compressed file, whose path is determined by `input_path`, a model from path `model_path` and a model_name. The
@@ -638,6 +625,7 @@ def decompress(
     loaded = np.load(input_path)
     data = loaded["data"]
     names = loaded["names"]
+    original_shape = loaded["original_shape"]
     normalization_features = loaded["normalization_features"]
 
     if config.model_type == "convolutional":
@@ -645,17 +633,17 @@ def decompress(
             os.path.join(output_path, "training", "final_layer.npy"),
         )
 
-    if config.save_error_bounded_deltas:
-        loaded_deltas = np.load(
-            gzip.GzipFile(input_path_deltas, "r"), allow_pickle=True
-        )
-        loaded_batch_indexes = np.load(
-            gzip.GzipFile(input_batch_index, "r"), allow_pickle=True
-        )
-        error_bound_batch = loaded_batch_indexes[0]
-        error_bound_deltas = loaded_deltas
-        error_bound_index = loaded_batch_indexes[1]
-        deltas_added = 0
+#    if config.save_error_bounded_deltas:
+#        loaded_deltas = np.load(
+#            gzip.GzipFile(input_path_deltas, "r"), allow_pickle=True
+#        )
+#        loaded_batch_indexes = np.load(
+#            gzip.GzipFile(input_batch_index, "r"), allow_pickle=True
+#        )
+#        error_bound_batch = loaded_batch_indexes[0]
+#        error_bound_deltas = loaded_deltas
+#        error_bound_index = loaded_batch_indexes[1]
+#        deltas_added = 0
 
     model_name = config.model_name
     latent_space_size = len(data[0])
@@ -698,32 +686,32 @@ def decompress(
             out = model.decode(data_batch).to(device)
             # Converting back to numpyarray
             out = detacher(out)
-            if config.save_error_bounded_deltas:
-                if idx in error_bound_batch:
-                    # Error Bounded Deltas added to Decompressed output
-                    delta_idx = np.where(error_bound_batch == idx)
-                    deltas = error_bound_deltas[delta_idx][0]
-                    delta_index = error_bound_index[delta_idx][0]
-                    row_idx, col_idx = delta_index
+#            if config.save_error_bounded_deltas:
+#                if idx in error_bound_batch:
+#                    # Error Bounded Deltas added to Decompressed output
+#                    delta_idx = np.where(error_bound_batch == idx)
+#                    deltas = error_bound_deltas[delta_idx][0]
+#                    delta_index = error_bound_index[delta_idx][0]
+#                    row_idx, col_idx = delta_index
 
-                    for i in range(len(row_idx)):
-                        out[row_idx[i]][col_idx[i]] -= deltas[i]
-                        deltas_added += 1
+#                    for i in range(len(row_idx)):
+#                        out[row_idx[i]][col_idx[i]] -= deltas[i]
+#                        deltas_added += 1
 
             if idx == 0:
                 decompressed = out
             else:
                 decompressed = np.concatenate((decompressed, out))
 
-    if config.save_error_bounded_deltas:
-        print("Total Deltas Added - ", deltas_added)
+#    if config.save_error_bounded_deltas:
+#        print("Total Deltas Added - ", deltas_added)
 
     if config.data_dimension == 2 and config.model_type == "dense":
         decompressed = decompressed.reshape(
             (len(decompressed), original_shape[1], original_shape[2])
         )
 
-    return decompressed, names, normalization_features
+    return decompressed, names, normalization_features, original_shape
 
 
 def diagnose(input_path: str, output_path: str) -> None:

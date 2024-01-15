@@ -19,8 +19,8 @@ import torch
 from numpy import ndarray
 from sklearn.model_selection import train_test_split
 
-from ..modules import helper
-from ..modules import models
+from baler_compressor import helper
+from baler_compressor import models
 from numba import jit
 
 
@@ -119,7 +119,7 @@ def normalize(data, custom_norm: bool):
     Returns: ndarray: If not custom_norm: Input data where every column is scaled to be in the range [0,
     1]. Otherwise, the input data is returned
     """
-
+    data = np.array(data)
     if custom_norm:
         pass
     elif not custom_norm:
