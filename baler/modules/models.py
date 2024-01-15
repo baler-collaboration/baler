@@ -20,7 +20,7 @@ from torch.nn import functional as F
 import torch.utils.data
 from torch.nn import functional as F
 from torch.autograd import Function
-from ..modules import helper
+from baler_compressor import helper
 
 
 class LowerBound(Function):
@@ -318,7 +318,7 @@ class Conv_AE(nn.Module):
         super(Conv_AE, self).__init__(*args, **kwargs)
 
         self.q_z_mid_dim = 2000
-        self.q_z_output_dim = 128
+        self.q_z_output_dim = 72128
         self.conv_op_shape = None
 
         # Encoder

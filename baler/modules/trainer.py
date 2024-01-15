@@ -1,17 +1,3 @@
-# Copyright 2022 Baler Contributors
-
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-
-#     http://www.apache.org/licenses/LICENSE-2.0
-
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 import os
 import random
 import time
@@ -20,12 +6,139 @@ import sys
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
-from tqdm import tqdm
+from tqdm.autonotebook import tqdm
+import math
 
-from ..modules import diagnostics
-from ..modules import helper
-from ..modules import utils
-from torch.nn import functional as F
+import baler_compressor.helper as helper
+import baler_compressor.utils as utils
+import baler_compressor.data_processing as data_processing
+import baler_compressor.models as models
+
+
+def run(data_path, config):
+    """Main function calling the training functions, ran when --mode=train is selected.
+        The three functions called are: `helper.process`, `helper.mode_init` and `helper.training`.
+
+        Depending on `config.data_dimensions`, the calculated latent space size will differ.
+
+    Args:
+        output_path (path): Selects base path for determining output path
+        config (dataClass): Base class selecting user inputs
+        verbose (bool): If True, prints out more information
+
+    Raises:
+        NameError: Baler currently only supports 1D (e.g. HEP) or 2D (e.g. CFD) data as inputs.
+    """
+
+    config.input_path = data_path
+    verbose = config.verbose
+
+    (
+        train_set_norm,
+        test_set_norm,
+        normalization_features,
+        original_shape,
+    ) = helper.process(
+        config.input_path,
+        config.custom_norm,
+        config.test_size,
+        config.apply_normalization,
+        config.convert_to_blocks if hasattr(config, "convert_to_blocks") else None,
+        verbose,
+    )
+
+    if verbose:
+        print("Training and testing sets normalized")
+
+    try:
+        n_features = 0
+        if config.data_dimension == 1:
+            number_of_columns = train_set_norm.shape[1]
+            config.latent_space_size = math.ceil(
+                number_of_columns / config.compression_ratio
+            )
+            config.number_of_columns = number_of_columns
+            n_features = number_of_columns
+        elif config.data_dimension == 2:
+            if config.model_type == "dense":
+                number_of_rows = train_set_norm.shape[1]
+                number_of_columns = train_set_norm.shape[2]
+                n_features = number_of_columns * number_of_rows
+            else:
+                number_of_rows = original_shape[1]
+                number_of_columns = original_shape[2]
+                n_features = number_of_columns
+            config.latent_space_size = math.ceil(
+                (number_of_rows * number_of_columns) / config.compression_ratio
+            )
+            config.number_of_columns = number_of_columns
+        else:
+            raise NameError(
+                "Data dimension can only be 1 or 2. Got config.data_dimension value = "
+                + str(config.data_dimension)
+            )
+    except AttributeError:
+        if verbose:
+            print(
+                f"{config.number_of_columns} -> {config.latent_space_size} dimensions"
+            )
+        assert number_of_columns == config.number_of_columns
+
+    if verbose:
+        print(
+            f"Intitalizing Model with Latent Size - {config.latent_space_size} and Features - {n_features}"
+        )
+
+    device = helper.get_device()
+    if verbose:
+        print(f"Device used for training: {device}")
+
+    model_object = helper.model_init(config.model_name)
+    model = model_object(n_features=n_features, z_dim=config.latent_space_size)
+    model.to(device)
+
+    if config.model_name == "Conv_AE_3D" and hasattr(
+        config, "compress_to_latent_space"
+    ):
+        model.set_compress_to_latent_space(config.compress_to_latent_space)
+
+    if verbose:
+        print(f"Model architecture:\n{model}")
+
+    # training_path = os.path.join(output_path, "training")
+    # if verbose:
+    #    print(f"Training path: {training_path}")
+
+    trained_model, loss_data = train(
+        model,
+        number_of_columns,
+        train_set_norm,
+        test_set_norm,
+        # training_path,
+        config,
+    )
+
+    if verbose:
+        print("Training complete")
+
+    return trained_model, normalization_features, loss_data
+
+    # if config.apply_normalization:
+    #    np.save(
+    #        os.path.join(training_path, "normalization_features.npy"),
+    #        normalization_features,
+    #    )
+    # if verbose:
+    #    print(
+    #        f"Normalization features saved to {os.path.join(training_path, 'normalization_features.npy')}"
+    #    )
+    # helper.model_saver(
+    #    trained_model, os.path.join(output_path, "compressed_output", "model.pt")
+    # )
+    # if verbose:
+    #    print(
+    #        f"Model saved to {os.path.join(output_path, 'compressed_output', 'model.pt')}"
+    #    )
 
 
 def fit(
@@ -147,7 +260,7 @@ def seed_worker(worker_id):
     random.seed(worker_seed)
 
 
-def train(model, variables, train_data, test_data, project_path, config):
+def train(model, variables, train_data, test_data, config):
     """Does the entire training loop by calling the `fit()` and `validate()`. Appart from this, this is the main function where the data is converted
         to the correct type for it to be trained, via `torch.Tensor()`. Furthermore, the batching is also done here, based on `config.batch_size`,
         and it is the `torch.utils.data.DataLoader` doing the splitting.
@@ -181,8 +294,8 @@ def train(model, variables, train_data, test_data, project_path, config):
     l1 = config.l1
     epochs = config.epochs
     latent_space_size = config.latent_space_size
-    intermittent_model_saving = config.intermittent_model_saving
-    intermittent_saving_patience = config.intermittent_saving_patience
+    # intermittent_model_saving = config.intermittent_model_saving
+    # intermittent_saving_patience = config.intermittent_saving_patience
 
     model_children = list(model.children())
 
@@ -283,13 +396,18 @@ def train(model, variables, train_data, test_data, project_path, config):
     start = time.time()
 
     # Registering hooks for activation extraction
-    if config.activation_extraction:
-        hooks = model.store_hooks()
+    # if config.activation_extraction:
+    #    hooks = model.store_hooks()
 
     for epoch in range(epochs):
         print(f"Epoch {epoch + 1} of {epochs}")
 
-        train_epoch_loss, mse_loss_fit, regularizer_loss_fit, trained_model = fit(
+        (
+            train_epoch_loss,
+            mse_loss_fit,
+            regularizer_loss_fit,
+            trained_model,
+        ) = fit(
             config=config,
             model=model,
             train_dl=train_dl,
@@ -322,27 +440,32 @@ def train(model, variables, train_data, test_data, project_path, config):
             if early_stopping.early_stop:
                 break
 
-        ## Implementation to save models & values after every N epochs, where N is stored in 'intermittent_saving_patience':
-        if intermittent_model_saving:
-            if epoch % intermittent_saving_patience == 0:
-                path = os.path.join(project_path, f"model_{epoch}.pt")
-                helper.model_saver(model, path)
+        ### Implementation to save models & values after every N epochs, where N is stored in 'intermittent_saving_patience':
+        # if intermittent_model_saving:
+        #    if epoch % intermittent_saving_patience == 0:
+        #        path = os.path.join(project_path, f"model_{epoch}.pt")
+        #        helper.model_saver(model, path)
 
     end = time.time()
 
     # Saving activations values
-    if config.activation_extraction:
-        activations = diagnostics.dict_to_square_matrix(model.get_activations())
-        model.detach_hooks(hooks)
-        np.save(os.path.join(project_path, "activations.npy"), activations)
+    # if config.activation_extraction:
+    #    activations = diagnostics.dict_to_square_matrix(model.get_activations())
+    #    model.detach_hooks(hooks)
+    #    np.save(os.path.join(project_path, "activations.npy"), activations)
 
-    print(f"{(end - start) / 60:.3} minutes")
-    np.save(
-        os.path.join(project_path, "loss_data.npy"), np.array([train_loss, val_loss])
-    )
+    print(f"Training took: {(end - start) / 60:.3} minutes")
+    # np.save(
+    #    os.path.join(config.output_path, "loss_data.npy"),
+    #    np.array([train_loss, val_loss]),
+    # )
+    loss_data = (np.array([train_loss, val_loss]),)
 
     if config.model_type == "convolutional":
         final_layer = model.get_final_layer_dims()
-        np.save(os.path.join(project_path, "final_layer.npy"), np.array(final_layer))
+        np.save(
+            os.path.join("output/compressed_output/", "final_layer.npy"),
+            np.array(final_layer),
+        )
 
-    return trained_model
+    return trained_model, loss_data

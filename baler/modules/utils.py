@@ -16,7 +16,7 @@ import torch
 import torch.nn as nn
 from scipy.stats import wasserstein_distance
 from torch.nn import functional
-from tqdm import tqdm
+from tqdm.autonotebook import tqdm
 from torch.nn import functional as F
 from torch import distributions as dist
 

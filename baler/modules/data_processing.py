@@ -19,14 +19,14 @@ import torch
 from numpy import ndarray
 from sklearn.model_selection import train_test_split
 
-from ..modules import helper
-from ..modules import models
+from baler_compressor import helper
+from baler_compressor import models
 
 
 def convert_to_blocks_util(blocks, data):
-    print(
-        "Converted Dataset to Blocks of Size - ", blocks, " from original ", data.shape
-    )
+    # print(
+    #    "Converted Dataset to Blocks of Size - ", blocks, " from original ", data.shape
+    # )
     blocks = np.array(blocks)
     original_shape = np.array(data.shape)
     total_size = np.prod(original_shape)
