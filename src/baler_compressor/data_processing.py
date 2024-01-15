@@ -25,7 +25,7 @@ from numba import jit
 
 
 @jit(cache=True, parallel=True, nopython=True)
-def convert_to_blocks_util(blocks, data:np.float32):
+def convert_to_blocks_util(blocks, data):
     print(
         "Converted Dataset to Blocks of Size - ", blocks, " from original ", data.shape
     )

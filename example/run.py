@@ -1,4 +1,5 @@
 import sys
+
 sys.path.append("../src/")
 
 # import baler
@@ -26,7 +27,7 @@ def define_config():
     # Define config
     config.input_path = "input/exafel_1.npz"
     config.output_path = "output/"
-    
+
     config = config_module.Config
     config.compression_ratio = 1000
     config.epochs = 400
@@ -50,7 +51,6 @@ def define_config():
     config.compress_to_latent_space = False
     config.convert_to_blocks = [1, 150, 150]
     config.verbose = False
-
 
     # FPGA stuff
     config.number_of_columns = 22500  # FIXME: this is doesn't need to be hardcoded
