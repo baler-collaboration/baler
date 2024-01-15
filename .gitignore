@@ -3,6 +3,8 @@
 !workspaces/CMS_project_v1/CMS_project_v1/config/CMS_project_v1_config.py
 !workspaces/CFD_workspace/CFD_project_animation/config/CFD_project_animation_config.py
 
+src/output/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

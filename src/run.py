@@ -2,6 +2,7 @@ import baler_compressor.config as config_module
 import baler_compressor.trainer as trainer_module
 import baler_compressor.compressor as compressor_module
 import baler_compressor.decompressor as decompressor_module
+import baler_compressor.helper as baler_helper
 
 # import helper
 import torch
@@ -19,30 +20,33 @@ def define_config():
     config = config_module.Config
 
     # Define config
-    config.input_path = "./input/219_small.npz"
-    config.output_path = "./output/"
-    config.compression_ratio = 100
-    config.epochs = 2
+    config.input_path = "input/exafel_1.npz"
+    config.output_path = "output/"
+    
+    config = config_module.Config
+    config.compression_ratio = 1000
+    config.epochs = 1000
     config.early_stopping = False
     config.early_stopping_patience = 100
     config.min_delta = 0
     config.lr_scheduler = True
-    config.lr_scheduler_patience = 100
-    config.model_name = "Conv_AE"
-    config.model_type = "convolutional"
-    config.custom_norm = False
+    config.lr_scheduler_patience = 50
+    config.model_name = "CFD_dense_AE"
+    config.model_type = "dense"
+    config.custom_norm = True
     config.l1 = True
     config.reg_param = 0.001
     config.RHO = 0.05
     config.lr = 0.001
-    config.batch_size = 200
-    config.test_size = 0.0
+    config.batch_size = 75
+    config.test_size = 0.2
     config.data_dimension = 2
     config.apply_normalization = False
     config.deterministic_algorithm = False
     config.compress_to_latent_space = False
-    config.convert_to_blocks = [1, 50, 50]
+    config.convert_to_blocks = [1, 150, 150]
     config.verbose = False
+
 
     # FPGA stuff
     config.number_of_columns = 22500  # FIXME: this is doesn't need to be hardcoded
@@ -68,7 +72,6 @@ def define_config():
 
 def train(config):
     # Run training
-    # (20, 2162, 2068)
     model, normalization_features, loss_data = trainer_module.run(
         config.input_path, config
     )
@@ -127,7 +130,7 @@ def plot(config):
 
     print("Making GIF: ")
     with imageio.get_writer(config.output_path + "/movie.gif", mode="I") as writer:
-        for i in tqdm(range(0, 200)):
+        for i in tqdm(range(0, 74)):
             figg = helper.plot2D(data[i], data_decompressed[i])
             image_name = config.output_path + f"plot_output/{i}.png"
             plt.savefig(image_name)
@@ -136,8 +139,6 @@ def plot(config):
 
 
 def FPGA(config):
-    import baler_compressor.helper as baler_helper
-
     baler_helper.perform_hls4ml_conversion(config.output_path, config)
 
 
