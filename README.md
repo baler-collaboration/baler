@@ -8,18 +8,18 @@ Baler is a tool used to test the feasibility of compressing different types of s
 1. Train a machine learning model on your data
 2. Compress your data with that model. This will also save the compressed file and model
 3. Decompress the file using the model at a later time
-4. Plot the performance of the compression/decompression
+
 
 
 # Getting Started #
-**NOTE:** For the same performance and version as presented in our [Arxiv](https://arxiv.org/abs/2305.02283) paper, please use release [v1.0.0](https://github.com/baler-collaboration/baler/tree/v1.0.0) and the setup instructions given there. v1.0.0 also has a working docker implementation. We are currently experiencing some performance issues on the main branch compared.
+Baler now exists as a *pip package* which you can install through:
+```console
+pip install baler-compressor
+```
 
-In the links below we offer instructions on how to set up Baler and working tutorial examples to get you started. We offer two ways to run baler:
-* [Python](docs/setup/python_setup.md)
-* [Docker/Singularity/Apptainer](docs/setup/docker_setup.md)
+For examples how to use Baler we recommend following the tutorial from our baler-demo repository: https://github.com/baler-collaboration/baler-demo
 
 
 
 # Contributing
-
 If you wish to contribute, please see the [contribution guidelines](https://github.com/baler-collaboration/baler/blob/main/docs/CONTRIBUTING.md).
