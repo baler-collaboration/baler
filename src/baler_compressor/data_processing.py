@@ -21,12 +21,14 @@ from sklearn.model_selection import train_test_split
 
 from baler_compressor import helper
 from baler_compressor import models
+from numba import jit
 
 
+@jit(cache=True, parallel=True, nopython=True)
 def convert_to_blocks_util(blocks, data):
-    # print(
-    #    "Converted Dataset to Blocks of Size - ", blocks, " from original ", data.shape
-    # )
+    print(
+        "Converted Dataset to Blocks of Size - ", blocks, " from original ", data.shape
+    )
     blocks = np.array(blocks)
     original_shape = np.array(data.shape)
     total_size = np.prod(original_shape)
@@ -84,6 +86,7 @@ def load_model(model_object, model_path: str, n_features: int, z_dim: int):
     return model
 
 
+@jit(cache=True, parallel=True, nopython=False)
 def find_minmax(data):
     """Obtains the minimum and maximum values for each column.
 
@@ -104,6 +107,7 @@ def find_minmax(data):
     return normalization_features
 
 
+@jit(cache=True, parallel=True, nopython=False)
 def normalize(data, custom_norm: bool):
     """This function scales the data to be in the range [0,1], based on the Min Max normalization method. It finds
     the minimum and maximum values of each column and computes the values according to: x_norm = (x - x_min) / (x_max
@@ -127,6 +131,7 @@ def normalize(data, custom_norm: bool):
     return data
 
 
+@jit(cache=True, parallel=True, nopython=True)
 def split(data, test_size: float, random_state: int) -> Tuple[ndarray, ndarray]:
     """Splits the given data according to a test size into two sets, train and test. This is a sklearn function,
     opted from: https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.train_test_split.html
@@ -142,6 +147,7 @@ def split(data, test_size: float, random_state: int) -> Tuple[ndarray, ndarray]:
     return train_test_split(data, test_size=test_size, random_state=random_state)
 
 
+@jit(cache=True, parallel=True, nopython=False)
 def renormalize_std(
     input_data: ndarray, true_min: float, feature_range: float
 ) -> ndarray:
@@ -159,6 +165,7 @@ def renormalize_std(
     return np.array([((i * feature_range) + true_min) for i in list(input_data)])
 
 
+@jit(cache=True, parallel=True, nopython=False)
 def renormalize_func(norm_data: ndarray, min_list: List, range_list: List) -> ndarray:
     """Un-normalizes an entire dataset. Applies the `renormalize_std`function across an entire dataset.
         `min_list` and `range_list` are obtained from the `normalization_features.npy` file.
