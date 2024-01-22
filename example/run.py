@@ -33,7 +33,7 @@ def define_config():
 
     config = config_module.Config
     config.compression_ratio = 1000
-    config.epochs = 400
+    config.epochs = 10
     config.early_stopping = False
     config.early_stopping_patience = 100
     config.min_delta = 0

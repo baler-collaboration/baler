@@ -20,7 +20,6 @@ from numpy import ndarray
 from sklearn.model_selection import train_test_split
 
 from baler_compressor import helper
-from baler_compressor import models
 from numba import jit
 
 
