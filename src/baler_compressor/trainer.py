@@ -93,14 +93,15 @@ def run(data_path, config):
     if verbose:
         print(f"Device used for training: {device}")
 
-    model_object = helper.model_init(config.model_name)
-    model = model_object(n_features=n_features, z_dim=config.latent_space_size)
+    # model_object = config.model
+    # model_object = helper.model_init(config.model_name)
+    model = config.model(n_features, config.latent_space_size)
     model.to(device)
 
-    if config.model_name == "Conv_AE_3D" and hasattr(
-        config, "compress_to_latent_space"
-    ):
-        model.set_compress_to_latent_space(config.compress_to_latent_space)
+    # if config.model_name == "Conv_AE_3D" and hasattr(
+    #    config, "compress_to_latent_space"
+    # ):
+    #    model.set_compress_to_latent_space(config.compress_to_latent_space)
 
     if verbose:
         print(f"Model architecture:\n{model}")

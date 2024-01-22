@@ -9,6 +9,9 @@ import baler_compressor.compressor as compressor_module
 import baler_compressor.decompressor as decompressor_module
 import baler_compressor.helper as baler_helper
 
+sys.path.append("../../baler-models/")
+import dense_demo as dense_demo_module
+
 # import helper for plotting
 import helper
 
@@ -36,7 +39,8 @@ def define_config():
     config.min_delta = 0
     config.lr_scheduler = True
     config.lr_scheduler_patience = 50
-    config.model_name = "CFD_dense_AE"
+    # config.model_name = "dense_demo"
+    config.model = dense_demo_module.dense_demo
     config.model_type = "dense"
     config.custom_norm = True
     config.l1 = True

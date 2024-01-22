@@ -26,10 +26,10 @@ def run(model_path, compressed_output_path, config):
     verbose = config.verbose
 
     start = time.time()
-    model_name = config.model_name
+    # model_name = config.model_name
     # data_before = np.load(config.input_path)["data"]
     decompressed, names, normalization_features, original_shape = helper.decompress(
-        model_path=model_path,
+        model_path,
         input_path=compressed_output_path,
         input_path_deltas=os.path.join(
             output_path, "compressed_output", "compressed_deltas.npz.gz"
@@ -39,12 +39,11 @@ def run(model_path, compressed_output_path, config):
             "compressed_output",
             "compressed_batch_index_metadata.npz.gz",
         ),
-        model_name=model_name,
         config=config,
         output_path=output_path,
     )
-    if verbose:
-        print(f"Model used: {model_name}")
+    # if verbose:
+    #    print(f"Model used: {model_name}")
 
     # if hasattr(config, "convert_to_blocks") and config.convert_to_blocks:
     #     print(

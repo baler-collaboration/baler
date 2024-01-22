@@ -46,7 +46,6 @@ def loss_plot(loss_data, output_path, config):
     val_loss = loss_data[1]
     conf_list = [
         len(train_loss),
-        config.model_name,
         config.reg_param,
         config.lr,
         config.batch_size,
