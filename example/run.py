@@ -10,7 +10,7 @@ import baler_compressor.decompressor as decompressor_module
 import baler_compressor.helper as baler_helper
 
 sys.path.append("../../baler-models/")
-import dense_demo as dense_demo_module
+import dense_demo as dense_demo
 
 # import helper for plotting
 import helper
@@ -28,32 +28,33 @@ def define_config():
     config = config_module.Config
 
     # Define config
-    config.input_path = "input/exafel_1.npz"
+    # config.input_path = "input/219_signal_center.npz"
+    config.input_path = "input/219_signal_log.npz"
     config.output_path = "output/"
 
     config = config_module.Config
-    config.compression_ratio = 1000
-    config.epochs = 10
+    config.compression_ratio = 100
+    config.epochs = 2000
     config.early_stopping = False
     config.early_stopping_patience = 100
     config.min_delta = 0
     config.lr_scheduler = True
     config.lr_scheduler_patience = 50
     # config.model_name = "dense_demo"
-    config.model = dense_demo_module.dense_demo
+    config.model = dense_demo.dense_demo
     config.model_type = "dense"
     config.custom_norm = True
     config.l1 = True
     config.reg_param = 0.001
     config.RHO = 0.05
     config.lr = 0.001
-    config.batch_size = 75
-    config.test_size = 0.2
+    config.batch_size = 64
+    config.test_size = 0
     config.data_dimension = 2
     config.apply_normalization = False
     config.deterministic_algorithm = False
     config.compress_to_latent_space = False
-    config.convert_to_blocks = [1, 150, 150]
+    config.convert_to_blocks = [1, 50, 50]
     config.verbose = False
 
     # FPGA stuff

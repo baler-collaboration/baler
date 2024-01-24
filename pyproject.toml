@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "baler-compressor"
-version = "0.0.5"
+version = "0.0.6"
 authors = [
   { name="Alexander Ekman", email="alexander.ekman@fysik.lu.se" },
 ]

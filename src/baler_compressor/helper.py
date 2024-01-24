@@ -705,7 +705,7 @@ def decompress(
 
     if config.data_dimension == 2 and config.model_type == "dense":
         decompressed = decompressed.reshape(
-            (len(decompressed), original_shape[1], original_shape[2])
+            (original_shape[0], original_shape[1], original_shape[2])
         )
 
     return decompressed, names, normalization_features, original_shape
