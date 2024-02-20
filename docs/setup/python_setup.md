@@ -22,6 +22,16 @@ Move into the Baler directory
 cd baler
 ```
 
+Checkout the FPGA branch
+```console
+git checkout fpga
+```
+
+Install the poetry environment
+```console
+poetry install
+```
+
 ## Working Example with Python
 
 Here we provide some instructions for our working examples.
@@ -31,31 +41,34 @@ Here we provide some instructions for our working examples.
 #### Training ####
 To train the autoencoder to compress your data, you run the following command. The config file `./workspaces/CFD_workspace/CFD_project_v1/config/CFD_project_v1_config.py`. This details the path of the data, the number of epochs, and all the other training parameters.
 ```console
-poetry run python baler --project CFD_workspace CFD_project_animation --mode train
+poetry run python baler --project fpga_workspace fpga_project --mode train
 ```
 
 #### Compressing ####
 To use the derived model for compression, you can now choose ``--mode compress``, which can be run as
 ```console
-poetry run python baler --project CFD_workspace CFD_project_animation --mode compress
+poetry run python baler --project fpga_workspace fpga_project --mode compress
 ```
 This will output a compressed file called "compressed.pickle", and this is the latent space representation of the input dataset. It will also output cleandata_pre_comp.pickle which is just the exact data being compressed.
 
 #### Decompressing ####
 To decompress the compressed file, we choose --mode decompress and run:
 ```console
-poetry run python baler --project CFD_workspace CFD_project_animation --mode decompress
+poetry run python baler --project fpga_workspace fpga_project --mode decompress
 ```
 
 #### Plotting ####
 To plot the difference of your variables before compression and after decompression, we can use the following command to generate a .pdf document under ``./workspaces/firstWorkspace/firstProject/output/plotting/comparison.pdf``
 
 ```console
-poetry run python baler --project CFD_workspace CFD_project_animation --mode plot
+poetry run python baler --project fpga_workspace fpga_project --mode plot
 ```
 
-### High Energy Physics Example ###
-To run our High Energy Physics using CMS data (DOI:10.7483/OPENDATA.CMS.KL8H.HFVH) follow the above instructions but replace `--project CFD_workspace CFD_project_animation` with `--project CMS_workspace CMS_project_v1`
+#### HLS4ML ####
+To create your HLS4ML files
+```console
+poetry run python baler --project fpga_workspace fpga_project --mode convert_with_hls4ml
+```
 
 ## New project ##
 To create the folder structure and a skeleton config for your own project:
