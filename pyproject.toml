@@ -9,7 +9,7 @@ readme = "README.md"
 baler = "baler.baler:main"
 
 [tool.poetry.dependencies]
-python = ">=3.8, <3.11"
+python = ">=3.8, <3.11.10"
 torch = ">=2.0.0, !=2.0.1"
 tqdm = "^4.64.1"
 matplotlib = "^3.6.2"
