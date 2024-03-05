@@ -678,9 +678,9 @@ class PJ_Conv_AE(nn.Module):
 
         # Conv Layers
         self.q_z_conv = nn.Sequential(
-            nn.Conv2d(1, 20, kernel_size=(5), stride=(2), padding='valid'),
+            nn.Conv2d(1, 20, kernel_size=(5), stride=(2), padding='same'),
             nn.LeakyReLU(),
-            nn.Conv2d(20, 50, kernel_size=(5), stride=(2), padding='valid'),
+            nn.Conv2d(20, 50, kernel_size=(5), stride=(2), padding='same'),
             nn.LeakyReLU(),
         )
         # Flatten
@@ -704,9 +704,9 @@ class PJ_Conv_AE(nn.Module):
         )
         # Conv Layers
         self.p_x_conv = nn.Sequential(
-            nn.ConvTranspose2d(50, 20, kernel_size=(5), stride=(2), padding='valid'),
+            nn.ConvTranspose2d(50, 20, kernel_size=(5), stride=(2), padding='same'),
             nn.LeakyReLU(),
-            nn.ConvTranspose2d(20, 1, kernel_size=(5), stride=(2), padding='valid'),
+            nn.ConvTranspose2d(20, 1, kernel_size=(5), stride=(2), padding='same'),
             nn.LeakyReLU(),
         )
 
