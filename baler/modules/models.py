@@ -665,88 +665,9 @@ class Conv_AE_GDN(nn.Module):
         self.conv_op_shape = conv_op_shape
 
 
-
 class PJ_Conv_AE(nn.Module):
     def __init__(self, n_features ,z_dim=10, *args, **kwargs):
         super(PJ_Conv_AE, self).__init__(*args, **kwargs)
-
-        self.q_z_mid_dim = 800
-        self.q_z_conv_output_dim = 2450 #was 2450
-        self.conv_op_shape = None
-
-        # Encoder
-
-        # Conv Layers
-        self.q_z_conv = nn.Sequential(
-            nn.Conv2d(1, 20, kernel_size=(5), stride=(2), padding='valid',),
-            nn.LeakyReLU(),
-            nn.Conv2d(20, 50, kernel_size=(5), stride=(2), padding='valid'),
-            nn.LeakyReLU(),
-        )
-        # Flatten
-        self.flatten = nn.Flatten(start_dim=1)
-
-        # Linear layers
-        self.q_z_lin = nn.Sequential(
-            nn.Linear(self.q_z_conv_output_dim, self.q_z_mid_dim),
-            nn.LeakyReLU(),
-            nn.Linear(self.q_z_mid_dim, z_dim),
-        )
-
-        # Decoder
-
-        # Linear layers
-        self.p_x_lin = nn.Sequential(
-            nn.Linear(z_dim, self.q_z_mid_dim),
-            nn.LeakyReLU(),
-            nn.Linear(self.q_z_mid_dim, self.q_z_conv_output_dim),
-            nn.LeakyReLU()
-        )
-        # Conv Layers
-        self.p_x_conv = nn.Sequential(
-            nn.ConvTranspose2d(50, 20, kernel_size=(5), stride=(2), padding='valid'),
-            nn.LeakyReLU(),
-            nn.ConvTranspose2d(20, 1, kernel_size=(5), stride=(2), padding='valid'),
-            nn.LeakyReLU(),
-        )
-
-    def encode(self, x):
-        # Conv
-        out = self.q_z_conv(x)
-        self.conv_op_shape = out.shape
-        print(out.shape[1],out.shape[2],out.shape[3])
-        self.q_z_output_dim = out.shape[1] * out.shape[2] * out.shape[3] # should be [7,7,50] for MNIST
-        
-        # Flatten
-        out = self.flatten(out)
-        print(out.shape)
-        # Dense
-        out = self.q_z_lin(out)
-        return out
-
-    def decode(self, z):
-        # Dense
-        out = self.p_x_lin(z)
-        # Unflatten
-        out = out.view(
-            self.conv_op_shape[0],
-            self.conv_op_shape[1],
-            self.conv_op_shape[2],
-            self.conv_op_shape[3],
-        )
-        # Conv transpose
-        out = self.p_x_conv(out)
-        return out
-
-    def forward(self, x):
-        z = self.encode(x)
-        out = self.decode(z)
-        return out
-
-
-class PJ_2(nn.Module):
-    def __init__(self, n_features ,z_dim=10, *args, **kwargs):
-        super(PJ_2, self).__init__(*args, **kwargs)
 
         # Encoder
         self.encoder = nn.Sequential(
