@@ -638,8 +638,7 @@ def decompress(
 
     if config.model_type == "convolutional":
         final_layer_details = np.load(
-            os.path.join(output_path, "training", "final_layer.npy"),
-            allow_pickle=True
+            os.path.join(output_path, "training", "final_layer.npy"), allow_pickle=True
         )
 
     if config.save_error_bounded_deltas:
