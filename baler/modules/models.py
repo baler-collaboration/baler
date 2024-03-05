@@ -670,17 +670,17 @@ class PJ_Conv_AE(nn.Module):
     def __init__(self, n_features ,z_dim=10, *args, **kwargs):
         super(PJ_Conv_AE, self).__init__(*args, **kwargs)
 
-        self.q_z_mid_dim = 500
-        self.q_z_conv_output_dim = 2450
+        self.q_z_mid_dim = 800
+        self.q_z_conv_output_dim = 2450 #was 2450
         self.conv_op_shape = None
 
         # Encoder
 
         # Conv Layers
         self.q_z_conv = nn.Sequential(
-            nn.Conv2d(1, 20, kernel_size=(5), stride=(2), padding='same'),
+            nn.Conv2d(1, 20, kernel_size=(5), stride=(2), padding='valid',),
             nn.LeakyReLU(),
-            nn.Conv2d(20, 50, kernel_size=(5), stride=(2), padding='same'),
+            nn.Conv2d(20, 50, kernel_size=(5), stride=(2), padding='valid'),
             nn.LeakyReLU(),
         )
         # Flatten
@@ -704,9 +704,9 @@ class PJ_Conv_AE(nn.Module):
         )
         # Conv Layers
         self.p_x_conv = nn.Sequential(
-            nn.ConvTranspose2d(50, 20, kernel_size=(5), stride=(2), padding='same'),
+            nn.ConvTranspose2d(50, 20, kernel_size=(5), stride=(2), padding='valid'),
             nn.LeakyReLU(),
-            nn.ConvTranspose2d(20, 1, kernel_size=(5), stride=(2), padding='same'),
+            nn.ConvTranspose2d(20, 1, kernel_size=(5), stride=(2), padding='valid'),
             nn.LeakyReLU(),
         )
 
@@ -714,10 +714,12 @@ class PJ_Conv_AE(nn.Module):
         # Conv
         out = self.q_z_conv(x)
         self.conv_op_shape = out.shape
+        print(out.shape[1],out.shape[2],out.shape[3])
         self.q_z_output_dim = out.shape[1] * out.shape[2] * out.shape[3] # should be [7,7,50] for MNIST
-
+        
         # Flatten
         out = self.flatten(out)
+        print(out.shape)
         # Dense
         out = self.q_z_lin(out)
         return out
@@ -740,3 +742,47 @@ class PJ_Conv_AE(nn.Module):
         z = self.encode(x)
         out = self.decode(z)
         return out
+
+
+class PJ_2(nn.Module):
+    def __init__(self, n_features ,z_dim=10, *args, **kwargs):
+        super(PJ_2, self).__init__(*args, **kwargs)
+
+        # Encoder
+        self.encoder = nn.Sequential(
+            nn.Conv2d(1, 20, kernel_size=5, stride=2, padding=2),  # Adjust input channels to 1 for grayscale images
+            nn.LeakyReLU(0.2),
+            nn.Conv2d(20, 50, kernel_size=5, stride=2, padding=2),
+            nn.Flatten(),
+            nn.Linear(50 * 7 * 7, 500),  # Adjust input size based on your data
+            nn.Linear(500, z_dim)
+        )
+
+        # Decoder
+        self.decoder = nn.Sequential(
+            nn.Linear(z_dim, 500),
+            nn.LeakyReLU(0.2),
+            nn.Linear(500, 2450),
+            nn.Unflatten(1, (50, 7, 7)),
+            nn.ConvTranspose2d(50, 20, kernel_size=5, stride=2, padding=2, output_padding=1),
+            nn.ConvTranspose2d(20, 1, kernel_size=5, stride=2, padding=2, output_padding=1),
+            nn.LeakyReLU(0.2)
+        )
+
+    def encode(self,x):
+        return self.encoder(x)
+
+    def decode(self,z):
+        return self.decoder(z)
+
+    def forward(self, x):
+        z = self.encode(x)
+        out = self.decode(z)
+        return out
+    
+    def get_final_layer_dims(self):
+        return list(self.decoder.children())[-1]
+
+
+    def set_final_layer_dims(self, conv_op_shape):
+        self.conv_op_shape = conv_op_shape
