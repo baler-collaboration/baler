@@ -663,3 +663,52 @@ class Conv_AE_GDN(nn.Module):
 
     def set_final_layer_dims(self, conv_op_shape):
         self.conv_op_shape = conv_op_shape
+
+
+class PJ_Conv_AE(nn.Module):
+    def __init__(self, n_features, z_dim=10, *args, **kwargs):
+        super(PJ_Conv_AE, self).__init__(*args, **kwargs)
+
+        # Encoder
+        self.encoder = nn.Sequential(
+            nn.Conv2d(
+                1, 20, kernel_size=5, stride=2, padding=2
+            ),  # Adjust input channels to 1 for grayscale images
+            nn.LeakyReLU(0.2),
+            nn.Conv2d(20, 50, kernel_size=5, stride=2, padding=2),
+            nn.Flatten(),
+            nn.Linear(50 * 7 * 7, 500),  # Adjust input size based on your data
+            nn.Linear(500, z_dim),
+        )
+
+        # Decoder
+        self.decoder = nn.Sequential(
+            nn.Linear(z_dim, 500),
+            nn.LeakyReLU(0.2),
+            nn.Linear(500, 2450),
+            nn.Unflatten(1, (50, 7, 7)),
+            nn.ConvTranspose2d(
+                50, 20, kernel_size=5, stride=2, padding=2, output_padding=1
+            ),
+            nn.ConvTranspose2d(
+                20, 1, kernel_size=5, stride=2, padding=2, output_padding=1
+            ),
+            nn.LeakyReLU(0.2),
+        )
+
+    def encode(self, x):
+        return self.encoder(x)
+
+    def decode(self, z):
+        return self.decoder(z)
+
+    def forward(self, x):
+        z = self.encode(x)
+        out = self.decode(z)
+        return out
+
+    def get_final_layer_dims(self):
+        return list(self.decoder.children())[-1]
+
+    def set_final_layer_dims(self, conv_op_shape):
+        self.conv_op_shape = conv_op_shape
