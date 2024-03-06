@@ -223,13 +223,20 @@ def perform_training(output_path, config, verbose: bool):
             print(
                 f"Normalization features saved to {os.path.join(training_path, 'normalization_features.npy')}"
             )
-    helper.model_saver(
-        trained_model, os.path.join(output_path, "compressed_output", "model.pt")
+    
+    if config.separate_model_saving:
+        helper.encoder_decoder_saver(trained_model, os.path.join(output_path, "compressed_output", "encoder.pt"),os.path.join(output_path, "compressed_output", "decoder.pt"))
+    else:
+        helper.model_saver(
+            trained_model, os.path.join(output_path, "compressed_output", "model.pt")
     )
     if verbose:
         print(
             f"Model saved to {os.path.join(output_path, 'compressed_output', 'model.pt')}"
         )
+        
+        print("\nThe model has the following structure:")
+        print(model.type)
 
 
 def perform_diagnostics(project_path, verbose: bool):
