@@ -1,0 +1,9 @@
+cff-version: 1.2.0
+message: "If you use Baler, please cite it as below."
+authors:
+- family-names: "Baler collaboration"
+title: "Baler : a machine learning based data compression tool"
+version: 1.4.0
+doi: 10.5281/zenodo.10723669 
+date-released: 2023-04-11
+url: "https://github.com/baler-collaboration/baler"
