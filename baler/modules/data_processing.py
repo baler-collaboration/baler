@@ -47,6 +47,32 @@ def save_model(model, model_path: str) -> None:
     torch.save(model.state_dict(), model_path)
 
 
+def encoder_saver(model, model_path: str) -> None:
+    """Saves the Encoder state dictionary as a `.pt` file to the given path
+
+    Args:
+        model (nn.Module): The PyTorch model to save.
+        model_path (str): String defining the models save path.
+
+    Returns:
+        None: Saved encoder state dictionary as `.pt` file.
+    """
+    torch.save(model.encoder.state_dict(), model_path)
+
+
+def decoder_saver(model, model_path: str) -> None:
+    """Saves the Decoder state dictionary as a `.pt` file to the given path
+
+    Args:
+        model (nn.Module): The PyTorch model to save.
+        model_path (str): String defining the models save path.
+
+    Returns:
+        None: Saved decoder state dictionary as `.pt` file.
+    """
+    torch.save(model.decoder.state_dict(), model_path)
+
+
 def initialise_model(model_name: str):
     """Initializing the models attributes to a model_object variable.
 
