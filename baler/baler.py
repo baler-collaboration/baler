@@ -234,7 +234,7 @@ def perform_training(output_path, config, verbose: bool):
         print(
             f"Model saved to {os.path.join(output_path, 'compressed_output', 'model.pt')}"
         )
-        
+
         print("\nThe model has the following structure:")
         print(model.type)
 
@@ -294,16 +294,26 @@ def perform_compression(output_path, config, verbose: bool):
         normalization_features = np.load(
             os.path.join(output_path, "training", "normalization_features.npy")
         )
-
-    (
+    if config.separate_model_saving:
+        (
         compressed,
         error_bound_batch,
         error_bound_deltas,
         error_bound_index,
-    ) = helper.compress(
-        model_path=os.path.join(output_path, "compressed_output", "model.pt"),
+        ) = helper.compress(
+        model_path=os.path.join(output_path, "compressed_output", "encoder.pt"),
         config=config,
-    )
+        )
+    else:
+        (
+            compressed,
+            error_bound_batch,
+            error_bound_deltas,
+            error_bound_index,
+        ) = helper.compress(
+            model_path=os.path.join(output_path, "compressed_output", "model.pt"),
+            config=config,
+        )
 
     end = time.time()
 
@@ -376,8 +386,9 @@ def perform_decompression(output_path, config, verbose: bool):
     start = time.time()
     model_name = config.model_name
     data_before = np.load(config.input_path)["data"]
-    decompressed, names, normalization_features = helper.decompress(
-        model_path=os.path.join(output_path, "compressed_output", "model.pt"),
+    if config.separate_model_saving:
+            decompressed, names, normalization_features = helper.decompress(
+        model_path=os.path.join(output_path, "compressed_output", "decoder.pt"),
         input_path=os.path.join(output_path, "compressed_output", "compressed.npz"),
         input_path_deltas=os.path.join(
             output_path, "compressed_output", "compressed_deltas.npz.gz"
@@ -390,6 +401,21 @@ def perform_decompression(output_path, config, verbose: bool):
         output_path=output_path,
         original_shape=data_before.shape,
     )
+    else:
+        decompressed, names, normalization_features = helper.decompress(
+            model_path=os.path.join(output_path, "compressed_output", "model.pt"),
+            input_path=os.path.join(output_path, "compressed_output", "compressed.npz"),
+            input_path_deltas=os.path.join(
+                output_path, "compressed_output", "compressed_deltas.npz.gz"
+            ),
+            input_batch_index=os.path.join(
+                output_path, "compressed_output", "compressed_batch_index_metadata.npz.gz"
+            ),
+            model_name=model_name,
+            config=config,
+            output_path=output_path,
+            original_shape=data_before.shape,
+        )
     if verbose:
         print(f"Model used: {model_name}")
 
