@@ -20,7 +20,6 @@ import numpy as np
 
 from .modules import helper
 import gzip
-from .modules.profiling import energy_profiling
 from .modules.profiling import pytorch_profile
 
 
@@ -54,8 +53,6 @@ def main():
         workspace_name,
         project_name,
         verbose,
-        pytorch_profile,
-        energy_profile,
     ) = helper.get_arguments()
     project_path = os.path.join("workspaces", workspace_name, project_name)
     output_path = os.path.join(project_path, "output")
@@ -63,14 +60,7 @@ def main():
     if mode == "newProject":
         helper.create_new_project(workspace_name, project_name, verbose)
     elif mode == "train":
-        check_enabled_profilers(
-            perform_training,
-            pytorch_profile,
-            energy_profile,
-            output_path,
-            config,
-            verbose,
-        )
+        perform_training(output_path=output_path, config=config, verbose=verbose)
     elif mode == "diagnose":
         perform_diagnostics(output_path, verbose)
     elif mode == "compress":
@@ -89,32 +79,6 @@ def main():
             + mode
             + " not recognised. Use baler --help to see available modes."
         )
-
-
-def check_enabled_profilers(
-    f, pytorchProfile=False, energyProfile=False, *args, **kwargs
-):
-    """
-    Conditionally apply profiling based on the given boolean flags.
-
-    Args:
-        f (callable): The function to be potentially profiled.
-        pytorchProfile (bool): Whether to apply PyTorch profiling.
-        energyProfile (bool): Whether to apply energy profiling.
-
-    Returns:
-        result: The result of the function `f` execution.
-    """
-    if pytorchProfile and not energyProfile:
-        return pytorch_profile(f, *args, **kwargs)
-    elif energyProfile and not pytorchProfile:
-        return energy_profiling(f, "baler_training", 1, *args, **kwargs)
-    elif pytorchProfile and energyProfile:
-        return pytorch_profile(
-            energy_profiling, f, "baler_training", 1, *args, **kwargs
-        )
-    else:
-        return f(*args, **kwargs)
 
 
 def perform_training(output_path, config, verbose: bool):
