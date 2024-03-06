@@ -4,7 +4,6 @@ import cProfile
 from pstats import SortKey
 import torch
 from torch.profiler import profile, record_function, ProfilerActivity
-import codecarbon
 
 
 def pytorch_profile(f, *args, **kwargs):
@@ -50,39 +49,6 @@ def pytorch_profile(f, *args, **kwargs):
 
     # Store the results to the .json file
     prof.export_stacks("/tmp/profiler_stacks.json", "self_cpu_time_total")
-
-    return result
-
-
-def energy_profiling(f, project_name, measure_power_secs, *args, **kwargs):
-    """
-    Energy Profiling measures the amount of electricity that
-    was consumed by the given function f and the amount of CO2 emission.
-    It utilizes the codecarbon package for tracking this information.
-
-    Args:
-        f (callable): The function to be profiled.
-        project_name (str): The name of the project.
-        measure_power_secs (int): The number of seconds to measure power.
-
-    Returns:
-        result: The result of the function `f` execution.
-    """
-
-    tracker = codecarbon.EmissionsTracker(
-        project_name=project_name, measure_power_secs=measure_power_secs
-    )
-    tracker.start_task(f"{f.__name__}")
-
-    # Execute the function and get its result
-    result = f(*args, **kwargs)
-
-    emissions = tracker.stop_task()
-    print("CO2 emission [kg]: ", emissions.emissions)
-    print("CO2 emission rate [kg/h]: ", 3600 * emissions.emissions_rate)
-    print("CPU energy consumed [kWh]: ", emissions.cpu_energy)
-    print("GPU energy consumed [kWh]: ", emissions.gpu_energy)
-    print("RAM energy consumed [kWh]: ", emissions.ram_energy)
 
     return result
 
