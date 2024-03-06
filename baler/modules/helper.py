@@ -398,6 +398,7 @@ def model_saver(model, model_path):
     """
     return data_processing.save_model(model, model_path)
 
+
 def encoder_decoder_saver(model, encoder_path, decoder_path):
     """Calls `data_processing.encoder_saver` and `data_processing.decoder_saver`
 
@@ -410,7 +411,10 @@ def encoder_decoder_saver(model, encoder_path, decoder_path):
         .pt file: `.pt` File containing the decoder state dictionary
 
     """
-    return data_processing.encoder_saver(model, encoder_path), data_processing.decoder_saver(model,decoder_path)
+    return data_processing.encoder_saver(
+        model, encoder_path
+    ), data_processing.decoder_saver(model, decoder_path)
+
 
 def detacher(tensor):
     """Detaches a given tensor to ndarray
