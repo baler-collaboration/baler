@@ -57,7 +57,10 @@ def encoder_saver(model, model_path: str) -> None:
     Returns:
         None: Saved encoder state dictionary as `.pt` file.
     """
-    torch.save(model.encoder.state_dict(), model_path)
+    if hasattr(model.encoder, "state_dict"):
+        torch.save(model.encoder.state_dict(), model_path)
+    else:
+        model.save_encoder(model_path)
 
 
 def decoder_saver(model, model_path: str) -> None:
@@ -70,7 +73,10 @@ def decoder_saver(model, model_path: str) -> None:
     Returns:
         None: Saved decoder state dictionary as `.pt` file.
     """
-    torch.save(model.decoder.state_dict(), model_path)
+    if hasattr(model.decoder, "state_dict"):
+        torch.save(model.decoder.state_dict(), model_path)
+    else:
+        model.save_decoder(model_path)
 
 
 def initialise_model(model_name: str):
