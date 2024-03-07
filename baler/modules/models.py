@@ -713,11 +713,11 @@ class PJ_Conv_AE(nn.Module):
     def set_final_layer_dims(self, conv_op_shape):
         self.conv_op_shape = conv_op_shape
 
+
 class PJ_Conv_AE_FPGA(nn.Module):
     def __init__(self, n_features, z_dim=10, *args, **kwargs):
         super(PJ_Conv_AE_FPGA, self).__init__(*args, **kwargs)
 
-        
         # Encoder layers
         self.en1 = nn.Conv2d(1, 20, kernel_size=5, stride=2, padding=2)
         self.en_act1 = nn.ReLU()
@@ -766,17 +766,27 @@ class PJ_Conv_AE_FPGA(nn.Module):
         return decoded
 
     def get_final_layer_dims(self):
-        return 
+        return
 
     def set_final_layer_dims(self, conv_op_shape):
         self.conv_op_shape = conv_op_shape
 
     def save_encoder(self, file_path):
         # Create an instance of the encoder
-        encoder_instance = nn.Sequential(self.en1, self.en_act1, self.en2, self.en_act2, self.en3, self.en4)
+        encoder_instance = nn.Sequential(
+            self.en1, self.en_act1, self.en2, self.en_act2, self.en3, self.en4
+        )
         torch.save(encoder_instance.state_dict(), file_path)
 
     def save_decoder(self, file_path):
         # Create an instance of the decoder
-        decoder_instance = nn.Sequential(self.de1, self.de_act1, self.de2, self.de_unflatten, self.de_conv1, self.de_conv2, self.de_act2)
+        decoder_instance = nn.Sequential(
+            self.de1,
+            self.de_act1,
+            self.de2,
+            self.de_unflatten,
+            self.de_conv1,
+            self.de_conv2,
+            self.de_act2,
+        )
         torch.save(decoder_instance.state_dict(), file_path)
