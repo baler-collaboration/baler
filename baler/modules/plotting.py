@@ -36,16 +36,16 @@ def loss_plot(path_to_loss_data, output_path, config):
     val_loss = loss_data[1]
     conf_list = [
         len(train_loss),
-        config.model_name,
-        config.reg_param,
-        config.lr,
-        config.batch_size,
+        config["model_name"],
+        config["reg_param"],
+        config["lr"],
+        config["batch_size"],
     ]
 
     plt.figure(figsize=(10, 7))
     plt.title("Loss plot")
     plt.plot(train_loss, color="orange", label="Train Loss")
-    if config.test_size:
+    if config["test_size"]:
         plt.plot(val_loss, color="red", label="Validation Loss")
     for i in range(len(conf_list)):
         plt.plot([], [], " ", label=str_list[i] + " " + str(conf_list[i]))
@@ -108,12 +108,12 @@ def plot_1D(output_path: str, config):
         config (dataclass): The config class containing attributes set in the config file
     """
 
-    before_path = config.input_path
+    before_path = config["input_path"]
     after_path = os.path.join(output_path, "decompressed_output", "decompressed.npz")
 
     before = np.transpose(np.load(before_path)["data"])
     after = np.transpose(np.load(after_path)["data"])
-    names = np.load(config.input_path)["names"]
+    names = np.load(config["input_path"])["names"]
 
     index_to_cut = get_index_to_cut(3, 1e-6, before)
     before = np.delete(before, index_to_cut, axis=1)
@@ -256,7 +256,7 @@ def plot_2D_old(project_path, config):
         config (dataclass): The config class containing attributes set in the config file
     """
 
-    data = np.load(config.input_path)["data"]
+    data = np.load(config["input_path"])["data"]
     data_decompressed = np.load(project_path + "/decompressed_output/decompressed.npz")[
         "data"
     ]
@@ -266,7 +266,7 @@ def plot_2D_old(project_path, config):
     else:
         num_tiles = 1
 
-    if config.model_type == "convolutional" and config.model_name == "Conv_AE_3D":
+    if config["model_type"] == "convolutional" and config["model_name"] == "Conv_AE_3D":
         data_decompressed = data_decompressed.reshape(
             data_decompressed.shape[0] * data_decompressed.shape[2],
             1,
@@ -276,9 +276,9 @@ def plot_2D_old(project_path, config):
 
     print("=== Plotting ===")
     for ind in trange(num_tiles):
-        if config.model_type == "convolutional":
+        if config["model_type"] == "convolutional":
             tile_data_decompressed = data_decompressed[ind][0] * 0.04 * 1000
-        elif config.model_type == "dense":
+        elif config["model_type"] == "dense":
             tile_data_decompressed = data_decompressed[ind] * 0.04 * 1000
         tile_data = data[ind] * 0.04 * 1000
 
@@ -380,7 +380,7 @@ def plot_2D(project_path, config):
         config (dataclass): The config class containing attributes set in the config file
     """
 
-    data = np.load(config.input_path)["data"]
+    data = np.load(config["input_path"])["data"]
     data_decompressed = np.load(project_path + "/decompressed_output/decompressed.npz")[
         "data"
     ]
@@ -395,7 +395,7 @@ def plot_2D(project_path, config):
     else:
         num_tiles = 1
 
-    # if config.model_type == "convolutional" and config.model_name == "Conv_AE_3D":
+    # if config["model_type"] == "convolutional" and config["model_name"] == "Conv_AE_3D":
     #     data_decompressed = data_decompressed.reshape(
     #         data_decompressed.shape[0] * data_decompressed.shape[2],
     #         1,
@@ -405,9 +405,9 @@ def plot_2D(project_path, config):
 
     print("=== Plotting ===")
     for ind in trange(num_tiles):
-        # if config.model_type == "convolutional":
+        # if config["model_type"] == "convolutional":
         #     tile_data_decompressed = data_decompressed[ind][0]
-        # elif config.model_type == "dense":
+        # elif config["model_type"] == "dense":
         #     tile_data_decompressed = data_decompressed[ind][0]
         tile_data = data[ind]
         tile_data_decompressed = data_decompressed[ind]
@@ -444,7 +444,7 @@ def plot(output_path, config):
         output_path (path): The path to the project directory
         config (dataclass): The config class containing attributes set in the config file
     """
-    if config.data_dimension == 1:
+    if config["data_dimension"] == 1:
         plot_1D(output_path, config)
-    elif config.data_dimension == 2:
+    elif config["data_dimension"] == 2:
         plot_2D(output_path, config)

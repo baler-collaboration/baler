@@ -15,12 +15,14 @@
 import argparse
 import importlib
 import os
+import shutil
 import sys
-from dataclasses import dataclass
 from math import ceil
 import gzip
+from pyparsing import Any
 
 from tqdm import tqdm
+
 
 sys.path.append(os.getcwd())
 import numpy as np
@@ -29,6 +31,7 @@ from torch.utils.data import DataLoader
 from sklearn.model_selection import train_test_split
 
 from ..modules import training, plotting, data_processing, diagnostics
+from ..modules.config import config_service
 
 
 def get_arguments():
@@ -82,15 +85,18 @@ def get_arguments():
 
     workspace_name = args.project[0]
     project_name = args.project[1]
-    config_path = (
-        f"workspaces.{workspace_name}.{project_name}.config.{project_name}_config"
-    )
+    config: dict[str, Any] = {}
 
-    if args.mode == "newProject":
-        config = None
-    else:
-        config = Config
-        importlib.import_module(config_path).set_config(config)
+    if args.mode != "newProject":
+        path_to_config = os.path.join(
+            "workspaces",
+            workspace_name,
+            project_name,
+            "config",
+            f"{project_name}_config.yaml",
+        )
+        print(f"Trying to load config from {path_to_config}")
+        config = config_service.load_config(path_to_config)
 
     return (
         config,
@@ -140,94 +146,10 @@ def create_new_project(
             print(f"Creating directory {directory}...")
         os.makedirs(directory, exist_ok=True)
 
-    # Populate default config
-    with open(
-        os.path.join(project_path, "config", f"{project_name}_config.py"), "w"
-    ) as f:
-        f.write(create_default_config(workspace_name, project_name))
-
-
-@dataclass
-class Config:
-    """Defines a configuration dataclass"""
-
-    input_path: str
-    compression_ratio: float
-    epochs: int
-    early_stopping: bool
-    early_stoppin_patience: int
-    lr_scheduler: bool
-    lr_scheduler_patience: int
-    min_delta: int
-    model_name: str
-    model_type = str
-    custom_norm: bool
-    l1: bool
-    reg_param: float
-    RHO: float
-    lr: float
-    batch_size: int
-    test_size: float
-    data_dimension: int
-    intermittent_model_saving: bool
-    intermittent_saving_patience: int
-    mse_avg: bool
-    mse_sum: bool
-    emd: bool
-    l1: bool
-    deterministic_algorithm: bool
-
-
-def create_default_config(workspace_name: str, project_name: str) -> str:
-    """Creates a default config file for a project.
-    Args:
-        workspace_name (str): Name of the workspace.
-        project_name (str): Name of the project.
-    Returns:
-        str: Default config file.
-    """
-
-    return f"""
-# === Configuration options ===
-
-def set_config(c):
-    c.input_path                   = "workspaces/{workspace_name}/data/{project_name}_data.npz"
-    c.data_dimension               = 1
-    c.compression_ratio            = 2.0
-    c.apply_normalization          = True
-    c.model_name                   = "AE"
-    c.model_type                    = "dense"
-    c.epochs                       = 5
-    c.lr                           = 0.001
-    c.batch_size                   = 512
-    c.early_stopping               = True
-    c.lr_scheduler                 = True
-
-
-
-
-# === Additional configuration options ===
-
-    c.early_stopping_patience      = 100
-    c.min_delta                    = 0
-    c.lr_scheduler_patience        = 50
-    c.custom_norm                  = False
-    c.reg_param                    = 0.001
-    c.RHO                          = 0.05
-    c.test_size                    = 0
-    # c.number_of_columns            = 24
-    # c.latent_space_size            = 12
-    c.extra_compression            = False
-    c.intermittent_model_saving    = False
-    c.intermittent_saving_patience = 100
-    c.mse_avg                      = False
-    c.mse_sum                      = True
-    c.emd                          = False
-    c.l1                           = True
-    c.activation_extraction        = False
-    c.deterministic_algorithm      = True
-
-"""
+    shutil.copy2(
+        "config.yaml",
+        os.path.join(project_path, "config", f"{project_name}_config.yaml"),
+    )
 
 
 def model_init(model_name: str):
@@ -291,6 +213,10 @@ def process(
     Returns: ndarray, ndarray, ndarray: Array with the train set, array with the test set and array with the
     normalization features.
     """
+
+    if input_path is None:
+        raise ValueError("Input path is None")
+
     loaded = np.load(input_path)
     data = loaded["data"]
 
@@ -485,8 +411,8 @@ def compress(model_path, config):
         torch.Tensor: Compressed data as PyTorch tensor
     """
 
-    # Loads the data and applies normalization if config.apply_normalization = True
-    loaded = np.load(config.input_path)
+    # Loads the data and applies normalization if config["apply_normalization"] = True
+    loaded = np.load(config["input_path"])
     data_before = loaded["data"]
     original_shape = data_before.shape
 
@@ -495,71 +421,75 @@ def compress(model_path, config):
             config.convert_to_blocks, data_before
         )
 
-    if config.apply_normalization:
+    if config["apply_normalization"]:
         print("Normalizing...")
-        data = normalize(data_before, config.custom_norm)
+        data = normalize(data_before, config["custom_norm"])
     else:
         data = data_before
     number_of_columns = 0
     try:
         n_features = 0
-        if config.data_dimension == 1:
-            column_names = np.load(config.input_path)["names"]
+        if config["data_dimension"] == 1:
+            column_names = np.load(config["input_path"])["names"]
             number_of_columns = len(column_names)
-            config.latent_space_size = ceil(
-                number_of_columns / config.compression_ratio
+            config["latent_space_size"] = ceil(
+                number_of_columns / config["compression_ratio"]
             )
-            config.number_of_columns = number_of_columns
+            config["number_of_columns"] = number_of_columns
             n_features = number_of_columns
-        elif config.data_dimension == 2:
-            if config.model_type == "dense":
+        elif config["data_dimension"] == 2:
+            if config["model_type"] == "dense":
                 number_of_rows = data.shape[1]
-                config.number_of_columns = data.shape[2]
-                n_features = number_of_rows * config.number_of_columns
+                config["number_of_columns"] = data.shape[2]
+                n_features = number_of_rows * config["number_of_columns"]
             else:
                 number_of_rows = original_shape[1]
-                config.number_of_columns = original_shape[2]
-                n_features = config.number_of_columns
-            config.latent_space_size = ceil(
-                (number_of_rows * config.number_of_columns) / config.compression_ratio
+                config["number_of_columns"] = original_shape[2]
+                n_features = config["number_of_columns"]
+            config["latent_space_size"] = ceil(
+                (number_of_rows * config["number_of_columns"])
+                / config["compression_ratio"]
             )
         else:
             raise NameError(
-                "Data dimension can only be 1 or 2. Got config.data_dimension = "
-                + str(config.data_dimension)
+                "Data dimension can only be 1 or 2. Got data_dimension = "
+                + str(config["data_dimension"])
             )
-    except AttributeError:
-        number_of_columns = config.number_of_columns
-        latent_space_size = config.latent_space_size
+    except KeyError:
+        number_of_columns = config["number_of_columns"]
+        latent_space_size = config["latent_space_size"]
         print(f"{number_of_columns} -> {latent_space_size} dimensions")
 
     # Initialise and load the model correctly.
-    latent_space_size = config.latent_space_size
-    bs = config.batch_size
+    latent_space_size = config["latent_space_size"]
+    bs = config["batch_size"]
     device = get_device()
-    model_object = data_processing.initialise_model(config.model_name)
+    model_object = data_processing.initialise_model(config["model_name"])
     model = data_processing.load_model(
         model_object,
         model_path=model_path,
         n_features=n_features,
-        z_dim=config.latent_space_size,
+        z_dim=config["latent_space_size"],
     )
     model.eval()
 
-    if config.data_dimension == 2:
-        if config.model_type == "convolutional" and config.model_name == "Conv_AE_3D":
+    if config["data_dimension"] == 2:
+        if (
+            config["model_type"] == "convolutional"
+            and config["model_name"] == "Conv_AE_3D"
+        ):
             data_tensor = torch.tensor(data, dtype=torch.float32).view(
                 data.shape[0] // bs, 1, bs, data.shape[1], data.shape[2]
             )
-        elif config.model_type == "convolutional":
+        elif config["model_type"] == "convolutional":
             data_tensor = torch.tensor(data, dtype=torch.float32).view(
                 data.shape[0], 1, data.shape[1], data.shape[2]
             )
-        elif config.model_type == "dense":
+        elif config["model_type"] == "dense":
             data_tensor = torch.tensor(data, dtype=torch.float32).view(
                 data.shape[0], data.shape[1] * data.shape[2]
             )
-    elif config.data_dimension == 1:
+    elif config["data_dimension"] == 1:
         data_tensor = torch.tensor(data, dtype=torch.float64)
 
     # Batching data to avoid memory leaks
@@ -584,7 +514,7 @@ def compress(model_path, config):
 
             compressed_output = model.encode(data_batch)
 
-            if config.save_error_bounded_deltas:
+            if config["save_error_bounded_deltas"]:
                 decoded_output = model.decode(compressed_output)
                 decoded_output = detacher(decoded_output)
                 deltas_compressed = 0
@@ -592,7 +522,7 @@ def compress(model_path, config):
             compressed_output = detacher(compressed_output)
             data_batch = detacher(data_batch)
 
-            if config.save_error_bounded_deltas:
+            if config["save_error_bounded_deltas"]:
                 (
                     deltas,
                     rms_pred_error_index,
@@ -608,7 +538,7 @@ def compress(model_path, config):
             else:
                 compressed = np.concatenate((compressed, compressed_output))
 
-    if config.save_error_bounded_deltas:
+    if config["save_error_bounded_deltas"]:
         print("Total Deltas Found - ", deltas_compressed)
 
     return (compressed, error_bound_batch, error_bound_deltas, error_bound_index)
@@ -645,12 +575,12 @@ def decompress(
     names = loaded["names"]
     normalization_features = loaded["normalization_features"]
 
-    if config.model_type == "convolutional":
+    if config.get("model_type") == "convolutional":
         final_layer_details = np.load(
             os.path.join(output_path, "training", "final_layer.npy"), allow_pickle=True
         )
 
-    if config.save_error_bounded_deltas:
+    if config["save_error_bounded_deltas"]:
         loaded_deltas = np.load(
             gzip.GzipFile(input_path_deltas, "r"), allow_pickle=True
         )
@@ -662,11 +592,11 @@ def decompress(
         error_bound_index = loaded_batch_indexes[1]
         deltas_added = 0
 
-    model_name = config.model_name
+    model_name = config["model_name"]
     latent_space_size = len(data[0])
-    bs = config.batch_size
+    bs = config["batch_size"]
     model_dict = torch.load(str(model_path), map_location=get_device())
-    if config.data_dimension == 2 and config.model_type == "dense":
+    if config["data_dimension"] == 2 and config["model_type"] == "dense":
         number_of_columns = int((len(model_dict[list(model_dict.keys())[-1]])))
     else:
         number_of_columns = len(model_dict[list(model_dict.keys())[-1]])
@@ -682,7 +612,7 @@ def decompress(
     )
     model.eval()
 
-    if config.model_type == "convolutional":
+    if config.get("model_type") == "convolutional":
         model.set_final_layer_dims(final_layer_details)
 
     # Load the data, convert to tensor and batch it to avoid memory leaks
@@ -703,7 +633,7 @@ def decompress(
             out = model.decode(data_batch).to(device)
             # Converting back to numpyarray
             out = detacher(out)
-            if config.save_error_bounded_deltas:
+            if config["save_error_bounded_deltas"]:
                 if idx in error_bound_batch:
                     # Error Bounded Deltas added to Decompressed output
                     delta_idx = np.where(error_bound_batch == idx)
@@ -720,10 +650,10 @@ def decompress(
             else:
                 decompressed = np.concatenate((decompressed, out))
 
-    if config.save_error_bounded_deltas:
+    if config["save_error_bounded_deltas"]:
         print("Total Deltas Added - ", deltas_added)
 
-    if config.data_dimension == 2 and config.model_type == "dense":
+    if config["data_dimension"] == 2 and config["model_type"] == "dense":
         decompressed = decompressed.reshape(
             (len(decompressed), original_shape[1], original_shape[2])
         )
@@ -808,12 +738,12 @@ def perform_hls4ml_conversion(output_path, config):
 
     model_path = os.path.join(output_path, "compressed_output", "model.pt")
 
-    model_object = data_processing.initialise_model(config.model_name)
+    model_object = data_processing.initialise_model(config["model_name"])
     model = data_processing.load_model(
         model_object,
         model_path=model_path,
-        n_features=config.number_of_columns,
-        z_dim=config.latent_space_size,
+        n_features=config["number_of_columns"],
+        z_dim=config["latent_space_size"],
     )
     model.to("cpu")
 

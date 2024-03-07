@@ -23,17 +23,6 @@ from baler.modules import data_processing
 from baler.modules import helper
 
 
-def test_import_config_success():
-    # Call the import_config function with the sample config file path
-    config = helper.Config
-    config.Foo = "Bar"
-    config.Baz = 10
-
-    # Assert that the result is equal to the expected config
-    # This checks that the import_config function correctly loads the JSON file and returns the expected dictionary
-    assert config.Foo == "Bar"
-
-
 def test_save_model():
     # Test data
     model = torch.nn.Linear(3, 2)
