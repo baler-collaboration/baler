@@ -385,7 +385,7 @@ def plot_2D(project_path, config):
         "data"
     ]
 
-    if config.convert_to_blocks:
+    if config["convert_to_blocks"]:
         data_decompressed = data_decompressed.reshape(
             data.shape[0], data.shape[1], data.shape[2]
         )
