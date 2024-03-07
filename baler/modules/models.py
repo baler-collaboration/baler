@@ -712,3 +712,54 @@ class PJ_Conv_AE(nn.Module):
 
     def set_final_layer_dims(self, conv_op_shape):
         self.conv_op_shape = conv_op_shape
+
+class PJ_Conv_AE_FPGA(nn.Module):
+    def __init__(self, n_features, z_dim, *args, **kwargs):
+        super(PJ_Conv_AE_FPGA, self).__init__(*args, **kwargs)
+
+        # Encoder
+        self.en1 = nn.Conv2d(1,20,kernel_size=5,stride=2,padding=2, dtype=torch.float32)
+        self.en_act1 = nn.ReLU()
+        self.en2 = nn.Conv2d(20, 50, kernel_size=5, stride=2, padding=2, dtype=torch.float32)
+        self.en_flat = nn.Flatten()
+        self.en3 = nn.Linear(50 * 7 * 7, 500, dtype=torch.float32)
+        self.en4 = nn.Linear(500, z_dim, dtype=torch.float32)
+
+        # Decoder
+        self.de1 = nn.Conv2d(1,20,kernel_size=5,stride=2,padding=2, dtype=torch.float32)
+        self.de_act1 = nn.ReLU()
+        self.de2 = nn.Linear(500, 2450, dtype=torch.float32)
+        self.unflat = nn.Unflatten(1, (50, 7, 7))
+        self.de3 = nn.ConvTranspose2d(50, 20, kernel_size=5, stride=2, padding=2, output_padding=1, dtype=torch.float32)
+        self.de4 = nn.ConvTranspose2d(20, 1, kernel_size=5, stride=2, padding=2, output_padding=1, dtype=torch.float32)
+        self.de_act2 = nn.ReLU()
+
+    def encode(self, x):
+        s1 = self.en1(x)
+        s2 = self.en_act1(s1)
+        s3 = self.en2(s2)
+        s4 = self.en_flat(s3)
+        s5 = self.en3(s4)
+        s6 = self.en4(s5)
+        return s6
+
+    def decode(self, z):
+        s7 = self.de1(z)
+        s8 = self.de_act1(s7)
+        s9 = self.de2(s8)
+        s10 = self.unflat(s9)
+        s11 = self.de3(s10)
+        s12 = self.de4(s11)
+        s13 = self.de_act2(s12)
+        return s13
+
+    def forward(self, x):
+        z = self.encode(x)
+        out = self.decode(z)
+        return out
+
+    def get_final_layer_dims(self):
+        return list(self.decoder.children())[-1]
+
+    def set_final_layer_dims(self, conv_op_shape):
+        self.conv_op_shape = conv_op_shape
