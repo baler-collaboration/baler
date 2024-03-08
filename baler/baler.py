@@ -20,7 +20,6 @@ import numpy as np
 
 from .modules import helper
 import gzip
-from .modules.profiling import pytorch_profile
 
 
 __all__ = (
@@ -85,7 +84,7 @@ def perform_training(output_path, config, verbose: bool):
     """Main function calling the training functions, ran when --mode=train is selected.
         The three functions called are: `helper.process`, `helper.mode_init` and `helper.training`.
 
-        Depending on `config.data_dimensions`, the calculated latent space size will differ.
+        Depending on `config["data_dimension"]`, the calculated latent space size will differ.
 
     Args:
         output_path (path): Selects base path for determining output path
@@ -101,12 +100,12 @@ def perform_training(output_path, config, verbose: bool):
         normalization_features,
         original_shape,
     ) = helper.process(
-        config.input_path,
-        config.custom_norm,
-        config.test_size,
-        config.apply_normalization,
-        config.convert_to_blocks if hasattr(config, "convert_to_blocks") else None,
-        verbose,
+        input_path=config.get("input_path"),
+        custom_norm=config.get("custom_norm"),
+        test_size=config.get("test_size"),
+        apply_normalization=config.get("apply_normalization"),
+        convert_to_blocks=config.get("convert_to_blocks"),
+        verbose=verbose,
     )
 
     if verbose:
@@ -114,52 +113,55 @@ def perform_training(output_path, config, verbose: bool):
 
     try:
         n_features = 0
-        if config.data_dimension == 1:
-            number_of_columns = train_set_norm.shape[1]
-            config.latent_space_size = ceil(
-                number_of_columns / config.compression_ratio
-            )
-            config.number_of_columns = number_of_columns
-            n_features = number_of_columns
-        elif config.data_dimension == 2:
-            if config.model_type == "dense":
-                number_of_rows = train_set_norm.shape[1]
-                number_of_columns = train_set_norm.shape[2]
-                n_features = number_of_columns * number_of_rows
-            else:
-                number_of_rows = original_shape[1]
-                number_of_columns = original_shape[2]
+        data_dimension = config["data_dimension"]
+        match data_dimension:
+            case 1:
+                number_of_columns = train_set_norm.shape[1]
+                config["latent_space_size"] = ceil(
+                    number_of_columns / config["compression_ratio"]
+                )
+                config["number_of_columns"] = number_of_columns
                 n_features = number_of_columns
-            config.latent_space_size = ceil(
-                (number_of_rows * number_of_columns) / config.compression_ratio
-            )
-            config.number_of_columns = number_of_columns
-        else:
-            raise NameError(
-                "Data dimension can only be 1 or 2. Got config.data_dimension value = "
-                + str(config.data_dimension)
-            )
+            case 2:
+                if config["model_type"] == "dense":
+                    number_of_rows = train_set_norm.shape[1]
+                    number_of_columns = train_set_norm.shape[2]
+                    n_features = number_of_columns * number_of_rows
+                else:
+                    number_of_rows = original_shape[1]
+                    number_of_columns = original_shape[2]
+                    n_features = number_of_columns
+                config["latent_space_size"] = ceil(
+                    (number_of_rows * number_of_columns) / config["compression_ratio"]
+                )
+                config["number_of_columns"] = number_of_columns
+            case _:
+                raise NameError(
+                    "Data dimension can only be 1 or 2. Got data_dimension value = "
+                    + str(config["data_dimension"])
+                )
     except AttributeError:
         if verbose:
             print(
-                f"{config.number_of_columns} -> {config.latent_space_size} dimensions"
+                f"{config['number_of_columns']} -> {config['latent_space_size']} dimensions"
             )
-        assert number_of_columns == config.number_of_columns
+
+        assert number_of_columns == config["number_of_columns"]
 
     if verbose:
         print(
-            f"Intitalizing Model with Latent Size - {config.latent_space_size} and Features - {n_features}"
+            f"Intitalizing Model with Latent Size - {config['latent_space_size']} and Features - {n_features}"
         )
 
     device = helper.get_device()
     if verbose:
         print(f"Device used for training: {device}")
 
-    model_object = helper.model_init(config.model_name)
-    model = model_object(n_features=n_features, z_dim=config.latent_space_size)
+    model_object = helper.model_init(config["model_name"])
+    model = model_object(n_features=n_features, z_dim=config["latent_space_size"])
     model.to(device)
 
-    if config.model_name == "Conv_AE_3D" and hasattr(
+    if config["model_name"] == "Conv_AE_3D" and hasattr(
         config, "compress_to_latent_space"
     ):
         model.set_compress_to_latent_space(config.compress_to_latent_space)
@@ -178,7 +180,7 @@ def perform_training(output_path, config, verbose: bool):
     if verbose:
         print("Training complete")
 
-    if config.apply_normalization:
+    if config["apply_normalization"]:
         np.save(
             os.path.join(training_path, "normalization_features.npy"),
             normalization_features,
@@ -188,7 +190,7 @@ def perform_training(output_path, config, verbose: bool):
                 f"Normalization features saved to {os.path.join(training_path, 'normalization_features.npy')}"
             )
 
-    if config.separate_model_saving:
+    if hasattr(config, "separate_model_saving") and config["separate_model_saving"]:
         helper.encoder_decoder_saver(
             trained_model,
             os.path.join(output_path, "compressed_output", "encoder.pt"),
@@ -240,7 +242,7 @@ def perform_compression(output_path, config, verbose: bool):
     """Main function calling the compression functions, ran when --mode=compress is selected.
        The main function being called here is: `helper.compress`
 
-        If `config.extra_compression` is selected, the compressed file is further compressed via zip
+        If `config["extra_compression"]` is selected, the compressed file is further compressed via zip
         Else, the function returns a compressed file of `.npz`, only compressed by Baler.
 
     Args:
@@ -252,17 +254,17 @@ def perform_compression(output_path, config, verbose: bool):
         An `.npz` file which includes:
         - The compressed data
         - The data headers
-        - Normalization features if `config.apply_normalization=True`
+        - Normalization features if `config["apply_normalization"]=True`
     """
     print("Compressing...")
     start = time.time()
     normalization_features = []
 
-    if config.apply_normalization:
+    if config["apply_normalization"]:
         normalization_features = np.load(
             os.path.join(output_path, "training", "normalization_features.npy")
         )
-    if config.separate_model_saving:
+    if config.get("separate_model_saving"):
         (
             compressed,
             error_bound_batch,
@@ -287,9 +289,9 @@ def perform_compression(output_path, config, verbose: bool):
 
     print("Compression took:", f"{(end - start) / 60:.3} minutes")
 
-    names = np.load(config.input_path)["names"]
+    names = np.load(config["input_path"])["names"]
 
-    if config.extra_compression:
+    if config["extra_compression"]:
         if verbose:
             print("Extra compression selected")
             print(
@@ -313,7 +315,7 @@ def perform_compression(output_path, config, verbose: bool):
             names=names,
             normalization_features=normalization_features,
         )
-    if config.save_error_bounded_deltas:
+    if config["save_error_bounded_deltas"]:
         error_bound_batch_index = np.array(
             [error_bound_batch, error_bound_index], dtype=object
         )
@@ -342,7 +344,7 @@ def perform_decompression(output_path, config, verbose: bool):
     """Main function calling the decompression functions, ran when --mode=decompress is selected.
        The main function being called here is: `helper.decompress`
 
-        If `config.apply_normalization=True` the output is un-normalized with the same normalization features saved from `perform_training()`.
+        If `config["apply_normalization"]=True` the output is un-normalized with the same normalization features saved from `perform_training()`.
 
     Args:
         output_path (path): Selects base path for determining output path
@@ -352,9 +354,9 @@ def perform_decompression(output_path, config, verbose: bool):
     print("Decompressing...")
 
     start = time.time()
-    model_name = config.model_name
-    data_before = np.load(config.input_path)["data"]
-    if config.separate_model_saving:
+    model_name = config["model_name"]
+    data_before = np.load(config["input_path"])["data"]
+    if config.get("separate_model_saving"):
         decompressed, names, normalization_features = helper.decompress(
             model_path=os.path.join(output_path, "compressed_output", "decoder.pt"),
             input_path=os.path.join(output_path, "compressed_output", "compressed.npz"),
@@ -398,7 +400,7 @@ def perform_decompression(output_path, config, verbose: bool):
             "Target Shape - ",
             data_before.shape,
         )
-        if config.model_type == "dense":
+        if config["model_type"] == "dense":
             decompressed = decompressed.reshape(
                 data_before.shape[0], data_before.shape[1], data_before.shape[2]
             )
@@ -407,7 +409,7 @@ def perform_decompression(output_path, config, verbose: bool):
                 data_before.shape[0], 1, data_before.shape[1], data_before.shape[2]
             )
 
-    if config.apply_normalization:
+    if config["apply_normalization"]:
         print("Un-normalizing...")
         normalization_features = np.load(
             os.path.join(output_path, "training", "normalization_features.npy"),
@@ -437,7 +439,7 @@ def perform_decompression(output_path, config, verbose: bool):
     end = time.time()
     print("Decompression took:", f"{(end - start) / 60:.3} minutes")
 
-    if config.extra_compression:
+    if config["extra_compression"]:
         if verbose:
             print("Extra compression selected")
             print(
@@ -467,7 +469,7 @@ def print_info(output_path, config):
         "================================== \n Information about your compression \n================================== "
     )
 
-    original = config.input_path
+    original = config["input_path"]
     compressed_path = os.path.join(output_path, "compressed_output")
     decompressed_path = os.path.join(output_path, "decompressed_output")
     training_path = os.path.join(output_path, "training")

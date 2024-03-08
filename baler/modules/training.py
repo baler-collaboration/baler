@@ -149,7 +149,7 @@ def seed_worker(worker_id):
 
 def train(model, variables, train_data, test_data, project_path, config):
     """Does the entire training loop by calling the `fit()` and `validate()`. Appart from this, this is the main function where the data is converted
-        to the correct type for it to be trained, via `torch.Tensor()`. Furthermore, the batching is also done here, based on `config.batch_size`,
+        to the correct type for it to be trained, via `torch.Tensor()`. Furthermore, the batching is also done here, based on `config["batch_size"]`,
         and it is the `torch.utils.data.DataLoader` doing the splitting.
         Applying either `EarlyStopping` or `LR Scheduler` is also done here, all based on their respective `config` arguments.
         For reproducibility, the seeds can also be fixed in this function.
@@ -165,7 +165,7 @@ def train(model, variables, train_data, test_data, project_path, config):
     """
     # Fix the random seed - TODO: add flag to make this optional
 
-    if config.deterministic_algorithm:
+    if config["deterministic_algorithm"]:
         random.seed(0)
         torch.manual_seed(0)
         np.random.seed(0)
@@ -173,16 +173,16 @@ def train(model, variables, train_data, test_data, project_path, config):
         g = torch.Generator()
         g.manual_seed(0)
 
-    test_size = config.test_size
-    learning_rate = config.lr
-    bs = config.batch_size
-    reg_param = config.reg_param
-    rho = config.RHO
-    l1 = config.l1
-    epochs = config.epochs
-    latent_space_size = config.latent_space_size
-    intermittent_model_saving = config.intermittent_model_saving
-    intermittent_saving_patience = config.intermittent_saving_patience
+    test_size = config["test_size"]
+    learning_rate = config["lr"]
+    bs = config["batch_size"]
+    reg_param = config["reg_param"]
+    rho = config["RHO"]
+    l1 = config["l1"]
+    epochs = config["epochs"]
+    latent_space_size = config["latent_space_size"]
+    intermittent_model_saving = config["intermittent_model_saving"]
+    intermittent_saving_patience = config["intermittent_saving_patience"]
 
     model_children = list(model.children())
 
@@ -191,8 +191,8 @@ def train(model, variables, train_data, test_data, project_path, config):
     model = model.to(device)
 
     # Converting data to tensors
-    if config.data_dimension == 2:
-        if config.model_type == "dense":
+    if config["data_dimension"] == 2:
+        if config["model_type"] == "dense":
             # print(train_data.shape)
             # print(test_data.shape)
             # sys.exit()
@@ -202,7 +202,10 @@ def train(model, variables, train_data, test_data, project_path, config):
             valid_ds = torch.tensor(test_data, dtype=torch.float32, device=device).view(
                 test_data.shape[0], test_data.shape[1] * test_data.shape[2]
             )
-        elif config.model_type == "convolutional" and config.model_name == "Conv_AE_3D":
+        elif (
+            config["model_type"] == "convolutional"
+            and config["model_name"] == "Conv_AE_3D"
+        ):
             train_ds = torch.tensor(
                 train_data, dtype=torch.float32, device=device
             ).view(
@@ -219,21 +222,21 @@ def train(model, variables, train_data, test_data, project_path, config):
                 train_data.shape[1],
                 train_data.shape[2],
             )
-        elif config.model_type == "convolutional":
+        elif config["model_type"] == "convolutional":
             train_ds = torch.tensor(
                 train_data, dtype=torch.float32, device=device
             ).view(train_data.shape[0], 1, train_data.shape[1], train_data.shape[2])
             valid_ds = torch.tensor(test_data, dtype=torch.float32, device=device).view(
                 train_data.shape[0], 1, train_data.shape[1], train_data.shape[2]
             )
-    elif config.data_dimension == 1:
+    elif config["data_dimension"] == 1:
         train_ds = torch.tensor(train_data, dtype=torch.float64, device=device)
         valid_ds = torch.tensor(test_data, dtype=torch.float64, device=device)
 
     # Pushing input data into the torch-DataLoader object and combines into one DataLoader object (a basic wrapper
     # around several DataLoader objects).
 
-    if config.deterministic_algorithm:
+    if config["deterministic_algorithm"]:
         train_dl = DataLoader(
             train_ds,
             batch_size=bs,
@@ -266,15 +269,15 @@ def train(model, variables, train_data, test_data, project_path, config):
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
     # Activate early stopping
-    if config.early_stopping:
+    if config["early_stopping"]:
         early_stopping = utils.EarlyStopping(
-            patience=config.early_stopping_patience, min_delta=config.min_delta
+            patience=config["early_stopping_patience"], min_delta=config["min_delta"]
         )  # Changes to patience & min_delta can be made in configs
 
     # Activate LR Scheduler
-    if config.lr_scheduler:
+    if config["lr_scheduler"]:
         lr_scheduler = utils.LRScheduler(
-            optimizer=optimizer, patience=config.lr_scheduler_patience
+            optimizer=optimizer, patience=config["lr_scheduler_patience"]
         )
 
     # Training and Validation of the model
@@ -283,7 +286,7 @@ def train(model, variables, train_data, test_data, project_path, config):
     start = time.time()
 
     # Registering hooks for activation extraction
-    if config.activation_extraction:
+    if config["activation_extraction"]:
         hooks = model.store_hooks()
 
     for epoch in range(epochs):
@@ -299,7 +302,7 @@ def train(model, variables, train_data, test_data, project_path, config):
             latent_dim=latent_space_size,
             RHO=rho,
             l1=l1,
-            n_dimensions=config.data_dimension,
+            n_dimensions=config["data_dimension"],
         )
         train_loss.append(train_epoch_loss)
 
@@ -315,9 +318,9 @@ def train(model, variables, train_data, test_data, project_path, config):
             val_epoch_loss = train_epoch_loss
             val_loss.append(val_epoch_loss)
 
-        if config.lr_scheduler:
+        if config["lr_scheduler"]:
             lr_scheduler(val_epoch_loss)
-        if config.early_stopping:
+        if config["early_stopping"]:
             early_stopping(val_epoch_loss)
             if early_stopping.early_stop:
                 break
@@ -331,7 +334,7 @@ def train(model, variables, train_data, test_data, project_path, config):
     end = time.time()
 
     # Saving activations values
-    if config.activation_extraction:
+    if config["activation_extraction"]:
         activations = diagnostics.dict_to_square_matrix(model.get_activations())
         model.detach_hooks(hooks)
         np.save(os.path.join(project_path, "activations.npy"), activations)
@@ -341,7 +344,7 @@ def train(model, variables, train_data, test_data, project_path, config):
         os.path.join(project_path, "loss_data.npy"), np.array([train_loss, val_loss])
     )
 
-    if config.model_type == "convolutional":
+    if config.get("model_type") == "convolutional":
         final_layer = model.get_final_layer_dims()
         np.save(os.path.join(project_path, "final_layer.npy"), np.array(final_layer))
 
