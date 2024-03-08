@@ -214,8 +214,8 @@ def process(
     normalization features.
     """
 
-    if input_path is None:
-        raise ValueError("Input path is None")
+    if input_path is None or input_path == "":
+        raise ValueError("Input path is None, did you forget to set it in the configuration file?")
 
     loaded = np.load(input_path)
     data = loaded["data"]
