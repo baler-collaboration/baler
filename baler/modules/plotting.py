@@ -379,7 +379,15 @@ def plot_2D(project_path, config):
         project_path (string): The path to the project directory
         config (dataclass): The config class containing attributes set in the config file
     """
+    tile_ori = np.zeros((2000, 2000))
+    sum_even = np.zeros((2000, 2000))
+    sum_odd = np.zeros((2000, 2000))
+    sum_odd_decomp = np.zeros((2000, 2000))
+    sum_even_decomp = np.zeros((2000, 2000))
 
+    tile_ori_decomp = np.zeros((2000, 2000))
+    tile_diff = np.zeros((2000, 2000))
+    
     data = np.load(config.input_path)["data"]
     data_decompressed = np.load(project_path + "/decompressed_output/decompressed.npz")[
         "data"
@@ -434,7 +442,50 @@ def plot_2D(project_path, config):
         fig.savefig(
             project_path + "/plotting/CFD" + str(ind) + ".png", bbox_inches="tight"
         )
-        # sys.exit()
+        if ind % 2 == 0:  # Even numbered iteration
+            sum_even += tile_data
+            sum_even_decomp += tile_data_decompressed
+        else:
+            sum_odd += tile_data
+            sum_odd_decomp += tile_data_decompressed
+
+    tile_ori= np.abs((sum_odd-sum_even))
+    tile_ori_decomp= np.abs((sum_odd_decomp-sum_even_decomp))
+    tile_diff= np.abs(tile_ori - tile_data_decompressed)
+
+    fig, axs = plt.subplots(
+        1, 3
+    )
+    axs[0].set_title("Original", fontsize=11)
+    imf = axs[0].imshow(
+        tile_ori, vmin=0, vmax= 500,
+        cmap="rainbow"
+    )
+
+    axs[1].set_title("Reconstructed", fontsize=11)
+    im2 = axs[1].imshow(
+        tile_ori_decomp, vmin=0, vmax= 500,
+        cmap="rainbow"
+    )
+    
+    axs[2].set_title("Difference", fontsize=11)
+    im3 = axs[2].imshow(
+        tile_diff, vmin=0, vmax= 500,
+        cmap="rainbow"
+    )
+    # cb2 = plt.colorbar(im3, ax=[axs[2]], location="right", fraction=0.046, pad=0.1)
+    # cb2.set_label("x-velocity [mm/s]")
+    
+    fig.subplots_adjust(right=0.8)
+    cbar_ax = fig.add_axes([0.815, 0.2, 0.02, 0.59])
+    #cb2 = fig.colorbar(im3, cax=cbar_ax, location="right", aspect=10)
+    #cb2.set_label("Gamma intensity (a.u.)")
+    # fig.colorbar(im3, cax=cbar_ax)
+
+    fig.savefig(
+        project_path + "/plotting/CFD" + str(ind) + "final.png", bbox_inches="tight"
+
+        )    # sys.exit()
 
 
 def plot(output_path, config):
