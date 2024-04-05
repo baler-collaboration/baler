@@ -724,9 +724,8 @@ def decompress(
         print("Total Deltas Added - ", deltas_added)
 
     if config.data_dimension == 2 and config.model_type == "dense":
-        decompressed = decompressed.reshape(
-            (len(decompressed), original_shape[1], original_shape[2])
-        )
+        print("Decompressing output of shape ", decompressed.shape,"and length ", len(decompressed), " to shape ", ((len(decompressed)//(original_shape[1]*original_shape[2])), original_shape[1], original_shape[2]))
+        decompressed = decompressed.reshape((original_shape[0], original_shape[1], original_shape[2]))
 
     return decompressed, names, normalization_features
 
