@@ -1,0 +1,12 @@
+import numpy as np
+
+# Load the npz file
+data = np.load('/home/kka011098/baler/workspaces/CFD_workspace/data/output_data.npz')
+
+# Extract the names array
+names = data[]
+
+# Print the names
+print("Feature Names:")
+for name in names:
+    print(name)

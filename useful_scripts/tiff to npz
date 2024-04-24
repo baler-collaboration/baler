@@ -1,0 +1,48 @@
+import os
+import numpy as np
+from PIL import Image
+
+def tiff_to_npz(input_folder, key_name="data"):
+    # Check if the input folder exists
+    if not os.path.exists(input_folder):
+        print(f"Input folder '{input_folder}' does not exist.")
+        return
+    
+    # Get a list of all TIFF files in the input folder
+    tiff_files = [f for f in os.listdir(input_folder) if f.endswith('.tiff') or f.endswith('.tif')]
+    if not tiff_files:
+        print(f"No TIFF files found in '{input_folder}'.")
+        return
+    
+    # Initialize an empty list to store TIFF data
+    tiff_data = []
+    names = np.array([])  # Initialize an empty array for 'names'
+    i = 0
+    
+    # Loop through each TIFF file
+    for tiff_file in tiff_files:
+        file_path = os.path.join(input_folder, tiff_file)
+        try:
+            # Open the TIFF file and convert it to a NumPy array
+            with Image.open(file_path) as img:
+                img_array = np.array(img, dtype=np.float16)  # Convert to float16
+                tiff_data.append(img_array)
+                i += 1
+        except Exception as e:
+            print(f"Error processing '{tiff_file}': {e}")
+        if i > 1:
+           break
+
+    # Concatenate all TIFF arrays along a new axis to create a single array
+    concatenated_data = np.stack(tiff_data)
+
+    # Determine the output file path
+    output_file = os.path.join(input_folder, "CFD_2files.npz")
+
+    # Save the concatenated NumPy array as a .npz file with the specified key names
+    np.savez(output_file, **{key_name: concatenated_data, 'names': names})
+    print(f"TIFF files converted and saved as '{output_file}' with key names '{key_name}' and 'names'.")
+
+# Example usage:
+input_folder = r"/home/kka011098/baler/workspaces/CFD_workspace/data/test"
+tiff_to_npz(input_folder, key_name="data")

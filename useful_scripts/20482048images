@@ -1,0 +1,48 @@
+import os
+import numpy as np
+from PIL import Image
+import matplotlib.pyplot as plt
+
+# Specify directories
+tiff_directory = "/home/kka011098/baler/workspaces/CFD_workspace/data/test/"
+output_directory = "/home/kka011098/baler/workspaces/CFD_workspace/data/"
+
+def read_tiff_files(directory):
+    tiff_files = [file for file in os.listdir(directory) if file.endswith('.tiff') or file.endswith('.tif')]
+    images = []
+    for file in tiff_files:
+        file_path = os.path.join(directory, file)
+        img = Image.open(file_path)
+        # Convert image to NumPy array with float16 data type
+        img_array = np.array(img, dtype=np.float32)
+        images.append(img_array)
+    return images
+
+def create_npz(images, output_file):
+    # Stack all images into a single 3D array
+    combined_array = np.stack(images, axis=0)
+    names = np.array([])
+    # Save the combined array into an NPZ file without compression
+    np.savez(output_file, data=combined_array, names = names)
+
+def plot_difference(images, output_dir):
+    odd_sum = np.sum(images[::2], axis=(1, 2))  # Sum of odd-indexed images
+    even_sum = np.sum(images[1::2], axis=(1, 2))  # Sum of even-indexed images
+    difference = odd_sum - even_sum
+    plt.plot(difference)
+    plt.xlabel('Image Index')
+    plt.ylabel('Difference')
+    plt.title('Difference between Sum of Odd and Even Indexed Images')
+    plt.grid(True)
+    plt.savefig(os.path.join(output_dir, 'difference_plot_full.png'))  # Save the plot
+    plt.close()  # Close the plot to free up memory
+
+def main():
+    output_file = os.path.join(output_directory, 'output_2048.npz')
+    images = read_tiff_files(tiff_directory)
+    create_npz(images, output_file)
+    print(f"Combined {len(images)} TIFF images into {output_file}")
+    plot_difference(np.array(images), output_directory)
+
+if __name__ == "__main__":
+    main()

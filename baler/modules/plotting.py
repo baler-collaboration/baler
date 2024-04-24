@@ -422,26 +422,27 @@ def plot_2D(project_path, config):
 
         diff = tile_data - tile_data_decompressed
 
-        max_value = np.amax([np.amax(tile_data), np.amax(tile_data_decompressed)])
-        min_value = np.amin([np.amin(tile_data), np.amin(tile_data_decompressed)])
+        #max_value = np.amax([np.amax(tile_data), np.amax(tile_data_decompressed)])
+        #min_value = np.amin([np.amin(tile_data), np.amin(tile_data_decompressed)])
 
         fig, axs = plt.subplots(
             1, 3, figsize=(29.7 * (1 / 2.54), 10 * (1 / 2.54)), sharey=True
         )
-        axs[0].set_title("Original", fontsize=11)
-        im1 = axs[0].imshow(tile_data, vmax=max_value, vmin=min_value)
-        axs[1].set_title("Reconstructed", fontsize=11)
-        im2 = axs[1].imshow(tile_data_decompressed, vmax=max_value, vmin=min_value)
-        axs[2].set_title("Difference", fontsize=11)
-        im3 = axs[2].imshow(diff, vmax=max_value, vmin=min_value)
+        #axs[0].set_title("Original", fontsize=11)
+        #im1 = axs[0].imshow(tile_data, vmax=max_value, vmin=min_value)
+        #axs[1].set_title("Reconstructed", fontsize=11)
+        #im2 = axs[1].imshow(tile_data_decompressed, vmax=max_value, vmin=min_value)
+        #axs[2].set_title("Difference", fontsize=11)
+        #im3 = axs[2].imshow(diff, vmax=max_value, vmin=min_value)
 
-        fig.subplots_adjust(right=0.8)
-        cbar_ax = fig.add_axes([0.815, 0.2, 0.02, 0.59])
-        cb2 = fig.colorbar(im3, cax=cbar_ax, location="right", aspect=10)
+        #fig.subplots_adjust(right=0.8)
+        #cbar_ax = fig.add_axes([0.815, 0.2, 0.02, 0.59])
+        #cb2 = fig.colorbar(im3, cax=cbar_ax, location="right", aspect=10)
 
-        fig.savefig(
-            project_path + "/plotting/CFD" + str(ind) + ".png", bbox_inches="tight"
-        )
+        #fig.savefig(
+        #    project_path + "/plotting/CFD" + str(ind) + ".png", bbox_inches="tight"
+        #)
+        
         if ind % 2 == 0:  # Even numbered iteration
             sum_even += tile_data
             sum_even_decomp += tile_data_decompressed
@@ -451,7 +452,7 @@ def plot_2D(project_path, config):
 
     tile_ori= np.abs((sum_odd-sum_even))
     tile_ori_decomp= np.abs((sum_odd_decomp-sum_even_decomp))
-    tile_diff= np.abs(tile_ori - tile_data_decompressed)
+    tile_diff= tile_ori - tile_data_decompressed
 
     fig, axs = plt.subplots(
         1, 3
@@ -459,31 +460,31 @@ def plot_2D(project_path, config):
     axs[0].set_title("Original", fontsize=11)
     imf = axs[0].imshow(
         tile_ori, vmin=0, vmax= 500,
-        cmap="rainbow"
+        cmap="viridis"
     )
-
+    print (tile_ori, tile_ori_decomp, tile_diff)
     axs[1].set_title("Reconstructed", fontsize=11)
     im2 = axs[1].imshow(
         tile_ori_decomp, vmin=0, vmax= 500,
-        cmap="rainbow"
+        cmap="viridis"
     )
     
     axs[2].set_title("Difference", fontsize=11)
     im3 = axs[2].imshow(
         tile_diff, vmin=0, vmax= 500,
-        cmap="rainbow"
+        cmap="viridis"
     )
     # cb2 = plt.colorbar(im3, ax=[axs[2]], location="right", fraction=0.046, pad=0.1)
     # cb2.set_label("x-velocity [mm/s]")
     
     fig.subplots_adjust(right=0.8)
     cbar_ax = fig.add_axes([0.815, 0.2, 0.02, 0.59])
-    #cb2 = fig.colorbar(im3, cax=cbar_ax, location="right", aspect=10)
-    #cb2.set_label("Gamma intensity (a.u.)")
-    # fig.colorbar(im3, cax=cbar_ax)
+    cb2 = fig.colorbar(im3, cax=cbar_ax, location="right", aspect=10)
+    cb2.set_label("Gamma intensity (a.u.)")
+    fig.colorbar(im3, cax=cbar_ax)
 
     fig.savefig(
-        project_path + "/plotting/CFD" + str(ind) + "final.png", bbox_inches="tight"
+        project_path + "/plotting/" + "Moessbauer_image.png", bbox_inches="tight"
 
         )    # sys.exit()
 

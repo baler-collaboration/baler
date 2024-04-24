@@ -1,0 +1,47 @@
+import os
+import numpy as np
+from PIL import Image
+
+def tiff_to_npz(input_folder, key_name="data"):
+    # Check if the input folder exists
+    if not os.path.exists(input_folder):
+        print(f"Input folder '{input_folder}' does not exist.")
+        return
+    
+    # Get a list of all TIFF files in the input folder
+    tiff_files = [f for f in os.listdir(input_folder) if f.endswith('.tiff') or f.endswith('.tif')]
+    if not tiff_files:
+        print(f"No TIFF files found in '{input_folder}'.")
+        return
+    
+    # Initialize an empty list to store TIFF data
+    tiff_data = []
+    
+    # Get the first TIFF file in the directory
+    first_tiff_file = tiff_files[0]
+    file_path = os.path.join(input_folder, first_tiff_file)
+    
+    try:
+        # Open the TIFF file and convert it to a NumPy array
+        with Image.open(file_path) as img:
+            img_array = np.array(img, dtype=np.float16)  # Convert to float16
+            # Reshape the array to (2048, 2048)
+            img_array = img_array[:2048, :2048]
+            tiff_data.append(img_array)
+    except Exception as e:
+        print(f"Error processing '{first_tiff_file}': {e}")
+
+    # Generate numbers 1 to 2048 for the 'names' key
+    names = np.arange(1, 2049)
+
+    # Determine the output file path
+    output_file = os.path.join(input_folder, "output_data2048.npz")
+
+    # Save the concatenated NumPy arrays as a .npz file with the specified key names
+    np.savez(output_file, **{'data': tiff_data[0], 'names': (names)})
+
+    print(f"TIFF file '{first_tiff_file}' converted and saved as '{output_file}' with keys 'data' and 'names'.")
+
+# Example usage:
+input_folder = r"/home/kka011098/baler/workspaces/CFD_workspace/data/test"
+tiff_to_npz(input_folder)

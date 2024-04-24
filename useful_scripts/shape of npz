@@ -1,0 +1,21 @@
+import numpy as np
+
+def display_npz(file_path):
+    try:
+        data = np.load(file_path, allow_pickle=True)
+        print("Contents of the NPZ file:")
+        print("------------------------------------")
+        for key in data.keys():
+            print(f"Key: {key}")
+            if isinstance(data[key], np.ndarray):
+                print("Shape:", data[key].shape)
+                print(data[key])
+            else:
+                print(data[key])
+            print("------------------------------------")
+    except Exception as e:
+        print("An error occurred:", e)
+
+# Example usage:
+file_path = "/home/kka011098/Moessbauer/baler/workspaces/CFD_workspace/data/output20002000norm.npz"
+display_npz(file_path)

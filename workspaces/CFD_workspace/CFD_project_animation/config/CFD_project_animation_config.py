@@ -1,9 +1,9 @@
 def set_config(c):
-    c.input_path = "workspaces/CFD_workspace/data/CFD_animation.npz"
-    c.compression_ratio = 100
+    c.input_path = "workspaces/CFD_workspace/data/output20002000norm.npz"
+    c.compression_ratio = 10
     # c.number_of_columns = 24
     # c.latent_space_size = 15
-    c.epochs = 2000
+    c.epochs = 1000
     c.early_stopping = False
     c.early_stopping_patience = 100
     c.min_delta = 0
@@ -15,8 +15,8 @@ def set_config(c):
     c.l1 = True
     c.reg_param = 0.001
     c.RHO = 0.05
-    c.lr = 0.001
-    c.batch_size = 6000
+    c.lr = 0.0001
+    c.batch_size = 100
     c.test_size = 0
     c.data_dimension = 2
     c.apply_normalization = False
@@ -28,7 +28,8 @@ def set_config(c):
     c.compress_to_latent_space = False
     c.save_error_bounded_deltas = False
     c.error_bounded_requirement = 1
-    c.convert_to_blocks = False
+    c.convert_to_blocks = [60 ,10, 10]
+    c.separate_model_saving = False
     # c.custom_loss_function = "loss_function_swae"
 
 
