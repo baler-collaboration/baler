@@ -471,7 +471,7 @@ def plot_2D(project_path, config):
     
     axs[2].set_title("Difference", fontsize=11)
     im3 = axs[2].imshow(
-        tile_diff, vmin=0, vmax= 501,
+        tile_diff, vmin=0, vmax= 500,
         cmap="viridis"
     )
     # cb2 = plt.colorbar(im3, ax=[axs[2]], location="right", fraction=0.046, pad=0.1)
