@@ -19,8 +19,8 @@ import torch
 from numpy import ndarray
 from sklearn.model_selection import train_test_split
 
-from ..modules import helper
-from ..modules import models
+from modules import helper
+from modules import models
 
 
 def convert_to_blocks_util(blocks, data):

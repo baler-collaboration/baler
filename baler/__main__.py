@@ -1,3 +1,3 @@
-from .baler import main
+from baler import main
 
 main()

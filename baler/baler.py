@@ -18,9 +18,9 @@ from math import ceil
 
 import numpy as np
 
-from .modules import helper
+from modules import helper
 import gzip
-from .modules.profiling import pytorch_profile
+from modules.profiling import pytorch_profile
 
 
 __all__ = (

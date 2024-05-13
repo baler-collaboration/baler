@@ -20,7 +20,7 @@ from torch.nn import functional as F
 import torch.utils.data
 from torch.nn import functional as F
 from torch.autograd import Function
-from ..modules import helper
+from modules import helper
 
 
 class LowerBound(Function):
@@ -712,3 +712,39 @@ class PJ_Conv_AE(nn.Module):
 
     def set_final_layer_dims(self, conv_op_shape):
         self.conv_op_shape = conv_op_shape
+
+
+class KAN_AE(nn.Module):
+    def __init__(self, n_features, z_dim, *args, **kwargs):
+        super(KAN_AE, self).__init__(*args, **kwargs)
+
+        self.n_features = n_features
+        self.z_dim = z_dim
+
+        # encoder
+        self.en1 = helper.KANLinear(n_features, 200)
+        self.en2 = helper.KANLinear(200, 100)
+        self.en3 = helper.KANLinear(100, 50)
+        self.en4 = helper.KANLinear(50, z_dim)
+        # decoder
+        self.de1 = helper.KANLinear(z_dim, 50)
+        self.de2 = helper.KANLinear(50, 100)
+        self.de3 = helper.KANLinear(100, 200)
+        self.de4 = helper.KANLinear(200, n_features)
+
+    def encode(self, x):
+        h1 = self.en1(x)
+        h2 = self.en2(h1)
+        h3 = self.en3(h2)
+        return self.en4(h3)
+
+    def decode(self, z):
+        h4 = self.de1(z)
+        h5 = self.de2(h4)
+        h6 = self.de3(h5)
+        out = self.de4(h6)
+        return out
+
+    def forward(self, x):
+        z = self.encode(x)
+        return self.decode(z)
