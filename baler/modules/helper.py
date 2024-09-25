@@ -178,6 +178,7 @@ class Config:
     l1: bool
     deterministic_algorithm: bool
 
+
 def create_default_config(workspace_name: str, project_name: str) -> str:
     """Creates a default config file for a project.
     Args:
