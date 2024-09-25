@@ -170,6 +170,7 @@ class Config:
     test_size: float
     data_dimension: int
     intermittent_model_saving: bool
+    separate_model_saving: bool
     intermittent_saving_patience: int
     mse_avg: bool
     mse_sum: bool
@@ -226,6 +227,7 @@ def set_config(c):
     c.l1                           = True
     c.activation_extraction        = False
     c.deterministic_algorithm      = True
+    c.separate_model_saving        = False
 
 """
 
