@@ -29,6 +29,7 @@ def set_config(c):
     c.save_error_bounded_deltas = False
     c.error_bounded_requirement = 1
     c.convert_to_blocks = False
+    c.separate_model_saving = False
     # c.custom_loss_function = "loss_function_swae"
 
 

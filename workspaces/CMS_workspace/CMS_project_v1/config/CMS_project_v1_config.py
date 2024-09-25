@@ -62,3 +62,4 @@ def set_config(c):
         "int",
     ]
     c.convert_to_blocks = False
+    c.separate_model_saving = False
