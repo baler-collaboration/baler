@@ -30,6 +30,7 @@ def define_config():
     # Define config
     config.input_path = "input/exafel_1.npz"
     config.output_path = "output/"
+    config.experiment_name = "exafel"
 
     config = config_module.Config
     config.compression_ratio = 1000

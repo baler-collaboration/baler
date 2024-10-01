@@ -8,6 +8,7 @@ import torch
 from torch.utils.data import DataLoader
 from tqdm.autonotebook import tqdm
 import math
+import mlflow
 
 import baler_compressor.helper as helper
 import baler_compressor.utils as utils
@@ -45,6 +46,17 @@ def run(data_path, config):
         config.convert_to_blocks if hasattr(config, "convert_to_blocks") else None,
         verbose,
     )
+
+
+    experiment_name = config.experiment_name
+    if not os.path.exists(config.output_path):
+        os.mkdir(config.output_path)
+
+    mlflow.set_tracking_uri(f"sqlite:///{os.path.abspath(config.output_path)}/mlruns.db")
+    tracking_uri = mlflow.get_tracking_uri()
+
+    print(f"Current tracking uri: {tracking_uri}")
+    mlflow.set_experiment(experiment_name)
 
     if verbose:
         print("Training and testing sets normalized")
@@ -109,15 +121,18 @@ def run(data_path, config):
     # if verbose:
     #    print(f"Training path: {training_path}")
 
-    trained_model, loss_data = train(
-        model,
-        number_of_columns,
-        train_set_norm,
-        test_set_norm,
-        # training_path,
-        config,
-    )
-
+    with mlflow.start_run():
+        for k,v in config.__dict__.items():mlflow.log_param(k,v)
+        trained_model, loss_data = train(
+            model,
+            number_of_columns,
+            train_set_norm,
+            test_set_norm,
+            # training_path,
+            config,
+        )
+    mlflow.end_run()
+    
     if verbose:
         print("Training complete")
 
@@ -421,6 +436,11 @@ def train(model, variables, train_data, test_data, config):
         )
         train_loss.append(train_epoch_loss)
 
+        mlflow.log_metric("Train Loss", train_epoch_loss, step=epoch)
+        mlflow.log_metric("Train Loss MSE", mse_loss_fit, step=epoch)
+        mlflow.log_metric("Learning Rate ",lr_scheduler.lr_scheduler.get_last_lr()[0])
+        mlflow.log_metric("Train Regularized Loss", regularizer_loss_fit, step=epoch)
+
         if test_size:
             val_epoch_loss = validate(
                 model=trained_model,
@@ -439,7 +459,8 @@ def train(model, variables, train_data, test_data, config):
             early_stopping(val_epoch_loss)
             if early_stopping.early_stop:
                 break
-
+        
+        mlflow.log_metric("Test Loss", val_epoch_loss, step=epoch)
         ### Implementation to save models & values after every N epochs, where N is stored in 'intermittent_saving_patience':
         # if intermittent_model_saving:
         #    if epoch % intermittent_saving_patience == 0:
