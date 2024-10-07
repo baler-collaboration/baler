@@ -713,6 +713,7 @@ class PJ_Conv_AE(nn.Module):
     def set_final_layer_dims(self, conv_op_shape):
         self.conv_op_shape = conv_op_shape
 
+
 class TransformerAE(nn.Module):
     """Autoencoder mixed with the Transformer Encoder layer
 
@@ -761,7 +762,7 @@ class TransformerAE(nn.Module):
             torch.nn.Linear(in_dim, 256),
             torch.nn.LeakyReLU(),
         )
-        
+
         self.encoder_layer_2 = torch.nn.Sequential(
             torch.nn.LazyBatchNorm1d(),
             torch.nn.Linear(256, 128),
@@ -780,16 +781,13 @@ class TransformerAE(nn.Module):
             torch.nn.LeakyReLU(),
         )
         self.decoder_layer_2 = torch.nn.Sequential(
-            torch.nn.LazyBatchNorm1d(),
-            torch.nn.Linear(128, 256),
-            torch.nn.LeakyReLU()
+            torch.nn.LazyBatchNorm1d(), torch.nn.Linear(128, 256), torch.nn.LeakyReLU()
         )
         self.decoder_layer_1 = torch.nn.Sequential(
             torch.nn.LazyBatchNorm1d(),
             torch.nn.Linear(256, in_dim),
             torch.nn.LeakyReLU(),
         )
-
 
         self.transformer_decoder_layer_3 = torch.nn.TransformerEncoderLayer(
             batch_first=True,
