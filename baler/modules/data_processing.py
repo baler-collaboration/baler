@@ -12,12 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Tuple
+from typing import List, Tuple, Optional, Union
 
 import numpy as np
 import torch
 from numpy import ndarray
 from sklearn.model_selection import train_test_split
+from torch.utils.data import Dataset, DataLoader
+import random
 
 from ..modules import helper
 from ..modules import models
@@ -201,3 +203,76 @@ def renormalize_func(norm_data: ndarray, min_list: List, range_list: List) -> nd
     min_list = np.array(min_list)
     range_list = np.array(range_list)
     return norm_data * range_list + min_list
+
+
+def load_external_dataset(dataset: Dataset, test_size: float = 0.2, 
+                          batch_size: int = 128, shuffle: bool = True, 
+                          random_state: int = 42, 
+                          deterministic: bool = False) -> Tuple[DataLoader, DataLoader]:
+    """Loads an external PyTorch Dataset and returns training and validation DataLoaders.
+
+    Args:
+        dataset (Dataset): A PyTorch Dataset object
+        test_size (float, optional): Fraction of the dataset to use for validation. Defaults to 0.2.
+        batch_size (int, optional): Batch size for training. Defaults to 128.
+        shuffle (bool, optional): Whether to shuffle the data. Defaults to True.
+        random_state (int, optional): Random seed for reproducibility. Defaults to 42.
+        deterministic (bool, optional): Whether to use deterministic algorithms. Defaults to False.
+
+    Returns:
+        Tuple[DataLoader, DataLoader]: Train and validation DataLoaders
+    """
+    # Get the total size of the dataset
+    dataset_size = len(dataset)
+    
+    # Calculate the size of the validation set
+    val_size = int(test_size * dataset_size)
+    train_size = dataset_size - val_size
+    
+    # Split the dataset
+    train_dataset, val_dataset = torch.utils.data.random_split(
+        dataset, 
+        [train_size, val_size],
+        generator=torch.Generator().manual_seed(random_state) if deterministic else None
+    )
+    
+    # Create generators for the DataLoader if deterministic
+    g = None
+    worker_init_fn = None
+    
+    if deterministic:
+        g = torch.Generator()
+        g.manual_seed(random_state)
+        worker_init_fn = seed_worker
+    
+    # Create the DataLoaders
+    train_loader = DataLoader(
+        train_dataset,
+        batch_size=batch_size,
+        shuffle=shuffle,
+        worker_init_fn=worker_init_fn if deterministic else None,
+        generator=g if deterministic else None,
+        drop_last=False,
+    )
+    
+    val_loader = DataLoader(
+        val_dataset,
+        batch_size=batch_size,
+        shuffle=False,
+        worker_init_fn=worker_init_fn if deterministic else None,
+        generator=g if deterministic else None,
+        drop_last=False,
+    )
+    
+    return train_loader, val_loader
+
+
+def seed_worker(worker_id):
+    """Function to seed DataLoader workers for reproducibility.
+    
+    Args:
+        worker_id: The ID of the worker
+    """
+    worker_seed = torch.initial_seed() % 2**32
+    np.random.seed(worker_seed)
+    random.seed(worker_seed)

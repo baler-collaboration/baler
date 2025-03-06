@@ -18,6 +18,8 @@ In the links below we offer instructions on how to set up Baler and working tuto
 * [Python](docs/setup/python_setup.md)
 * [Docker/Singularity/Apptainer](docs/setup/docker_setup.md)
 
+# Using External PyTorch Datasets #
+Baler now supports using external PyTorch Dataset objects directly. This allows you to use custom datasets, pre-existing PyTorch datasets, or any class that implements the PyTorch Dataset interface. See the [external dataset guide](docs/guides/external_dataset.md) for more details.
 
 
 # Contributing
