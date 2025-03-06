@@ -64,7 +64,7 @@ def main():
         compression_ratio=0.1,  # Compress to 10% of original size
         epochs=10,
         early_stopping=True,
-        early_stopping_patience=5,
+        early_stoppin_patience=5,
         lr_scheduler=True,
         lr_scheduler_patience=2,
         min_delta=0.001,
