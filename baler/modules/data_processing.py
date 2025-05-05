@@ -205,65 +205,79 @@ def renormalize_func(norm_data: ndarray, min_list: List, range_list: List) -> nd
     return norm_data * range_list + min_list
 
 
-def load_external_dataset(dataset: Dataset, test_size: float = 0.2, 
-                          batch_size: int = 128, shuffle: bool = True, 
-                          random_state: int = 42, 
+def load_external_dataset(dataset: Dataset, test_size: float = 0.2,
+                          batch_size: int = 128, shuffle: bool = True,
+                          random_state: int = 42,
                           deterministic: bool = False) -> Tuple[DataLoader, DataLoader]:
-    """Loads an external PyTorch Dataset and returns training and validation DataLoaders.
+    """Load an external PyTorch Dataset and split it into training and validation sets.
 
     Args:
-        dataset (Dataset): A PyTorch Dataset object
-        test_size (float, optional): Fraction of the dataset to use for validation. Defaults to 0.2.
-        batch_size (int, optional): Batch size for training. Defaults to 128.
-        shuffle (bool, optional): Whether to shuffle the data. Defaults to True.
-        random_state (int, optional): Random seed for reproducibility. Defaults to 42.
-        deterministic (bool, optional): Whether to use deterministic algorithms. Defaults to False.
+        dataset (Dataset): An instance of a PyTorch Dataset.
+        test_size (float): Proportion of the dataset to include in the validation split.
+        batch_size (int): How many samples per batch to load.
+        shuffle (bool): Whether to shuffle the data before splitting and in the DataLoader.
+        random_state (int): Controls the shuffling applied to the data before splitting.
+        deterministic (bool): If True, sets the random seed for reproducibility.
 
     Returns:
-        Tuple[DataLoader, DataLoader]: Train and validation DataLoaders
+        Tuple[DataLoader, DataLoader]: Tuple containing training and validation DataLoaders.
     """
-    # Get the total size of the dataset
-    dataset_size = len(dataset)
-    
-    # Calculate the size of the validation set
-    val_size = int(test_size * dataset_size)
-    train_size = dataset_size - val_size
-    
-    # Split the dataset
-    train_dataset, val_dataset = torch.utils.data.random_split(
-        dataset, 
-        [train_size, val_size],
-        generator=torch.Generator().manual_seed(random_state) if deterministic else None
-    )
-    
-    # Create generators for the DataLoader if deterministic
-    g = None
-    worker_init_fn = None
-    
+    # Set the seed for reproducibility if deterministic is True
     if deterministic:
-        g = torch.Generator()
-        g.manual_seed(random_state)
-        worker_init_fn = seed_worker
-    
-    # Create the DataLoaders
+        torch.manual_seed(random_state)
+        np.random.seed(random_state)
+        random.seed(random_state)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(random_state)
+            torch.backends.cudnn.deterministic = True
+            torch.backends.cudnn.benchmark = False
+
+    # Handle edge cases for test_size
+    total_size = len(dataset)
+    if test_size <= 0.0:
+        # All data goes to train set
+        train_indices = list(range(total_size))
+        val_indices = []
+    elif test_size >= 1.0:
+        # All data goes to validation set
+        train_indices = []
+        val_indices = list(range(total_size))
+    else:
+        # Regular split using train_test_split
+        indices = list(range(total_size))
+        train_indices, val_indices = train_test_split(
+            indices, test_size=test_size, random_state=random_state if shuffle else None, shuffle=shuffle
+        )
+
+    # Create subset datasets
+    train_subset = torch.utils.data.Subset(dataset, train_indices)
+    val_subset = torch.utils.data.Subset(dataset, val_indices)
+
+    # Define worker_init_fn for reproducibility
+    worker_init_fn = seed_worker if deterministic else None
+    generator = torch.Generator().manual_seed(random_state) if deterministic else None
+
+    # Create DataLoaders with appropriate batch size
+    train_batch_size = min(batch_size, len(train_subset)) if train_indices else 1
+    val_batch_size = min(batch_size, len(val_subset)) if val_indices else 1
+
+    # Create DataLoaders, ensuring we don't try to shuffle empty datasets
     train_loader = DataLoader(
-        train_dataset,
-        batch_size=batch_size,
-        shuffle=shuffle,
-        worker_init_fn=worker_init_fn if deterministic else None,
-        generator=g if deterministic else None,
-        drop_last=False,
+        train_subset, 
+        batch_size=train_batch_size,
+        shuffle=shuffle and len(train_subset) > 0,
+        worker_init_fn=worker_init_fn, 
+        generator=generator
     )
     
     val_loader = DataLoader(
-        val_dataset,
-        batch_size=batch_size,
-        shuffle=False,
-        worker_init_fn=worker_init_fn if deterministic else None,
-        generator=g if deterministic else None,
-        drop_last=False,
+        val_subset, 
+        batch_size=val_batch_size,
+        shuffle=False,  # Usually validation data is not shuffled
+        worker_init_fn=worker_init_fn, 
+        generator=generator
     )
-    
+
     return train_loader, val_loader
 
 
