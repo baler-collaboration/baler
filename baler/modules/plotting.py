@@ -106,6 +106,7 @@ def plot_1D(output_path: str, config, extra_path):
     Args:
         output_path (path): The path to the project directory
         config (dataclass): The config class containing attributes set in the config file
+        extra_path (path): The path to the directory where the decompressed data is stored. 
     """
 
     before_path = config.input_path
@@ -124,6 +125,12 @@ def plot_1D(output_path: str, config, extra_path):
     before = np.delete(before, index_to_cut, axis=1)
     after = np.delete(after, index_to_cut, axis=1)
 
+    # with np.errstate(divide='raise'):
+    #     try:
+    #         response = np.divide(np.subtract(after, before), before) * 100
+    #     except FloatingPointError:
+    #         print("caught divide by zero")
+    #         response = 0    
     response = np.divide(np.subtract(after, before), before) * 100
     residual = np.subtract(after, before)
 
@@ -177,7 +184,13 @@ def plot_1D(output_path: str, config, extra_path):
             ax1.set_ylabel("Counts", ha="right", y=1.0)
             ax1.set_yscale("log")
             ax1.legend(loc="best")
-            ax1.set_xlim(x_min - 0.1 * x_diff, x_max + 0.1 * x_diff)
+            try:
+                ax1.set_xlim(x_min - 0.1 * x_diff, x_max + 0.1 * x_diff)
+            except ValueError:
+                print(
+                    f"Error setting xlim for {column_name}. Data may be too sparse or not well defined."
+                )
+                ax1.set_xlim(0, 10)
             ax1.set_ylim(ymin=1)
 
             data_bin_centers = bins_after[:-1] + (bins_after[1:] - bins_after[:-1]) / 2
@@ -481,7 +494,7 @@ def plot_comparison_summary(results, output_path, original_size_mb):
     ]
 
     # --- Create the plots ---
-    fig, axs = plt.subplots(2, 2, figsize=(18, 12))
+    fig, axs = plt.subplots(2, 2, figsize=(18, 24))
     fig.suptitle("Compression Benchmark Summary", fontsize=20, y=1.02)
 
     # 1. RMSE (Error) Plot
@@ -494,8 +507,8 @@ def plot_comparison_summary(results, output_path, original_size_mb):
 
     # 2. Performance (Time) Plot - Grouped Bar Chart
     ax2 = axs[0, 1]
-    x = np.arange(len(names))  # the label locations
-    width = 0.35  # the width of the bars
+    x = np.arange(len(names))
+    width = 0.35
     ax2.bar(
         x - width / 2, compress_times, width, label="Compression Time", color="coral"
     )
@@ -526,7 +539,7 @@ def plot_comparison_summary(results, output_path, original_size_mb):
     ax4 = axs[1, 1]
     ax4.scatter(ratios, rmse_values, color="crimson", zorder=5)
     for i, name in enumerate(names):
-        ax4.text(ratios[i] * 1.02, rmse_values[i], name, fontsize=9)
+        ax4.text(ratios[i] * 1.02, rmse_values[i], name, fontsize=9, rotation=45)
     ax4.set_title("Trade-off: Compression Ratio vs. Error")
     ax4.set_xlabel("Compression Ratio (higher is better)")
     ax4.set_ylabel("RMSE (lower is better)")
@@ -550,7 +563,7 @@ def plot_comparison_summary(results, output_path, original_size_mb):
     for ax in axs.flat:
         plt.setp(ax.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
 
-    fig.tight_layout(rect=[0, 0.03, 1, 0.97])  # Adjust layout to make room for suptitle
+    fig.tight_layout(rect=[0, 0.03, 1, 0.97], h_pad=3)
 
     # Save the figure
     plot_dir = os.path.join(output_path, "plotting")
@@ -558,4 +571,6 @@ def plot_comparison_summary(results, output_path, original_size_mb):
     save_path = os.path.join(plot_dir, "comparison_summary.pdf")
     fig.savefig(save_path, bbox_inches="tight")
     plt.close(fig)
-    print(f"  -> Comparison summary plot saved to: {save_path}")
+    # print(f"  -> Comparison summary plot saved to: {save_path}")
+
+

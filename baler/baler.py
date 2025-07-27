@@ -20,9 +20,8 @@ import numpy as np
 from .modules import helper
 from .modules import compare
 import gzip
-from .modules.profiling import pytorch_profile
+# from .modules.profiling import pytorch_profile
 import blosc2
-from .modules.plotting import plot_comparison_summary
 
 __all__ = (
     "perform_compression",
@@ -586,25 +585,19 @@ def perform_comparison(output_path, config, project_name, verbose):
         )
     )
 
-    # 2a. Downcast float16
-    benchmarks_to_run.append(
-        compare.DowncastBenchmark(
-            output_dir=os.path.join(output_path, "downcast_float16"),
-            data_original=data_original,
-            names_original=names_original,
-            target_dtype=np.float16,
-        )
-    )
 
-    # 2b. Downcast float32
-    benchmarks_to_run.append(
-        compare.DowncastBenchmark(
-            output_dir=os.path.join(output_path, "downcast_float32"),
-            data_original=data_original,
-            names_original=names_original,
-            target_dtype=np.float32,
+    # 2. Downcast float32 - only valid when using float64 inputs
+    if config.float_dtype == "float32":
+        pass
+    else:
+        benchmarks_to_run.append(
+            compare.DowncastBenchmark(
+                output_dir=os.path.join(output_path, "downcast_float32"),
+                data_original=data_original,
+                names_original=names_original,
+                target_dtype=np.float32,
+            )
         )
-    )
 
     # 3a. ZFP using 'precision' mode (the original test)
     # The 'precision' parameter specifies the number of uncompressed bits to keep.
@@ -619,7 +612,7 @@ def perform_comparison(output_path, config, project_name, verbose):
         )
     )
 
-    # 3b. ZFP using 'rate' mode (new test)
+    # 3b. ZFP using 'rate' mode
     # The 'rate' parameter specifies a fixed size budget in bits per value.
     # A smaller rate means higher compression.
     zfp_rate = 8.0
@@ -632,7 +625,7 @@ def perform_comparison(output_path, config, project_name, verbose):
         )
     )
 
-    # 3c. ZFP using 'tolerance' mode (new test)
+    # 3c. ZFP using 'tolerance' mode
     # The 'tolerance' parameter specifies the maximum allowed error in the compressed data.
     # A smaller tolerance means higher compression but potentially more error.
     zfp_tolerance = 1e-3
@@ -690,11 +683,12 @@ def perform_comparison(output_path, config, project_name, verbose):
         all_results.append(result)
 
     compare.output_benchmark_results(
-        original_size_mb, all_results, project_name, verbose=verbose
+        original_size_mb, all_results, project_name, output_path, verbose=verbose
     )
 
     if all_results:
-        plot_comparison_summary(all_results, output_path, original_size_mb)
+        ## helper.plot_comparison_summary(all_results, output_path, original_size_mb)
+        helper.plot_all_results(output_path, config)
 
     green_code_timer_end = time.perf_counter()
 

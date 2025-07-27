@@ -16,11 +16,10 @@
 import os
 import time
 import abc
+import csv
 from datetime import datetime
 from dataclasses import dataclass
 import numpy as np
-
-# External library imports
 import zfpy
 import blosc2
 
@@ -309,7 +308,7 @@ class BloscBenchmark(Benchmark):
 # TODO Implement a benchmark for SZ3 compression
 
 
-def output_benchmark_results(original_size_mb, all_results, title, verbose):
+def output_benchmark_results(original_size_mb, all_results, title, output_path, verbose):
     """
     Formats and outputs the results of multiple compression benchmarks.
 
@@ -341,7 +340,55 @@ def output_benchmark_results(original_size_mb, all_results, title, verbose):
         print(header)
         print("-" * 150)
 
-    # Write the header to the results tracking file
+    # --- CSV Logging Setup ---
+    timestamp = datetime.now().strftime("%Y-%m-%d %H.%M.%S")
+    csv_file_path = f"{output_path}/{timestamp}_compression_comparison_results.csv"
+    csv_header = [
+        "Original Size (MB)",
+        "Method",
+        "Size (MB)",
+        "Comp Ratio",
+        "RMSE",
+        "Max Error",
+        "PSNR (dB)",
+        "Comp Time(s)",
+        "Decomp Time(s)",
+    ]
+    # Check if file exists to decide whether to write the header
+    file_exists = os.path.isfile(csv_file_path)
+
+    # --- Write to CSV File ---
+
+    with open(csv_file_path, "a", newline="") as csvfile:
+        writer = csv.writer(csvfile)
+        if not file_exists:
+            writer.writerow(csv_header)
+
+        # Sort results by a desired metric, e.g., RMSE, before writing
+        sorted_results_for_csv = sorted(all_results, key=lambda r: r.rmse)
+        for r in sorted_results_for_csv:
+            if original_size_mb > 0 and r.size_mb > 0:
+                ratio = original_size_mb / r.size_mb
+                ratio_str = f"{ratio:.2f}:1"
+            else:
+                ratio_str = "N/A"
+
+            row = [
+                timestamp,
+                title,
+                f"{original_size_mb:.3f}",
+                r.name,
+                f"{r.size_mb:.3f}",
+                ratio_str,
+                f"{r.rmse:.2e}",
+                f"{r.max_err:.2e}",
+                f"{r.psnr:.1f}",
+                f"{r.compress_time_sec:.3f}",
+                f"{r.decompress_time_sec:.3f}",
+            ]
+            writer.writerow(row)
+
+    # --- Write to Formatted Text Log File ---
     with open("compression_comparison_results.txt", "a") as f:
         f.write("\n" + "=" * 150 + "\n")
         f.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
@@ -352,7 +399,7 @@ def output_benchmark_results(original_size_mb, all_results, title, verbose):
         f.write(f"{header}\n")
         f.write("-" * 150 + "\n")
 
-    # Sort results by a desired metric, e.g., RMSE
+    # Sort results for console/text output
     sorted_results = sorted(all_results, key=lambda r: r.rmse)
 
     for r in sorted_results:
@@ -361,7 +408,7 @@ def output_benchmark_results(original_size_mb, all_results, title, verbose):
             ratio = original_size_mb / r.size_mb
             ratio_str = f"{ratio:.2f}:1"
         else:
-            ratio_str = "N/A"  # Handle cases where original size is unknown or compressed size is zero
+            ratio_str = "N/A"
 
         result_string = (
             f"{r.name:<30} | {r.size_mb:>10.3f} | {ratio_str:>11} | {r.rmse:>10.2e} | {r.max_err:>11.2e} | "

@@ -889,3 +889,34 @@ def green_code_tracking(start, end, title, verbose=False, testing=False):
         f.write(
             f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - {title} - Total time taken: {end - start:.3f} seconds\n"
         )
+
+
+def plot_comparison_summary(results, output_path, original_size_mb):
+    """
+    Calls `plotting.plot_comparison_summary()`
+    """
+    plotting.plot_comparison_summary(results, output_path, original_size_mb)
+    print("=== Done ===")
+    print("Summary Comparison plot is available in:", os.path.join(output_path, "plotting"))
+
+
+def find_decompressed_results(output_path):
+    results_dirs = []
+    for root, dirs, files in os.walk(output_path):
+        if "decompressed.npz" in files:
+            results_dirs.append(root)
+    return results_dirs
+
+
+def plot_all_results(output_path, config):
+    """
+
+    """
+    results_list = find_decompressed_results(output_path)
+
+    for path in results_list:
+        print(f"Plotting results from: {path}")
+        if config.data_dimension == 1:
+            plotting.plot_1D(output_path, config, path)
+        elif config.data_dimension == 2:
+            plotting.plot_2D(output_path, config, path)
