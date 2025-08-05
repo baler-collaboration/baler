@@ -57,10 +57,10 @@ def main():
     project_path = os.path.join("workspaces", workspace_name, project_name)
     output_path = os.path.join(project_path, "output")
 
+    tracker_title = f"Baler {mode} {workspace_name}-{project_name}"
+    if mode != "newProject":
+        tracker_title += f", Model: {config.model_name}"
     tracker = helper.setup_green_tracker()
-    tracker_title = (
-        f"Baler {mode} {workspace_name}-{project_name}, Model: {config.model_name}"
-    )
     with tracker.time(tracker_title, verbose=verbose):
         if mode == "newProject":
             helper.create_new_project(workspace_name, project_name, verbose)
