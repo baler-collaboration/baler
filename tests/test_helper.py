@@ -1,4 +1,4 @@
-# Copyright 2022 Baler Contributors
+# Copyright 2022-2025 Baler Contributors
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -49,3 +49,11 @@ def test_create_new_project():
 
     # Clean up after the test
     shutil.rmtree(base_path)
+
+def test_helper_setup_tracker(mocker):
+    """Test that the helper function correctly initializes the tracker."""
+    mock_tracker_class = mocker.patch('baler.modules.green_code.GreenCodeTracker')
+    
+    helper.setup_green_tracker()
+    
+    mock_tracker_class.assert_called_once_with()

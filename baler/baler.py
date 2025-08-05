@@ -1,4 +1,4 @@
-# Copyright 2022 Baler Contributors
+# Copyright 2022-2025 Baler Contributors
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -57,28 +57,33 @@ def main():
     project_path = os.path.join("workspaces", workspace_name, project_name)
     output_path = os.path.join(project_path, "output")
 
-    if mode == "newProject":
-        helper.create_new_project(workspace_name, project_name, verbose)
-    elif mode == "train":
-        perform_training(output_path=output_path, config=config, verbose=verbose)
-    elif mode == "diagnose":
-        perform_diagnostics(output_path, verbose)
-    elif mode == "compress":
-        perform_compression(output_path, config, verbose)
-    elif mode == "decompress":
-        perform_decompression(output_path, config, verbose)
-    elif mode == "plot":
-        perform_plotting(output_path, config, verbose)
-    elif mode == "info":
-        print_info(output_path, config)
-    elif mode == "convert_with_hls4ml":
-        helper.perform_hls4ml_conversion(output_path, config)
-    else:
-        raise NameError(
-            "Baler mode "
-            + mode
-            + " not recognised. Use baler --help to see available modes."
-        )
+    tracker = helper.setup_green_tracker()
+    tracker_title = (
+        f"Baler {mode} {workspace_name}-{project_name}, Model: {config.model_name}"
+    )
+    with tracker.time(tracker_title, verbose=verbose):
+        if mode == "newProject":
+            helper.create_new_project(workspace_name, project_name, verbose)
+        elif mode == "train":
+            perform_training(output_path=output_path, config=config, verbose=verbose)
+        elif mode == "diagnose":
+            perform_diagnostics(output_path, verbose)
+        elif mode == "compress":
+            perform_compression(output_path, config, verbose)
+        elif mode == "decompress":
+            perform_decompression(output_path, config, verbose)
+        elif mode == "plot":
+            perform_plotting(output_path, config, verbose)
+        elif mode == "info":
+            print_info(output_path, config)
+        elif mode == "convert_with_hls4ml":
+            helper.perform_hls4ml_conversion(output_path, config)
+        else:
+            raise NameError(
+                "Baler mode "
+                + mode
+                + " not recognised. Use baler --help to see available modes."
+            )
 
 
 def perform_training(output_path, config, verbose: bool):
@@ -255,7 +260,7 @@ def perform_compression(output_path, config, verbose: bool):
         - Normalization features if `config.apply_normalization=True`
     """
     print("Compressing...")
-    start = time.time()
+    start = time.perf_counter()
     normalization_features = []
 
     if config.apply_normalization:
@@ -283,9 +288,9 @@ def perform_compression(output_path, config, verbose: bool):
             config=config,
         )
 
-    end = time.time()
+    end = time.perf_counter()
 
-    print("Compression took:", f"{(end - start) / 60:.3} minutes")
+    print("Compression took:", f"{(end - start):.3} seconds")
 
     names = np.load(config.input_path)["names"]
 
@@ -351,7 +356,7 @@ def perform_decompression(output_path, config, verbose: bool):
     """
     print("Decompressing...")
 
-    start = time.time()
+    start = time.perf_counter()
     model_name = config.model_name
     data_before = np.load(config.input_path)["data"]
     if config.separate_model_saving:
@@ -434,8 +439,8 @@ def perform_decompression(output_path, config, verbose: bool):
     except AttributeError:
         pass
 
-    end = time.time()
-    print("Decompression took:", f"{(end - start) / 60:.3} minutes")
+    end = time.perf_counter()
+    print("Decompression took:", f"{(end - start):.3} seconds")
 
     if config.extra_compression:
         if verbose:
