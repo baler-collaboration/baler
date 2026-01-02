@@ -355,7 +355,7 @@ class Conv_AE(nn.Module):
             nn.ReLU(),
             # nn.BatchNorm1d(self.q_z_output_dim),
             nn.Linear(self.q_z_mid_dim, self.q_z_output_dim),
-            nn.ReLU()
+            nn.ReLU(),
             # nn.BatchNorm1d(42720)
         )
         # Conv Layers
@@ -613,7 +613,7 @@ class Conv_AE_GDN(nn.Module):
             nn.ReLU(),
             # nn.BatchNorm1d(self.q_z_output_dim),
             nn.Linear(self.q_z_mid_dim, self.q_z_output_dim),
-            nn.ReLU()
+            nn.ReLU(),
             # nn.BatchNorm1d(42720)
         )
         # Conv Layers
