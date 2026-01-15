@@ -80,6 +80,7 @@ def main():
             + " not recognised. Use baler --help to see available modes."
         )
 
+
 def init_model(model_class, config, n_features):
     """
     Initialize model safely by inspecting constructor signature.
@@ -104,6 +105,8 @@ def init_model(model_class, config, n_features):
         kwargs["latent_dim"] = config.latent_space_size
 
     return model_class(**kwargs)
+
+
 def perform_training(output_path, config, verbose: bool):
     """Main function calling the training functions, ran when --mode=train is selected.
         The three functions called are: `helper.process`, `helper.mode_init` and `helper.training`.
@@ -180,10 +183,10 @@ def perform_training(output_path, config, verbose: bool):
 
     model_object = helper.model_init(config.model_name)
     model = init_model(
-    model_object,
-    config=config,
-    n_features=n_features,
-)
+        model_object,
+        config=config,
+        n_features=n_features,
+    )
 
     model.to(device)
 
