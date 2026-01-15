@@ -17,7 +17,7 @@ import time
 from math import ceil
 
 import numpy as np
-
+import inspect
 from .modules import helper
 import gzip
 from .modules.profiling import pytorch_profile
@@ -79,6 +79,32 @@ def main():
             + mode
             + " not recognised. Use baler --help to see available modes."
         )
+
+
+def init_model(model_class, config, n_features):
+    """
+    Initialize model safely by inspecting constructor signature.
+    Handles different parameter names used across Baler models.
+    """
+    sig = inspect.signature(model_class.__init__)
+    kwargs = {}
+
+    if "n_features" in sig.parameters:
+        kwargs["n_features"] = n_features
+
+    if "input_dim" in sig.parameters:
+        kwargs["input_dim"] = n_features
+
+    if "in_dim" in sig.parameters:
+        kwargs["in_dim"] = n_features
+
+    if "z_dim" in sig.parameters:
+        kwargs["z_dim"] = config.latent_space_size
+
+    if "latent_dim" in sig.parameters:
+        kwargs["latent_dim"] = config.latent_space_size
+
+    return model_class(**kwargs)
 
 
 def perform_training(output_path, config, verbose: bool):
@@ -156,7 +182,12 @@ def perform_training(output_path, config, verbose: bool):
         print(f"Device used for training: {device}")
 
     model_object = helper.model_init(config.model_name)
-    model = model_object(n_features=n_features, z_dim=config.latent_space_size)
+    model = init_model(
+        model_object,
+        config=config,
+        n_features=n_features,
+    )
+
     model.to(device)
 
     if config.model_name == "Conv_AE_3D" and hasattr(
