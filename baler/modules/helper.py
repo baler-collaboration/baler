@@ -1,4 +1,4 @@
-# Copyright 2022 Baler Contributors
+# Copyright 2022-2025 Baler Contributors
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,10 +16,10 @@ import argparse
 import importlib
 import os
 import sys
+from datetime import datetime
 from dataclasses import dataclass
 from math import ceil
 import gzip
-
 from tqdm import tqdm
 
 sys.path.append(os.getcwd())
@@ -28,7 +28,7 @@ import torch
 from torch.utils.data import DataLoader
 from sklearn.model_selection import train_test_split
 
-from ..modules import training, plotting, data_processing, diagnostics
+from ..modules import training, plotting, data_processing, diagnostics, green_code
 
 
 def get_arguments():
@@ -849,3 +849,10 @@ def perform_hls4ml_conversion(output_path, config):
     hls_model.build(
         csim=config.csim, synth=config.synth, cosim=config.cosim, export=config.export
     )
+
+
+def setup_green_tracker():
+    """
+    Initializes and returns an instance of the GreenCodeTracker.
+    """
+    return green_code.GreenCodeTracker()

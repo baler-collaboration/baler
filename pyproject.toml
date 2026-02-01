@@ -17,6 +17,9 @@ scikit-learn = "^1.2.0"
 hls4ml = { version = "^0.7.1", optional = true }
 tensorflow = { version = "^2.12.0", optional = true }
 numpy = "1.23.5"
+py-cpuinfo = "^9.0.0"
+psutil = "^7.0.0"
+pytest-mock = "^3.14.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.2.1"
@@ -28,3 +31,9 @@ hls4ml = [ "hls4ml", "tensorflow" ]
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.group.gpu]
+optional = true
+
+[tool.poetry.group.gpu.dependencies]
+pynvml = ">=11.0.0" # This adds pynvml to the 'gpu' group

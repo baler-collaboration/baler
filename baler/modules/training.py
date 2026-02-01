@@ -1,4 +1,4 @@
-# Copyright 2022 Baler Contributors
+# Copyright 2022-2025 Baler Contributors
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -280,7 +280,7 @@ def train(model, variables, train_data, test_data, project_path, config):
     # Training and Validation of the model
     train_loss = []
     val_loss = []
-    start = time.time()
+    start = time.perf_counter()
 
     # Registering hooks for activation extraction
     if config.activation_extraction:
@@ -328,7 +328,7 @@ def train(model, variables, train_data, test_data, project_path, config):
                 path = os.path.join(project_path, f"model_{epoch}.pt")
                 helper.model_saver(model, path)
 
-    end = time.time()
+    end = time.perf_counter()
 
     # Saving activations values
     if config.activation_extraction:
@@ -336,7 +336,7 @@ def train(model, variables, train_data, test_data, project_path, config):
         model.detach_hooks(hooks)
         np.save(os.path.join(project_path, "activations.npy"), activations)
 
-    print(f"{(end - start) / 60:.3} minutes")
+    print(f"{(end - start):.3} seconds")
     np.save(
         os.path.join(project_path, "loss_data.npy"), np.array([train_loss, val_loss])
     )
