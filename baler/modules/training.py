@@ -1,4 +1,4 @@
-# Copyright 2022 Baler Contributors
+# Copyright 2022-2025 Baler Contributors
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -227,8 +227,12 @@ def train(model, variables, train_data, test_data, project_path, config):
                 train_data.shape[0], 1, train_data.shape[1], train_data.shape[2]
             )
     elif config.data_dimension == 1:
-        train_ds = torch.tensor(train_data, dtype=torch.float64, device=device)
-        valid_ds = torch.tensor(test_data, dtype=torch.float64, device=device)
+        if hasattr(config, "float_dtype") and config.float_dtype == "float32":
+            train_ds = torch.tensor(train_data, dtype=torch.float32, device=device)
+            valid_ds = torch.tensor(test_data, dtype=torch.float32, device=device)
+        else:
+            train_ds = torch.tensor(train_data, dtype=torch.float64, device=device)
+            valid_ds = torch.tensor(test_data, dtype=torch.float64, device=device)
 
     # Pushing input data into the torch-DataLoader object and combines into one DataLoader object (a basic wrapper
     # around several DataLoader objects).
@@ -280,7 +284,7 @@ def train(model, variables, train_data, test_data, project_path, config):
     # Training and Validation of the model
     train_loss = []
     val_loss = []
-    start = time.time()
+    start = time.perf_counter()
 
     # Registering hooks for activation extraction
     if config.activation_extraction:
@@ -328,7 +332,7 @@ def train(model, variables, train_data, test_data, project_path, config):
                 path = os.path.join(project_path, f"model_{epoch}.pt")
                 helper.model_saver(model, path)
 
-    end = time.time()
+    end = time.perf_counter()
 
     # Saving activations values
     if config.activation_extraction:
@@ -336,7 +340,7 @@ def train(model, variables, train_data, test_data, project_path, config):
         model.detach_hooks(hooks)
         np.save(os.path.join(project_path, "activations.npy"), activations)
 
-    print(f"{(end - start) / 60:.3} minutes")
+    print(f"{(end - start):.4f} seconds")
     np.save(
         os.path.join(project_path, "loss_data.npy"), np.array([train_loss, val_loss])
     )

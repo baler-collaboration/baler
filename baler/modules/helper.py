@@ -1,4 +1,4 @@
-# Copyright 2022 Baler Contributors
+# Copyright 2022-2025 Baler Contributors
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@ import argparse
 import importlib
 import os
 import sys
+from datetime import datetime
 from dataclasses import dataclass
 from math import ceil
 import gzip
@@ -35,20 +36,26 @@ def get_arguments():
     """Determines the arguments one is able to apply in the command line when running Baler. Use `--help` to see what
     options are available.
 
-    Returns: .py, string, folder: `.py` file containing the config options, string determining what mode to run,
-    projects directory where outputs go.
+    Returns:
+        tuple: (config (Config or None), mode (str), workspace_name (str), project_name (str), verbose (bool))
     """
     parser = argparse.ArgumentParser(
         prog="baler",
         description=(
             "Baler is a machine learning based compression tool for big data.\n\n"
-            "Baler has three running modes:\n\n"
-            '\t1. Derivation: Using a configuration file and a "small" input dataset, Baler derives a '
+            "Baler has nine running modes:\n\n"
+            "\t1. newProject: Creates a new project directory, with default configuration files.\n\n"
+            '\t2. train: Using a configuration file and a "small" input dataset, Baler derives a '
             "machine learning model optimized to compress and decompress your data.\n\n"
-            "\t2. Compression: Using a previously derived model and a large input dataset, Baler compresses "
+            "\t3. compress: Using a previously derived model and a large input dataset, Baler compresses "
             "your data and outputs a smaller compressed file.\n\n"
-            "\t3. Decompression: Using a previously compressed file as input and a model, Baler decompresses "
-            "your data into a larger file."
+            "\t4. decompress: Using a previously compressed file as input and a model, Baler decompresses "
+            "your data into a larger file.\n\n"
+            "\t5. plot: Creates plots from the training output data.\n\n"
+            "\t6. info: Displays information about the project and workspace.\n\n"
+            "\t7. hls4ml: Converts the trained model to an HLS4ML project for FPGA deployment.\n\n"
+            "\t8. diagnose: Runs diagnostics on the activations of the trained model.\n\n"
+            "\t9. compare: Compares the performance of the trained model with other models.\n\n"
         ),
         epilog="Enjoy!",
         formatter_class=argparse.RawTextHelpFormatter,
@@ -562,7 +569,10 @@ def compress(model_path, config):
                 data.shape[0], data.shape[1] * data.shape[2]
             )
     elif config.data_dimension == 1:
-        data_tensor = torch.tensor(data, dtype=torch.float64)
+        if hasattr(config, "float_dtype") and config.float_dtype == "float32":
+            data_tensor = torch.tensor(data, dtype=torch.float32)
+        else:
+            data_tensor = torch.tensor(data, dtype=torch.float64)
 
     # Batching data to avoid memory leaks
     data_dl = DataLoader(
@@ -740,7 +750,17 @@ def diagnose(input_path: str, output_path: str) -> None:
         input_path (str): path to the np.array contataining the activations values
         output_path (str): path to store the diagnostics pdf
     """
-    diagnostics.diagnose(input_path, output_path)
+    try:
+        diagnostics.diagnose(input_path, output_path)
+    except FileNotFoundError as e:
+        print(
+            "An error occurred while running diagnostics. "
+            "Please ensure that the activations.npy file exists in the training folder and try again."
+        )
+    except Exception as e:
+        print("An unexpected error occurred while running diagnostics. ")
+        print(f"Error details: {e}")
+        raise
 
 
 def perform_hls4ml_conversion(output_path, config):
@@ -849,3 +869,54 @@ def perform_hls4ml_conversion(output_path, config):
     hls_model.build(
         csim=config.csim, synth=config.synth, cosim=config.cosim, export=config.export
     )
+
+
+def green_code_tracking(start, end, title, verbose=False, testing=False):
+    if testing:
+        file_name = "green_code_tracking_test.txt"
+    else:
+        file_name = "green_code_tracking.txt"
+    if verbose:
+        print("\n" + "=" * 150)
+        print(
+            f"                    GREEN CODE INITIATIVE - {title}                          "
+        )
+        print("-" * 150)
+        print(f"Total time taken for {title}: {end - start:.3f} seconds")
+        print(f"{title} complete. All results saved in the output directory.")
+        print("\n" + "=" * 150)
+    with open(file_name, "a") as f:
+        f.write(
+            f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - {title} - Total time taken: {end - start:.3f} seconds\n"
+        )
+
+
+def plot_comparison_summary(results, output_path, original_size_mb):
+    """
+    Calls `plotting.plot_comparison_summary()`
+    """
+    plotting.plot_comparison_summary(results, output_path, original_size_mb)
+    print("=== Done ===")
+    print("Summary Comparison plot is available in:", os.path.join(output_path, "plotting"))
+
+
+def find_decompressed_results(output_path):
+    results_dirs = []
+    for root, dirs, files in os.walk(output_path):
+        if "decompressed.npz" in files:
+            results_dirs.append(root)
+    return results_dirs
+
+
+def plot_all_results(output_path, config):
+    """
+
+    """
+    results_list = find_decompressed_results(output_path)
+
+    for path in results_list:
+        print(f"Plotting results from: {path}")
+        if config.data_dimension == 1:
+            plotting.plot_1D(output_path, config, path)
+        elif config.data_dimension == 2:
+            plotting.plot_2D(output_path, config, path)

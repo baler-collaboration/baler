@@ -1,4 +1,4 @@
-# Copyright 2022 Baler Contributors
+# Copyright 2022-2025 Baler Contributors
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -181,6 +181,26 @@ class AE(nn.Module):
     def detach_hooks(self, hooks: list) -> None:
         for hook in hooks:
             hook.remove()
+
+
+class AE_float32(AE):
+    # This class defines an Autoencoder that inherits from the base `AE` class.
+    # All linear layers are explicitly defined with `dtype=torch.float32`.
+    # This model addresses an issue with the original AE inflating the compressed data size
+    #   caused by float64 precision layers operating on float32 data.
+    # To utilise this model, add [c.float_dtype = "float32"] to the project config file.
+
+    def __init__(self, n_features, z_dim, *args, **kwargs):
+        super(AE_float32, self).__init__(n_features, z_dim, *args, **kwargs)
+
+        self.en1 = nn.Linear(n_features, 200, dtype=torch.float32)
+        self.en2 = nn.Linear(200, 100, dtype=torch.float32)
+        self.en3 = nn.Linear(100, 50, dtype=torch.float32)
+        self.en4 = nn.Linear(50, z_dim, dtype=torch.float32)
+        self.de1 = nn.Linear(z_dim, 50, dtype=torch.float32)
+        self.de2 = nn.Linear(50, 100, dtype=torch.float32)
+        self.de3 = nn.Linear(100, 200, dtype=torch.float32)
+        self.de4 = nn.Linear(200, n_features, dtype=torch.float32)
 
 
 class CFD_dense_AE(nn.Module):

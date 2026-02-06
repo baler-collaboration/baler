@@ -1,4 +1,4 @@
-# Copyright 2022 Baler Contributors
+# Copyright 2022-2025 Baler Contributors
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -316,7 +316,7 @@ class LRScheduler:
             patience=self.patience,
             factor=self.factor,
             min_lr=self.min_lr,
-            verbose=True,
+            # verbose=True, # commented out as now deprecated, use get_last_lr() instead
         )
 
     def __call__(self, train_loss):

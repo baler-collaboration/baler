@@ -71,8 +71,16 @@ def plot(data: np.array, output_path: str) -> None:
 
 
 def diagnose(input_path: str, output_path: str) -> None:
-    input = np.load(input_path)
-    plot(input, output_path)
-    print(
-        "Diagnostics saved as diagnostics.pdf in the diagnostics folder of your project."
-    )
+    """Function to create diagnostics for the neural activation pattern of a model.
+    Args:
+        input_path (str): Path to the input file containing the neural activation data.
+        output_path (str): Path to save the diagnostics plot.
+    """
+    if not os.path.exists(input_path):
+        raise FileNotFoundError(f"Input file not found: {input_path}")
+    else:
+        input = np.load(input_path)
+        plot(input, output_path)
+        print(
+            "Diagnostics saved as diagnostics.pdf in the diagnostics folder of your project."
+        )

@@ -16,6 +16,8 @@ import os
 import shutil
 
 from baler.modules import helper
+import time
+from datetime import datetime
 
 
 def test_create_new_project():
@@ -49,3 +51,108 @@ def test_create_new_project():
 
     # Clean up after the test
     shutil.rmtree(base_path)
+
+
+def test_green_code_tracking_no_verbose(capsys):
+    log_file = "green_code_tracking_test.txt"
+    if os.path.exists(log_file):
+        os.remove(log_file)
+
+    try:
+        start_time = time.time()
+        time.sleep(0.01)
+        end_time = time.time()
+        title = "Test Process No Verbose"
+
+        helper.green_code_tracking(
+            start_time, end_time, title, verbose=False, testing=True
+        )
+
+        # Check file content
+        assert os.path.exists(log_file)
+        with open(log_file, "r") as f:
+            content = f.read()
+            assert title in content
+            assert f"Total time taken: {end_time - start_time:.3f} seconds" in content
+
+        # Check that nothing was printed to stdout
+        captured = capsys.readouterr()
+        assert captured.out == ""
+
+    finally:
+        # Cleanup
+        if os.path.exists(log_file):
+            os.remove(log_file)
+
+
+def test_green_code_tracking_with_verbose(capsys):
+    log_file = "green_code_tracking_test.txt"
+    if os.path.exists(log_file):
+        os.remove(log_file)
+
+    try:
+        start_time = time.time()
+        time.sleep(0.01)
+        end_time = time.time()
+        title = "Test Process Verbose"
+
+        helper.green_code_tracking(
+            start_time, end_time, title, verbose=True, testing=True
+        )
+
+        # Check file content
+        assert os.path.exists(log_file)
+        with open(log_file, "r") as f:
+            content = f.read()
+            assert title in content
+            assert f"Total time taken: {end_time - start_time:.3f} seconds" in content
+
+        # Check stdout
+        captured = capsys.readouterr()
+        assert "GREEN CODE INITIATIVE" in captured.out
+        assert (
+            f"Total time taken for {title}: {end_time - start_time:.3f} seconds"
+            in captured.out
+        )
+        assert f"{title} complete." in captured.out
+
+    finally:
+        # Cleanup
+        if os.path.exists(log_file):
+            os.remove(log_file)
+
+
+def test_green_code_tracking_appends_to_file():
+    log_file = "green_code_tracking_test.txt"
+    if os.path.exists(log_file):
+        os.remove(log_file)
+
+    try:
+        # First call
+        start_time1 = time.time()
+        time.sleep(0.01)
+        end_time1 = time.time()
+        title1 = "PYTEST - First Process"
+        helper.green_code_tracking(start_time1, end_time1, title1, testing=True)
+
+        # Second call
+        start_time2 = time.time()
+        time.sleep(0.01)
+        end_time2 = time.time()
+        title2 = "PYTEST - Second Process"
+        helper.green_code_tracking(start_time2, end_time2, title2, testing=True)
+
+        # Check file content
+        assert os.path.exists(log_file)
+        with open(log_file, "r") as f:
+            lines = f.readlines()
+            assert len(lines) == 2
+            assert title1 in lines[0]
+            assert f"{end_time1 - start_time1:.3f}" in lines[0]
+            assert title2 in lines[1]
+            assert f"{end_time2 - start_time2:.3f}" in lines[1]
+
+    finally:
+        # Cleanup
+        if os.path.exists(log_file):
+            os.remove(log_file)

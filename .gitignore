@@ -3,6 +3,14 @@
 !workspaces/CMS_project_v1/CMS_project_v1/config/CMS_project_v1_config.py
 !workspaces/CFD_workspace/CFD_project_animation/config/CFD_project_animation_config.py
 
+# This directory is used to store libraries that are built on the target machine and are not
+# intended to be shared across different machines (e.g. SZ3).
+/external/*
+
+# Exclude results tracking files
+green_code_tracking.txt
+compression_comparison_results.txt
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
