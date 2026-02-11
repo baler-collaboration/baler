@@ -15,8 +15,12 @@
 import os
 import time
 from math import ceil
+import importlib
+from typing import Optional, Union
 
 import numpy as np
+import torch
+from torch.utils.data import Dataset, DataLoader
 
 from .modules import helper
 import gzip
@@ -95,6 +99,86 @@ def perform_training(output_path, config, verbose: bool):
     Raises:
         NameError: Baler currently only supports 1D (e.g. HEP) or 2D (e.g. CFD) data as inputs.
     """
+    # Check if an external dataset is provided
+    if hasattr(config, "external_dataset") and config.external_dataset is not None:
+        # Load the external dataset module
+        if verbose:
+            print(f"Using external dataset from {config.external_dataset}")
+        
+        try:
+            # Import the external dataset
+            if isinstance(config.external_dataset, str):
+                # Assuming external_dataset is a module path like "mymodule.mydataset"
+                module_path, class_name = config.external_dataset.rsplit(".", 1)
+                module = importlib.import_module(module_path)
+                dataset_class = getattr(module, class_name)
+                
+                # Initialize the dataset
+                if hasattr(config, "dataset_args") and config.dataset_args is not None:
+                    external_dataset = dataset_class(**config.dataset_args)
+                else:
+                    external_dataset = dataset_class()
+            else:
+                # Assuming external_dataset is already a Dataset instance
+                external_dataset = config.external_dataset
+                
+            if not isinstance(external_dataset, Dataset):
+                raise ValueError("The provided external_dataset is not a PyTorch Dataset instance")
+            
+            # Create DataLoaders
+            from .modules import data_processing
+            train_loader, val_loader = data_processing.load_external_dataset(
+                dataset=external_dataset,
+                test_size=config.test_size,
+                batch_size=config.batch_size,
+                shuffle=True,
+                random_state=42 if config.deterministic_algorithm else None,
+                deterministic=config.deterministic_algorithm
+            )
+            
+            # Initialize model
+            model_object = helper.model_init(config.model_name)
+            
+            # Get an example batch to determine feature size
+            device = helper.get_device()
+            example_batch = next(iter(train_loader)).to(device)
+            
+            # Determine input dimensions based on the model type and data dimensions
+            if config.data_dimension == 2:
+                if config.model_type == "dense":
+                    n_features = example_batch.shape[1] * example_batch.shape[2]
+                elif config.model_type == "convolutional":
+                    # Get the flattened size from convolutional features
+                    n_features = example_batch.shape[1] * example_batch.shape[2] * example_batch.shape[3]
+            else:  # 1D data
+                n_features = example_batch.shape[1]
+            
+            # Calculate latent space size based on compression ratio
+            z_dim = int(n_features * config.compression_ratio)
+            
+            variables = {"n_features": n_features, "z_dim": z_dim}
+            
+            if verbose:
+                print(f"Input features: {n_features}, Latent dimension: {z_dim}")
+            
+            model = model_object(n_features, z_dim)
+            
+            # Train the model with the external dataset
+            from .modules import training
+            trained_model = training.train(
+                model=model,
+                variables=variables,
+                train_loader=train_loader,
+                val_loader=val_loader,
+                project_path=output_path,
+                config=config
+            )
+            
+            return
+        except (ImportError, AttributeError, ValueError) as e:
+            raise ValueError(f"Failed to load external dataset: {str(e)}")
+    
+    # Original code for numpy array-based datasets
     (
         train_set_norm,
         test_set_norm,

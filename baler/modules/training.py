@@ -147,19 +147,28 @@ def seed_worker(worker_id):
     random.seed(worker_seed)
 
 
-def train(model, variables, train_data, test_data, project_path, config):
+def train(model, variables, train_data=None, test_data=None, project_path=None, config=None, 
+          train_loader=None, val_loader=None):
     """Does the entire training loop by calling the `fit()` and `validate()`. Appart from this, this is the main function where the data is converted
         to the correct type for it to be trained, via `torch.Tensor()`. Furthermore, the batching is also done here, based on `config.batch_size`,
         and it is the `torch.utils.data.DataLoader` doing the splitting.
         Applying either `EarlyStopping` or `LR Scheduler` is also done here, all based on their respective `config` arguments.
         For reproducibility, the seeds can also be fixed in this function.
+        
+        The function now supports both traditional numpy arrays and PyTorch DataLoaders directly:
+        - If train_loader and val_loader are provided, they will be used directly
+        - Otherwise, train_data and test_data arrays will be converted to tensors and DataLoaders
+        
     Args:
         model (modelObject): The model you wish to train
-        variables (_type_): _description_
-        train_set (ndarray): Array consisting of the train set
-        test_set (ndarray): Array consisting of the test set
+        variables (dict): Dictionary containing model parameters
+        train_data (ndarray, optional): Array consisting of the train set. Required if train_loader is None.
+        test_data (ndarray, optional): Array consisting of the test set. Required if val_loader is None.
         project_path (string): Path to the project directory
         config (dataClass): Base class selecting user inputs
+        train_loader (DataLoader, optional): Pre-configured DataLoader for training data. If provided, train_data is ignored.
+        val_loader (DataLoader, optional): Pre-configured DataLoader for validation data. If provided, test_data is ignored.
+        
     Returns:
         modelObject: fully trained model ready to perform compression and decompression
     """
@@ -180,7 +189,7 @@ def train(model, variables, train_data, test_data, project_path, config):
     rho = config.RHO
     l1 = config.l1
     epochs = config.epochs
-    latent_space_size = config.latent_space_size
+    latent_space_size = config.latent_space_size if hasattr(config, "latent_space_size") else variables["z_dim"]
     intermittent_model_saving = config.intermittent_model_saving
     intermittent_saving_patience = config.intermittent_saving_patience
 
@@ -190,77 +199,80 @@ def train(model, variables, train_data, test_data, project_path, config):
     device = helper.get_device()
     model = model.to(device)
 
-    # Converting data to tensors
-    if config.data_dimension == 2:
-        if config.model_type == "dense":
-            # print(train_data.shape)
-            # print(test_data.shape)
-            # sys.exit()
-            train_ds = torch.tensor(
-                train_data, dtype=torch.float32, device=device
-            ).view(train_data.shape[0], train_data.shape[1] * train_data.shape[2])
-            valid_ds = torch.tensor(test_data, dtype=torch.float32, device=device).view(
-                test_data.shape[0], test_data.shape[1] * test_data.shape[2]
-            )
-        elif config.model_type == "convolutional" and config.model_name == "Conv_AE_3D":
-            train_ds = torch.tensor(
-                train_data, dtype=torch.float32, device=device
-            ).view(
-                train_data.shape[0] // bs,
-                1,
-                bs,
-                train_data.shape[1],
-                train_data.shape[2],
-            )
-            valid_ds = torch.tensor(test_data, dtype=torch.float32, device=device).view(
-                train_data.shape[0] // bs,
-                1,
-                bs,
-                train_data.shape[1],
-                train_data.shape[2],
-            )
-        elif config.model_type == "convolutional":
-            train_ds = torch.tensor(
-                train_data, dtype=torch.float32, device=device
-            ).view(train_data.shape[0], 1, train_data.shape[1], train_data.shape[2])
-            valid_ds = torch.tensor(test_data, dtype=torch.float32, device=device).view(
-                train_data.shape[0], 1, train_data.shape[1], train_data.shape[2]
-            )
-    elif config.data_dimension == 1:
-        train_ds = torch.tensor(train_data, dtype=torch.float64, device=device)
-        valid_ds = torch.tensor(test_data, dtype=torch.float64, device=device)
-
-    # Pushing input data into the torch-DataLoader object and combines into one DataLoader object (a basic wrapper
-    # around several DataLoader objects).
-
-    if config.deterministic_algorithm:
-        train_dl = DataLoader(
-            train_ds,
-            batch_size=bs,
-            shuffle=False,
-            worker_init_fn=seed_worker,
-            generator=g,
-            drop_last=False,
-        )
-        valid_dl = DataLoader(
-            valid_ds,
-            batch_size=bs,
-            worker_init_fn=seed_worker,
-            generator=g,
-            drop_last=False,
-        )
+    # Check if DataLoaders are provided directly
+    if train_loader is not None and val_loader is not None:
+        # Use the provided DataLoaders
+        train_dl = train_loader
+        valid_dl = val_loader
     else:
-        train_dl = DataLoader(
-            train_ds,
-            batch_size=bs,
-            shuffle=False,
-            drop_last=False,
-        )
-        valid_dl = DataLoader(
-            valid_ds,
-            batch_size=bs,
-            drop_last=False,
-        )
+        # Converting data to tensors
+        if config.data_dimension == 2:
+            if config.model_type == "dense":
+                train_ds = torch.tensor(
+                    train_data, dtype=torch.float32, device=device
+                ).view(train_data.shape[0], train_data.shape[1] * train_data.shape[2])
+                valid_ds = torch.tensor(test_data, dtype=torch.float32, device=device).view(
+                    test_data.shape[0], test_data.shape[1] * test_data.shape[2]
+                )
+            elif config.model_type == "convolutional" and config.model_name == "Conv_AE_3D":
+                train_ds = torch.tensor(
+                    train_data, dtype=torch.float32, device=device
+                ).view(
+                    train_data.shape[0] // bs,
+                    1,
+                    bs,
+                    train_data.shape[1],
+                    train_data.shape[2],
+                )
+                valid_ds = torch.tensor(test_data, dtype=torch.float32, device=device).view(
+                    train_data.shape[0] // bs,
+                    1,
+                    bs,
+                    train_data.shape[1],
+                    train_data.shape[2],
+                )
+            elif config.model_type == "convolutional":
+                train_ds = torch.tensor(
+                    train_data, dtype=torch.float32, device=device
+                ).view(train_data.shape[0], 1, train_data.shape[1], train_data.shape[2])
+                valid_ds = torch.tensor(test_data, dtype=torch.float32, device=device).view(
+                    test_data.shape[0], 1, test_data.shape[1], test_data.shape[2]
+                )
+        elif config.data_dimension == 1:
+            train_ds = torch.tensor(train_data, dtype=torch.float64, device=device)
+            valid_ds = torch.tensor(test_data, dtype=torch.float64, device=device)
+
+        # Pushing input data into the torch-DataLoader object and combines into one DataLoader object (a basic wrapper
+        # around several DataLoader objects).
+
+        if config.deterministic_algorithm:
+            train_dl = DataLoader(
+                train_ds,
+                batch_size=bs,
+                shuffle=False,
+                worker_init_fn=seed_worker,
+                generator=g,
+                drop_last=False,
+            )
+            valid_dl = DataLoader(
+                valid_ds,
+                batch_size=bs,
+                worker_init_fn=seed_worker,
+                generator=g,
+                drop_last=False,
+            )
+        else:
+            train_dl = DataLoader(
+                train_ds,
+                batch_size=bs,
+                shuffle=False,
+                drop_last=False,
+            )
+            valid_dl = DataLoader(
+                valid_ds,
+                batch_size=bs,
+                drop_last=False,
+            )
 
     # Select Optimizer
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)

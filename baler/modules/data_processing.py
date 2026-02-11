@@ -12,12 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Tuple
+from typing import List, Tuple, Optional, Union
 
 import numpy as np
 import torch
 from numpy import ndarray
 from sklearn.model_selection import train_test_split
+from torch.utils.data import Dataset, DataLoader
+import random
 
 from ..modules import helper
 from ..modules import models
@@ -201,3 +203,90 @@ def renormalize_func(norm_data: ndarray, min_list: List, range_list: List) -> nd
     min_list = np.array(min_list)
     range_list = np.array(range_list)
     return norm_data * range_list + min_list
+
+
+def load_external_dataset(dataset: Dataset, test_size: float = 0.2,
+                          batch_size: int = 128, shuffle: bool = True,
+                          random_state: int = 42,
+                          deterministic: bool = False) -> Tuple[DataLoader, DataLoader]:
+    """Load an external PyTorch Dataset and split it into training and validation sets.
+
+    Args:
+        dataset (Dataset): An instance of a PyTorch Dataset.
+        test_size (float): Proportion of the dataset to include in the validation split.
+        batch_size (int): How many samples per batch to load.
+        shuffle (bool): Whether to shuffle the data before splitting and in the DataLoader.
+        random_state (int): Controls the shuffling applied to the data before splitting.
+        deterministic (bool): If True, sets the random seed for reproducibility.
+
+    Returns:
+        Tuple[DataLoader, DataLoader]: Tuple containing training and validation DataLoaders.
+    """
+    # Set the seed for reproducibility if deterministic is True
+    if deterministic:
+        torch.manual_seed(random_state)
+        np.random.seed(random_state)
+        random.seed(random_state)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(random_state)
+            torch.backends.cudnn.deterministic = True
+            torch.backends.cudnn.benchmark = False
+
+    # Handle edge cases for test_size
+    total_size = len(dataset)
+    if test_size <= 0.0:
+        # All data goes to train set
+        train_indices = list(range(total_size))
+        val_indices = []
+    elif test_size >= 1.0:
+        # All data goes to validation set
+        train_indices = []
+        val_indices = list(range(total_size))
+    else:
+        # Regular split using train_test_split
+        indices = list(range(total_size))
+        train_indices, val_indices = train_test_split(
+            indices, test_size=test_size, random_state=random_state if shuffle else None, shuffle=shuffle
+        )
+
+    # Create subset datasets
+    train_subset = torch.utils.data.Subset(dataset, train_indices)
+    val_subset = torch.utils.data.Subset(dataset, val_indices)
+
+    # Define worker_init_fn for reproducibility
+    worker_init_fn = seed_worker if deterministic else None
+    generator = torch.Generator().manual_seed(random_state) if deterministic else None
+
+    # Create DataLoaders with appropriate batch size
+    train_batch_size = min(batch_size, len(train_subset)) if train_indices else 1
+    val_batch_size = min(batch_size, len(val_subset)) if val_indices else 1
+
+    # Create DataLoaders, ensuring we don't try to shuffle empty datasets
+    train_loader = DataLoader(
+        train_subset, 
+        batch_size=train_batch_size,
+        shuffle=shuffle and len(train_subset) > 0,
+        worker_init_fn=worker_init_fn, 
+        generator=generator
+    )
+    
+    val_loader = DataLoader(
+        val_subset, 
+        batch_size=val_batch_size,
+        shuffle=False,  # Usually validation data is not shuffled
+        worker_init_fn=worker_init_fn, 
+        generator=generator
+    )
+
+    return train_loader, val_loader
+
+
+def seed_worker(worker_id):
+    """Function to seed DataLoader workers for reproducibility.
+    
+    Args:
+        worker_id: The ID of the worker
+    """
+    worker_seed = torch.initial_seed() % 2**32
+    np.random.seed(worker_seed)
+    random.seed(worker_seed)
