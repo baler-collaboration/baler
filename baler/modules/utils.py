@@ -316,7 +316,6 @@ class LRScheduler:
             patience=self.patience,
             factor=self.factor,
             min_lr=self.min_lr,
-            verbose=True,
         )
 
     def __call__(self, train_loss):
