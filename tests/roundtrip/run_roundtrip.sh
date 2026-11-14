@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+# Full baler round trip (train -> compress -> decompress -> plot) on a bundled
+# project with its config unchanged, followed by tests/roundtrip/check_roundtrip.py.
+#
+# Run from the repository root (baler resolves workspaces/... relative to CWD):
+#     tests/roundtrip/run_roundtrip.sh [WORKSPACE] [PROJECT]
+# Uses whatever `python` is on PATH; under uv: `uv run tests/roundtrip/run_roundtrip.sh`.
+#
+# Writes to $ROUNDTRIP_OUT (default: roundtrip_results/):
+#   timings.json, roundtrip_metrics.json, <mode>.log
+set -euo pipefail
+
+WORKSPACE="${1:-CMS_workspace}"
+PROJECT="${2:-CMS_project_v1}"
+OUT_DIR="${ROUNDTRIP_OUT:-roundtrip_results}"
+PYTHON="${PYTHON:-python}"
+
+if [[ ! -d "workspaces/${WORKSPACE}/${PROJECT}" ]]; then
+    echo "error: workspaces/${WORKSPACE}/${PROJECT} not found; run from the repo root" >&2
+    exit 2
+fi
+
+mkdir -p "${OUT_DIR}"
+timings="${OUT_DIR}/timings.json"
+echo "{" > "${timings}"
+
+total_start=$(date +%s)
+sep=""
+for mode in train compress decompress plot; do
+    echo "=== baler --mode ${mode} ==="
+    start=$(date +%s)
+    "${PYTHON}" -m baler --project "${WORKSPACE}" "${PROJECT}" --mode "${mode}" 2>&1 \
+        | tee "${OUT_DIR}/${mode}.log"
+    end=$(date +%s)
+    echo "=== ${mode}: $((end - start)) s ==="
+    printf '%s  "%s": %d' "${sep}" "${mode}" "$((end - start))" >> "${timings}"
+    sep=$',\n'
+done
+total_end=$(date +%s)
+printf ',\n  "total": %d\n}\n' "$((total_end - total_start))" >> "${timings}"
+
+echo "=== per-step wall time (s) ==="
+cat "${timings}"
+
+"${PYTHON}" tests/roundtrip/check_roundtrip.py \
+    --workspace "${WORKSPACE}" --project "${PROJECT}" \
+    --metrics-out "${OUT_DIR}/roundtrip_metrics.json" \
+    --timings "${timings}"

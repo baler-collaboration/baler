@@ -1,0 +1,7 @@
+{
+  "_status": "provisional",
+  "_note": "Permissive placeholders (Phase 0). They only catch gross breakage. Phase 3 replaces them with values calibrated from 5 CI runs (per-variable max_observed x 1.5).",
+  "max_rms_over_std": 2.0,
+  "per_variable_max_rms_over_std": {},
+  "max_final_train_loss": 1.0
+}
