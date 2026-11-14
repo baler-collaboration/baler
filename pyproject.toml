@@ -11,9 +11,9 @@ dependencies = [
     # torch >= 2.6: torch.load defaults to weights_only=True from 2.6 on.
     "torch>=2.6",
     "numpy>=2.0",
-    "matplotlib>=3.6.2",
-    "scikit-learn>=1.2.0",
-    "tqdm>=4.64.1",
+    "matplotlib>=3.10.9",
+    "scikit-learn>=1.7.2",
+    "tqdm>=4.70.1",
 ]
 
 [project.optional-dependencies]
@@ -30,8 +30,8 @@ Repository = "https://github.com/baler-collaboration/baler"
 
 [dependency-groups]
 dev = [
-    "pytest>=7.2.1,<8",
-    "black>=23.1.0,<24",
+    "pytest>=9.2",
+    "black>=26.10",
 ]
 
 [build-system]
