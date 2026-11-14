@@ -6,7 +6,7 @@ readme = "README.md"
 license = "Apache-2.0"
 license-files = ["LICENSE", "NOTICE"]
 authors = [{ name = "Baler collaboration" }]
-requires-python = ">=3.10,<3.11"
+requires-python = ">=3.10,<3.15"  # torch 2.14 publishes wheels for 3.10-3.14 on all platforms
 dependencies = [
     # torch >= 2.6: torch.load defaults to weights_only=True from 2.6 on.
     "torch>=2.6",
