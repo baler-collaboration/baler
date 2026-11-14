@@ -22,7 +22,6 @@ from .modules import helper
 import gzip
 from .modules.profiling import pytorch_profile
 
-
 __all__ = (
     "perform_compression",
     "perform_decompression",
