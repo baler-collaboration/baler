@@ -6,7 +6,10 @@ readme = "README.md"
 license = "Apache-2.0"
 license-files = ["LICENSE", "NOTICE"]
 authors = [{ name = "Baler collaboration" }]
-requires-python = ">=3.10,<3.15"  # torch 2.14 publishes wheels for 3.10-3.14 on all platforms
+# Python range from torch wheel availability on Linux, macOS and Windows:
+# torch 2.14 covers 3.10-3.14 and torch 2.15 covers 3.11-3.15 (it dropped
+# 3.10). The lock resolves torch 2.14.x on Python 3.10.
+requires-python = ">=3.10,<3.16"
 dependencies = [
     # torch >= 2.6: torch.load defaults to weights_only=True from 2.6 on.
     "torch>=2.6",
