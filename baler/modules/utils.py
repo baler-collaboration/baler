@@ -325,4 +325,6 @@ class LRScheduler:
         self.lr_scheduler.step(train_loss)
         new_lr = self.optimizer.param_groups[0]["lr"]
         if new_lr != old_lr:
-            print(f"LRScheduler: reducing learning rate from {old_lr:.4e} to {new_lr:.4e}")
+            print(
+                f"LRScheduler: reducing learning rate from {old_lr:.4e} to {new_lr:.4e}"
+            )

@@ -87,7 +87,9 @@ def test_lr_scheduler():
     model = torch.nn.Linear(10, 1)
     optimizer = torch.optim.SGD(model.parameters(), lr=0.1)
     patience, factor, min_lr = 2, 0.5, 1e-5
-    lr_scheduler = LRScheduler(optimizer, patience=patience, min_lr=min_lr, factor=factor)
+    lr_scheduler = LRScheduler(
+        optimizer, patience=patience, min_lr=min_lr, factor=factor
+    )
 
     def lr():
         return optimizer.param_groups[0]["lr"]
