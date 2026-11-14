@@ -329,7 +329,13 @@ def perform_compression(output_path, config, verbose: bool):
             os.path.join(output_path, "compressed_output", "compressed_deltas.npz.gz"),
             "w",
         )
-        np.save(file=f_deltas, arr=error_bound_deltas)
+        # One entry per batch, each a list of a different length. numpy >= 1.24
+        # no longer builds ragged arrays implicitly, so build the 1-D object
+        # array explicitly (same on-disk layout as before).
+        error_bound_deltas_arr = np.empty(len(error_bound_deltas), dtype=object)
+        for i, batch_deltas in enumerate(error_bound_deltas):
+            error_bound_deltas_arr[i] = batch_deltas
+        np.save(file=f_deltas, arr=error_bound_deltas_arr)
         np.save(
             file=f_batch_index,
             arr=error_bound_batch_index,
