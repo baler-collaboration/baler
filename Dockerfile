@@ -34,9 +34,9 @@ COPY --from=ghcr.io/astral-sh/uv:0.13.5 /uv /uvx /bin/
 ENV UV_COMPILE_BYTECODE=1 \
     UV_LINK_MODE=copy \
     UV_PYTHON_DOWNLOADS=never \
-    UV_PROJECT_ENVIRONMENT=/baler-root/baler/.venv
+    UV_PROJECT_ENVIRONMENT=/opt/venv
 
-WORKDIR /baler-root/baler
+WORKDIR /baler-root
 
 # Install dependencies first (cached layer), then the project itself.
 COPY pyproject.toml uv.lock ./
@@ -44,19 +44,23 @@ RUN uv sync --frozen --no-dev --no-install-project
 
 COPY baler/ ./baler/
 COPY README.md LICENSE NOTICE ./
-RUN uv sync --frozen --no-dev --no-editable
+# Editable install: the venv imports baler from /baler-root/baler, so the
+# source files can be shadowed with bind mounts for live development
+# (see docs/setup/docker_setup.md, "Developing using Docker image").
+RUN uv sync --frozen --no-dev
 
 ## -----------------------------------------------------------------------------
 ## Baler layer
 
 FROM python:3.10-slim
 
-# Copy the virtual environment (baler is installed into it as a regular package)
-COPY --from=builder /baler-root/baler/.venv /baler-root/baler/.venv
+# Copy the virtual environment and the baler source it imports (editable install)
+COPY --from=builder /opt/venv /opt/venv
+COPY --from=builder /baler-root/baler /baler-root/baler
 
 # Configure run time
 ENV PYTHONUNBUFFERED=1 \
-    PATH="/baler-root/baler/.venv/bin:$PATH"
+    PATH="/opt/venv/bin:$PATH"
 WORKDIR /baler-root/
 
 # Install fixuid
