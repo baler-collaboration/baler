@@ -15,39 +15,44 @@ Download and install Python 3.10 from the official website using the following l
 
 [Python 3.10.11](https://www.python.org/ftp/python/3.10.11/python-3.10.11-amd64.exe)
 
-### STEP 2: Install Poetry
+### STEP 2: Install uv
 
-Once Python is installed, open your terminal or command prompt and run the following command to install Poetry:
+Once Python is installed, open your terminal or command prompt and run the following command to install [uv](https://docs.astral.sh/uv/getting-started/installation/):
 
 ```console
-python -m pip install poetry
+python -m pip install uv
 ```
 
 ### STEP 3: Clone Baler Project
 
 Refer to the primary README documentation of the Baler project for detailed instructions on cloning the repository using Git.
 
-### STEP 4: Prepare Baler Project for GPU
+### STEP 4: Install Project Dependencies
 
-Navigate to the cloned Baler directory. If you find a `poetry.lock` file in the directory, delete it.
+Navigate to the cloned Baler directory and run:
 
-Now, open the `pyproject.toml` file using your preferred text editor.
-
-### STEP 5: (Optional) Update PyTorch Version for CUDA
-
-In the `pyproject.toml` file, find the torch dependency version and update it with the following URL:
-
-Replace this:
-```
-torch = ">=2.0.0, !=2.0.1"
+```console
+uv sync
 ```
 
-With this:
-```
-torch = { url = "https://download.pytorch.org/whl/cu118/torch-2.0.0%2Bcu118-cp310-cp310-win_amd64.whl#sha256=5ee2b7c19265b9c869525c378fcdf350510b8f3fc08af26da1a2587a34cea8f5"}
+This creates a virtual environment in `.venv\` with the exact versions pinned in `uv.lock`. Do not delete or edit `uv.lock` or `pyproject.toml`.
+
+### STEP 5: (Optional) Install the CUDA build of PyTorch
+
+The torch wheel installed in STEP 4 is CPU-only on Windows. To train on an NVIDIA GPU, replace it with the CUDA build of the **same torch version**:
+
+```console
+uv run python -c "import torch; print(torch.__version__)"
+uv pip install --reinstall-package torch "torch==<VERSION>" --index-url https://download.pytorch.org/whl/cu124
 ```
 
-> **Note**: This step is particularly important if you want to run your training on GPUs. Please ensure that the version you are using (in this case: PyTorch 2.0.0 with CUDA 11.8 (cu118) for Python 3.10 (cp310)) corresponds to the version you want to run.
+Replace `<VERSION>` with the version printed by the first command (e.g. `2.6.0`). Pick the CUDA variant (`cu118`, `cu124`, `cu126`, ...) matching your driver from the [PyTorch install page](https://pytorch.org/get-started/locally/). Check it worked with:
+
+```console
+uv run --no-sync python -c "import torch; print(torch.cuda.is_available())"
+```
+
+> **Note**: plain `uv run` and `uv sync` reset the environment to `uv.lock` and therefore put the CPU-only torch back. After STEP 5, always use `uv run --no-sync` (as below), or activate the environment with `.venv\Scripts\activate` and call `baler` directly.
 
 ### STEP 5a: (Optional) Disable Energy Profiling
 
@@ -67,20 +72,12 @@ To comment them, simply place a `#` in front of each line:
 
 > **Note**: This step is particularly important if you face out-of-memory issues when utilizing GPU acceleration or encounter memory-related problems in general.
 
-### STEP 6: Install Project Dependencies
+### STEP 6: Run Baler
 
-Inside the Baler directory, execute the following command to install the required dependencies:
-
-```console
-python -m poetry install
-```
-
-### STEP 7: Run Baler with Poetry
-
-Once all dependencies are installed, you can run Baler with the following command:
+Once all dependencies are installed, you can run Baler with the following command (drop `--no-sync` if you skipped STEP 5):
 
 ```console
-python -m poetry run baler baler [-h] --mode MODE --project WORKSPACE PROJECT [--verbose]
+uv run --no-sync baler --mode MODE --project WORKSPACE PROJECT [--verbose]
 ```
 
 Replace `MODE`, `WORKSPACE`, and `PROJECT` with appropriate values as per your requirement.

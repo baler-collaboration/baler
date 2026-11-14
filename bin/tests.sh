@@ -11,7 +11,7 @@ PYTEST_OPTIONS="--verbose"
 # Function to run pytest
 function run_pytest() {
   echo "Running pytest with options: ${PYTEST_OPTIONS}"
-  poetry run pytest ${PYTEST_OPTIONS}
+  uv run pytest ${PYTEST_OPTIONS}
   echo "Pytest completed successfully."
 }
 

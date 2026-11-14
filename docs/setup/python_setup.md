@@ -6,19 +6,19 @@ For some Linux users, disable the KDE keyring
 export PYTHON_KEYRING_BACKEND=keyring.backends.null.Keyring
 ```
 
-1. Install [poetry](https://python-poetry.org/) for managing the python environment. 
+1. Install [uv](https://docs.astral.sh/uv/getting-started/installation/) for managing the python environment. uv installs a suitable Python version (3.10) itself if needed.
 
 2. Clone this repository and move into the project
 ```console
 git clone https://github.com/baler-collaboration/baler.git && cd baler
 ```
 
-3. Install dependencies using Poetry
+3. Install dependencies using uv (this creates a `.venv/` in the project, following `uv.lock`)
 ```console
-poetry install
+uv sync
 ```
 
-4. Try the installation with `poetry run baler`, this should give the following output:
+4. Try the installation with `uv run baler`, this should give the following output:
 
 ```console
 usage: baler [-h] --mode MODE --project WORKSPACE PROJECT [--verbose]
@@ -34,28 +34,28 @@ Here we provide some instructions for our working examples.
 #### Training ####
 To train the autoencoder to compress your data, you run the following command. The config file `./workspaces/CFD_workspace/CFD_project_v1/config/CFD_project_v1_config.py`. This details the path of the data, the number of epochs, and all the other training parameters.
 ```console
-poetry run baler --project CFD_workspace CFD_project_animation --mode train
+uv run baler --project CFD_workspace CFD_project_animation --mode train
 ```
 
 #### Compressing ####
 To use the derived model for compression, you can now choose ``--mode compress``, which can be run as
 
 ```console
-poetry run baler --project CFD_workspace CFD_project_animation --mode compress
+uv run baler --project CFD_workspace CFD_project_animation --mode compress
 ```
 This will output a compressed file called "compressed.pickle", and this is the latent space representation of the input dataset. It will also output cleandata_pre_comp.pickle which is just the exact data being compressed.
 
 #### Decompressing ####
 To decompress the compressed file, we choose --mode decompress and run:
 ```console
-poetry run baler --project CFD_workspace CFD_project_animation --mode decompress
+uv run baler --project CFD_workspace CFD_project_animation --mode decompress
 ```
 
 #### Plotting ####
 To plot the difference of your variables before compression and after decompression, we can use the following command to generate a .pdf document under ``./workspaces/firstWorkspace/firstProject/output/plotting/comparison.pdf``
 
 ```console
-poetry run baler --project CFD_workspace CFD_project_animation --mode plot
+uv run baler --project CFD_workspace CFD_project_animation --mode plot
 ```
 
 ### High Energy Physics Example ###
@@ -64,5 +64,11 @@ To run our High Energy Physics using CMS data (DOI:10.7483/OPENDATA.CMS.KL8H.HFV
 ## New project ##
 To create the folder structure and a skeleton config for your own project:
 ```console
-poetry run baler --project firstWorkspace firstProject --mode newProject
+uv run baler --project firstWorkspace firstProject --mode newProject
+```
+
+## Running the tests ##
+```console
+uv run pytest                         # unit tests
+uv run tests/roundtrip/run_roundtrip.sh   # full train/compress/decompress/plot round trip on the CMS example
 ```

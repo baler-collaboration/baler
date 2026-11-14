@@ -21,63 +21,51 @@
 # SOFTWARE.
 
 ## -----------------------------------------------------------------------------
-## Base image with VENV
+## Builder: resolve the locked environment with uv
 
-# The following code was based on
+# The multi-stage layout was originally based on
 # https://github.com/michaeloliverx/python-poetry-docker-example/blob/master/docker/Dockerfile
+# and has since been ported from poetry to uv.
 
-FROM python:3.8-slim as python-base
+FROM python:3.10-slim AS builder
 
-# Configure environment
+COPY --from=ghcr.io/astral-sh/uv:0.13.5 /uv /uvx /bin/
 
-ENV PYTHONUNBUFFERED=1 \
-    PYTHONFAULTHANDLER=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    PIP_NO_CACHE_DIR=off \
-    PIP_DISABLE_PIP_VERSION_CHECK=on \
-    PIP_DEFAULT_TIMEOUT=100 \
-    POETRY_HOME="/opt/poetry" \
-    POETRY_VIRTUALENVS_IN_PROJECT=true \
-    POETRY_NO_INTERACTION=1 \
-    PYSETUP_PATH="/baler-root/baler" \
-    VENV_PATH="/baler-root/baler/.venv"
+ENV UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy \
+    UV_PYTHON_DOWNLOADS=never \
+    UV_PROJECT_ENVIRONMENT=/baler-root/baler/.venv
 
-ENV PATH="$POETRY_HOME/bin:$VENV_PATH/bin:$PATH"
+WORKDIR /baler-root/baler
 
-# System deps:
-RUN pip install "poetry"
+# Install dependencies first (cached layer), then the project itself.
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-dev --no-install-project
 
-# Copy only requirements to cache them in docker layer
-WORKDIR $PYSETUP_PATH
-COPY ./poetry.lock ./pyproject.toml ./
+COPY baler/ ./baler/
+COPY README.md LICENSE NOTICE ./
+RUN uv sync --frozen --no-dev --no-editable
 
-# Project initialization:
-RUN poetry install --no-interaction --no-ansi
-
-# Creating folders, and files for the project:
-COPY ./baler/ README.md ./tests/ ./
-
-# Creating python wheel
-RUN poetry build
+# uv.lock takes torch from the CPU-only PyTorch index on Linux. Swap in the CUDA
+# build of the same torch version. Override the CUDA variant with
+#   docker build --build-arg TORCH_CUDA=cu126 -f Dockerfile.gpu .
+ARG TORCH_CUDA=cu124
+RUN TORCH_VERSION="$(.venv/bin/python -c 'import torch; print(torch.__version__.split("+")[0])')" && \
+    uv pip install --python .venv/bin/python --reinstall-package torch \
+        "torch==${TORCH_VERSION}" \
+        --index-url "https://download.pytorch.org/whl/${TORCH_CUDA}"
 
 ## -----------------------------------------------------------------------------
 ## Baler layer
 
-FROM python:3.8-slim
+FROM python:3.10-slim
 
-# Copy virtual environment
-WORKDIR /baler-root/baler
-COPY --from=python-base /baler-root/baler/dist/*.whl ./
-
-# Install wheel
-RUN pip install *.whl
-
-# Copy source
-COPY --from=python-base /baler-root/baler/modules/ ./modules
-COPY --from=python-base /baler-root/baler/*.py /baler-root/baler/README.md ./
+# Copy the virtual environment (baler is installed into it as a regular package)
+COPY --from=builder /baler-root/baler/.venv /baler-root/baler/.venv
 
 # Configure run time
-ENV PYTHONUNBUFFERED=1
+ENV PYTHONUNBUFFERED=1 \
+    PATH="/baler-root/baler/.venv/bin:$PATH"
 WORKDIR /baler-root/
 
 # Install fixuid
