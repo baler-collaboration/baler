@@ -81,3 +81,9 @@ Synthesis also needs Vivado 2020.1, and the project config needs the options lis
 uv run pytest                         # unit tests
 uv run tests/roundtrip/run_roundtrip.sh   # full train/compress/decompress/plot round trip on the CMS example
 ```
+
+CI (`.github/workflows/test_and_lint.yaml`) runs black, pytest on the lowest and highest supported Python, and the round trip on the newest Python. The round-trip thresholds in `tests/roundtrip/thresholds.json` are calibrated from several CI runs. To recalibrate (e.g. after dependency updates), start the workflow manually with `roundtrip_runs` set to `[1,2,3,4,5]`, download the `roundtrip-results-run*` artifacts, and run:
+```console
+uv run tests/roundtrip/calibrate_thresholds.py <dir>/roundtrip-results-run*/roundtrip_results/roundtrip_metrics.json \
+    --out tests/roundtrip/thresholds.json --source "<link to the workflow run>"
+```

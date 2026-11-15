@@ -8,6 +8,8 @@
 #
 # Writes to $ROUNDTRIP_OUT (default: roundtrip_results/):
 #   timings.json, roundtrip_metrics.json, <mode>.log
+# If ROUNDTRIP_SUMMARY_MD is set, a markdown summary is appended to that file
+# (CI sets it to $GITHUB_STEP_SUMMARY).
 set -euo pipefail
 
 WORKSPACE="${1:-CMS_workspace}"
@@ -42,7 +44,12 @@ printf ',\n  "total": %d\n}\n' "$((total_end - total_start))" >> "${timings}"
 echo "=== per-step wall time (s) ==="
 cat "${timings}"
 
+summary_args=()
+if [[ -n "${ROUNDTRIP_SUMMARY_MD:-}" ]]; then
+    summary_args=(--summary-md "${ROUNDTRIP_SUMMARY_MD}")
+fi
+
 "${PYTHON}" tests/roundtrip/check_roundtrip.py \
     --workspace "${WORKSPACE}" --project "${PROJECT}" \
     --metrics-out "${OUT_DIR}/roundtrip_metrics.json" \
-    --timings "${timings}"
+    --timings "${timings}" ${summary_args[@]+"${summary_args[@]}"}

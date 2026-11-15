@@ -62,6 +62,55 @@ def count_pdf_pages(path):
     return n or None
 
 
+def markdown_summary(metrics):
+    """Short markdown report: check results, key numbers, per-variable rms/std."""
+    ok = metrics.get("all_passed")
+    v = metrics.get("versions", {})
+    lines = [
+        f"## Round trip: {'✅ all checks passed' if ok else '❌ checks failed'}",
+        "",
+        f"Python {v.get('python')}, torch {v.get('torch')}, numpy {v.get('numpy')}; "
+        f"thresholds: `{metrics.get('thresholds_status')}`",
+        "",
+    ]
+    failed = [r for r in metrics.get("checks", []) if not r["passed"]]
+    if failed:
+        lines += ["**Failed checks:**", ""]
+        lines += [f"- {r['check']}: {r['detail']}" for r in failed]
+        lines.append("")
+    t = metrics.get("timings_s", {})
+    if t:
+        lines += [
+            "| " + " | ".join(t) + " |",
+            "|" + "---|" * len(t),
+            "| " + " | ".join(f"{x} s" for x in t.values()) + " |",
+            "",
+        ]
+    if "final_train_loss" in metrics:
+        lines.append(
+            f"Final train loss: {metrics['final_train_loss']:.5g} "
+            f"({metrics.get('epochs_run')}/{metrics.get('epochs_configured')} epochs)"
+        )
+    summ = metrics.get("rms_over_std_summary")
+    if summ:
+        lines += [
+            f"rms(residual)/std(original): median {summ['median']:.4f}, "
+            f"max {summ['max']:.4f} (`{summ['argmax'].split('.')[-1]}`)",
+            "",
+            "<details><summary>Per-variable rms/std</summary>",
+            "",
+            "| variable | rms/std | limit |",
+            "|---|---|---|",
+        ]
+        for name, pv in metrics["per_variable"].items():
+            r = pv["rms_over_std"]
+            lines.append(
+                f"| {name.split('.')[-1]} | {'n/a' if r is None else f'{r:.4f}'} | {pv['limit']:.4g} |"
+            )
+        lines += ["", "</details>"]
+    return "\n".join(lines) + "\n\n"
+
+
 class Checker:
     def __init__(self):
         self.results = []
@@ -85,6 +134,10 @@ def main(argv=None):
     p.add_argument("--metrics-out", required=True)
     p.add_argument("--thresholds", default=os.path.join(HERE, "thresholds.json"))
     p.add_argument("--timings", help="optional JSON of per-step wall times (seconds)")
+    p.add_argument(
+        "--summary-md",
+        help="optional file to append a markdown summary to (e.g. $GITHUB_STEP_SUMMARY)",
+    )
     args = p.parse_args(argv)
 
     with open(args.thresholds) as f:
@@ -128,6 +181,9 @@ def main(argv=None):
         metrics["all_passed"] = c.all_passed
         with open(args.metrics_out, "w") as f:
             json.dump(metrics, f, indent=2)
+        if args.summary_md:
+            with open(args.summary_md, "a") as f:
+                f.write(markdown_summary(metrics))
         n_fail = sum(not r["passed"] for r in c.results)
         print(
             f"\n{'ALL CHECKS PASSED' if c.all_passed else f'{n_fail} CHECK(S) FAILED'}"
