@@ -751,9 +751,14 @@ def perform_hls4ml_conversion(output_path, config):
     The output hls4ml project will be located in OutputDir defined in the config file.
     The model path is determined by the `output_path`. The 'output_path' should point to the output directory inside the project directory.
 
+    Note: this integration has not been worked on since mid-2023. It was last
+    checked in November 2026 (model conversion and HLS project writing with
+    hls4ml 0.7.1, without Vivado) and is supported on Python 3.10-3.13 only.
+
     Before running this function:
     1. Install Vivado 2020.1 and add in to path.
-    2. Install hls4ml and tensorflow to the projects virtual environment.
+    2. Install the optional hls4ml dependencies (Python 3.10-3.13):
+       `uv sync --extra hls4ml`.
     3. Add the following configuration options to the projects config:
 
         c.default_reuse_factor
@@ -808,7 +813,14 @@ def perform_hls4ml_conversion(output_path, config):
 
     """
 
-    import hls4ml
+    try:
+        import hls4ml
+    except ImportError as e:
+        raise ImportError(
+            "convert_with_hls4ml needs the optional hls4ml dependencies, which are "
+            "only available on Python 3.10-3.13. Install them with "
+            "`uv sync --extra hls4ml` on a supported Python version."
+        ) from e
 
     model_path = os.path.join(output_path, "compressed_output", "model.pt")
 
