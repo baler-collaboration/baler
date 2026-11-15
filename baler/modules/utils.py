@@ -321,10 +321,11 @@ class LRScheduler:
     def __call__(self, train_loss):
         # ReduceLROnPlateau(verbose=True) used to print LR reductions; the kwarg
         # was deprecated in torch 2.2 and removed in 2.7, so report them here.
-        old_lr = self.optimizer.param_groups[0]["lr"]
+        old_lrs = [group["lr"] for group in self.optimizer.param_groups]
         self.lr_scheduler.step(train_loss)
-        new_lr = self.optimizer.param_groups[0]["lr"]
-        if new_lr != old_lr:
-            print(
-                f"LRScheduler: reducing learning rate from {old_lr:.4e} to {new_lr:.4e}"
-            )
+        for i, (old_lr, group) in enumerate(zip(old_lrs, self.optimizer.param_groups)):
+            if group["lr"] != old_lr:
+                print(
+                    f"LRScheduler: reducing learning rate of group {i} "
+                    f"from {old_lr:.4e} to {group['lr']:.4e}"
+                )

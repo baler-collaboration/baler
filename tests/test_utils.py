@@ -129,3 +129,18 @@ def test_lr_scheduler_reports_reduction(capsys):
     assert capsys.readouterr().out == ""
     lr_scheduler(2.0)
     assert "reducing learning rate" in capsys.readouterr().out
+
+
+def test_lr_scheduler_reports_every_param_group(capsys):
+    # Group 0 already sits at min_lr, so only group 1 is reduced; the
+    # reduction must still be reported.
+    w0, w1 = torch.nn.Parameter(torch.zeros(1)), torch.nn.Parameter(torch.zeros(1))
+    optimizer = torch.optim.SGD(
+        [{"params": [w0], "lr": 1e-5}, {"params": [w1], "lr": 0.1}]
+    )
+    lr_scheduler = LRScheduler(optimizer, patience=0, min_lr=1e-5, factor=0.5)
+    lr_scheduler(1.0)
+    lr_scheduler(2.0)
+    assert [g["lr"] for g in optimizer.param_groups] == pytest.approx([1e-5, 0.05])
+    out = capsys.readouterr().out
+    assert "group 1" in out and "group 0" not in out
