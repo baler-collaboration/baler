@@ -67,6 +67,15 @@ To create the folder structure and a skeleton config for your own project:
 uv run baler --project firstWorkspace firstProject --mode newProject
 ```
 
+## Optional: FPGA conversion with hls4ml ##
+`--mode convert_with_hls4ml` converts a trained model to an FPGA (HLS) project with [hls4ml](https://github.com/fastmachinelearning/hls4ml). It needs extra dependencies, available on **Python 3.10-3.13 only**:
+```console
+uv sync --extra hls4ml
+```
+Synthesis also needs Vivado 2020.1, and the project config needs the options listed in the docstring of `perform_hls4ml_conversion` (`baler/modules/helper.py`).
+
+> **Note:** this integration has not been worked on since mid-2023. It was last checked in November 2026 (model conversion and HLS project writing with hls4ml 0.7.1, without Vivado); synthesis was not tested.
+
 ## Running the tests ##
 ```console
 uv run pytest                         # unit tests

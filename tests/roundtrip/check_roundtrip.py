@@ -68,7 +68,9 @@ class Checker:
 
     def check(self, name, ok, detail=""):
         self.results.append({"check": name, "passed": bool(ok), "detail": detail})
-        print(f"[{'PASS' if ok else 'FAIL'}] {name}" + (f": {detail}" if detail else ""))
+        print(
+            f"[{'PASS' if ok else 'FAIL'}] {name}" + (f": {detail}" if detail else "")
+        )
         return bool(ok)
 
     @property
@@ -82,9 +84,7 @@ def main(argv=None):
     p.add_argument("--project", required=True)
     p.add_argument("--metrics-out", required=True)
     p.add_argument("--thresholds", default=os.path.join(HERE, "thresholds.json"))
-    p.add_argument(
-        "--timings", help="optional JSON of per-step wall times (seconds)"
-    )
+    p.add_argument("--timings", help="optional JSON of per-step wall times (seconds)")
     args = p.parse_args(argv)
 
     with open(args.thresholds) as f:
@@ -196,7 +196,11 @@ def main(argv=None):
             metrics["final_train_loss"] = final_train
             metrics["final_val_loss"] = float(loss[1, -1])
             metrics["train_loss_per_epoch"] = [float(x) for x in loss[0]]
-            c.check("final train loss finite", math.isfinite(final_train), f"{final_train:.6g}")
+            c.check(
+                "final train loss finite",
+                math.isfinite(final_train),
+                f"{final_train:.6g}",
+            )
             c.check(
                 "final train loss below threshold",
                 final_train < max_final_loss,
@@ -215,10 +219,17 @@ def main(argv=None):
             name = str(name)
             ratio = float(r / s) if s > 0 else None
             limit = float(max_ratio_per_var.get(name, max_ratio_default))
-            per_var[name] = {"rms_residual": float(r), "std_original": float(s), "rms_over_std": ratio, "limit": limit}
+            per_var[name] = {
+                "rms_residual": float(r),
+                "std_original": float(s),
+                "rms_over_std": ratio,
+                "limit": limit,
+            }
             if ratio is None or not math.isfinite(ratio) or ratio > limit:
                 bad.append(f"{name}={ratio}")
-        ratios = [v["rms_over_std"] for v in per_var.values() if v["rms_over_std"] is not None]
+        ratios = [
+            v["rms_over_std"] for v in per_var.values() if v["rms_over_std"] is not None
+        ]
         metrics["per_variable"] = per_var
         metrics["rms_over_std_summary"] = {
             "median": float(np.median(ratios)) if ratios else None,

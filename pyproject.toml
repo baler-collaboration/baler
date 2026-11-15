@@ -6,25 +6,28 @@ readme = "README.md"
 license = "Apache-2.0"
 license-files = ["LICENSE", "NOTICE"]
 authors = [{ name = "Baler collaboration" }]
-requires-python = ">=3.10,<3.11"
+# Python range from torch wheel availability on Linux, macOS and Windows:
+# torch 2.14 covers 3.10-3.14 and torch 2.15 covers 3.11-3.15 (it dropped
+# 3.10). The lock resolves torch 2.14.x on Python 3.10.
+requires-python = ">=3.10,<3.16"
 dependencies = [
-    # torch < 2.7: baler/modules/utils.py passes verbose=True to
-    # torch.optim.lr_scheduler.ReduceLROnPlateau. That kwarg was deprecated in
-    # torch 2.2 and removed in 2.7, where `baler --mode train` crashes with
-    # "unexpected keyword argument 'verbose'". This cap is the minimal fix that
-    # keeps the current code working; remove it once the code no longer passes
-    # verbose (planned for the dependency-update phase).
-    "torch>=2.0,!=2.0.1,<2.7",
-    "numpy==1.23.5",
-    "matplotlib>=3.6.2",
-    "scikit-learn>=1.2.0",
-    "tqdm>=4.64.1",
+    # torch >= 2.6: torch.load defaults to weights_only=True from 2.6 on.
+    "torch>=2.6",
+    "numpy>=2.0",
+    "matplotlib>=3.10.9",
+    "scikit-learn>=1.7.2",
+    "tqdm>=4.70.1",
 ]
 
 [project.optional-dependencies]
+# FPGA conversion (`baler --mode convert_with_hls4ml`). Supported on Python
+# 3.10-3.13 only: tensorflow (needed by hls4ml 0.7's qkeras dependency; baler
+# itself does not use it) has no wheels for Python 3.14+. Baler's hls4ml
+# integration has not been worked on since mid-2023; it was last checked in
+# November 2026 (model conversion and HLS project writing, without Vivado).
 hls4ml = [
-    "hls4ml>=0.7.1,<0.8",
-    "tensorflow>=2.12.0,<3",
+    "hls4ml>=0.7.1,<0.8; python_version < '3.14'",
+    "tensorflow>=2.12.0,<3; python_version < '3.14'",
 ]
 
 [project.scripts]
@@ -35,8 +38,8 @@ Repository = "https://github.com/baler-collaboration/baler"
 
 [dependency-groups]
 dev = [
-    "pytest>=7.2.1,<8",
-    "black>=23.1.0,<24",
+    "pytest>=9.2",
+    "black>=26.10",
 ]
 
 [build-system]
