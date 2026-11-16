@@ -62,12 +62,76 @@ def count_pdf_pages(path):
     return n or None
 
 
+def markdown_summary(metrics):
+    """Short markdown report: check results, key numbers, per-variable rms/std."""
+    ok = metrics.get("all_passed")
+    v = metrics.get("versions", {})
+    lines = [
+        f"## Round trip: {'✅ all checks passed' if ok else '❌ checks failed'}",
+        "",
+        f"Python {v.get('python')}, torch {v.get('torch')}, numpy {v.get('numpy')}; "
+        f"thresholds: `{metrics.get('thresholds_status')}`",
+        "",
+    ]
+    failed = [r for r in metrics.get("checks", []) if not r["passed"]]
+    if failed:
+        lines += ["**Failed checks:**", ""]
+        lines += [f"- {r['check']}: {r['detail']}" for r in failed]
+        lines.append("")
+    t = metrics.get("timings_s", {})
+    if t:
+        lines += [
+            "| " + " | ".join(t) + " |",
+            "|" + "---|" * len(t),
+            "| " + " | ".join(f"{x} s" for x in t.values()) + " |",
+            "",
+        ]
+    if "final_train_loss" in metrics:
+        lines.append(
+            f"Final train loss: {metrics['final_train_loss']:.5g} "
+            f"({metrics.get('epochs_run')}/{metrics.get('epochs_configured')} epochs)"
+        )
+    summ = metrics.get("rms_over_std_summary")
+    if summ:
+        lines += [
+            f"rms(residual)/std(original): median {summ['median']:.4f}, "
+            f"max {summ['max']:.4f} (`{summ['argmax'].split('.')[-1]}`)",
+            "",
+            "<details><summary>Per-variable rms/std</summary>",
+            "",
+        ]
+        ref = metrics.get("reference")
+        if ref:
+            lines += [
+                f"Reference (not gated): {ref['epochs']}-epoch run, median rms/std "
+                f"{ref['median_rms_over_std']:.4f}, final loss {ref['final_train_loss']:.5g}",
+                "",
+                f"| variable | rms/std | limit | {ref['epochs']}-epoch ref |",
+                "|---|---|---|---|",
+            ]
+        else:
+            lines += ["| variable | rms/std | limit |", "|---|---|---|"]
+        fmt = lambda x: "n/a" if x is None else f"{x:.4f}"
+        for name, pv in metrics["per_variable"].items():
+            row = f"| {name.split('.')[-1]} | {fmt(pv['rms_over_std'])} | {pv['limit']:.4g} |"
+            if ref:
+                row += f" {fmt(pv.get('reference'))} |"
+            lines.append(row)
+        lines += ["", "</details>"]
+    return "\n".join(lines) + "\n\n"
+
+
 class Checker:
     def __init__(self):
         self.results = []
 
-    def check(self, name, ok, detail=""):
-        self.results.append({"check": name, "passed": bool(ok), "detail": detail})
+    def check(self, name, ok, detail="", kind="structural"):
+        """kind: "structural" (files, shapes, finiteness) or "threshold" (a
+        limit from thresholds.json). Calibration may use runs that fail only
+        threshold checks, never runs that fail structural ones."""
+        self.results.append(
+            {"check": name, "passed": bool(ok), "detail": detail, "kind": kind}
+        )
         print(
             f"[{'PASS' if ok else 'FAIL'}] {name}" + (f": {detail}" if detail else "")
         )
@@ -85,6 +149,10 @@ def main(argv=None):
     p.add_argument("--metrics-out", required=True)
     p.add_argument("--thresholds", default=os.path.join(HERE, "thresholds.json"))
     p.add_argument("--timings", help="optional JSON of per-step wall times (seconds)")
+    p.add_argument(
+        "--summary-md",
+        help="optional file to append a markdown summary to (e.g. $GITHUB_STEP_SUMMARY)",
+    )
     args = p.parse_args(argv)
 
     with open(args.thresholds) as f:
@@ -92,6 +160,7 @@ def main(argv=None):
     max_ratio_default = float(thresholds["max_rms_over_std"])
     max_ratio_per_var = thresholds.get("per_variable_max_rms_over_std", {})
     max_final_loss = float(thresholds["max_final_train_loss"])
+    reference = thresholds.get("_reference")  # informational only, never gated on
 
     config, config_path = load_config(args.workspace, args.project)
     out = os.path.join("workspaces", args.workspace, args.project, "output")
@@ -111,6 +180,14 @@ def main(argv=None):
         "config": config_path,
         "thresholds_file": os.path.relpath(args.thresholds),
         "thresholds_status": thresholds.get("_status"),
+        "reference": (
+            {
+                k: reference[k]
+                for k in ("epochs", "median_rms_over_std", "final_train_loss")
+            }
+            if reference
+            else None
+        ),
         "versions": {
             "python": sys.version.split()[0],
             "numpy": np.__version__,
@@ -128,6 +205,9 @@ def main(argv=None):
         metrics["all_passed"] = c.all_passed
         with open(args.metrics_out, "w") as f:
             json.dump(metrics, f, indent=2)
+        if args.summary_md:
+            with open(args.summary_md, "a") as f:
+                f.write(markdown_summary(metrics))
         n_fail = sum(not r["passed"] for r in c.results)
         print(
             f"\n{'ALL CHECKS PASSED' if c.all_passed else f'{n_fail} CHECK(S) FAILED'}"
@@ -205,6 +285,7 @@ def main(argv=None):
                 "final train loss below threshold",
                 final_train < max_final_loss,
                 f"{final_train:.6g} < {max_final_loss}",
+                kind="threshold",
             )
 
     # 5. Per-variable reconstruction quality: rms(residual) / std(original)
@@ -225,6 +306,8 @@ def main(argv=None):
                 "rms_over_std": ratio,
                 "limit": limit,
             }
+            if reference:
+                per_var[name]["reference"] = reference["rms_over_std"].get(name)
             if ratio is None or not math.isfinite(ratio) or ratio > limit:
                 bad.append(f"{name}={ratio}")
         ratios = [
@@ -240,6 +323,7 @@ def main(argv=None):
             "per-variable rms/std within thresholds",
             not bad,
             "all within limits" if not bad else "exceeded: " + ", ".join(bad),
+            kind="threshold",
         )
 
     # 6. Plots
