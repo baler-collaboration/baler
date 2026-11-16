@@ -115,9 +115,9 @@ def perform_training(output_path, config, verbose: bool):
         n_features = 0
         if config.data_dimension == 1:
             number_of_columns = train_set_norm.shape[1]
-            config.latent_space_size = ceil(
-                number_of_columns / config.compression_ratio
-            )
+            config.latent_space_size = (
+                ceil(number_of_columns / config.compression_ratio) + 1
+            )  # TEMPORARY deliberate CI-failure test, reverted in the next commit
             config.number_of_columns = number_of_columns
             n_features = number_of_columns
         elif config.data_dimension == 2:
