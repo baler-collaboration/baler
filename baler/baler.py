@@ -431,11 +431,7 @@ def perform_decompression(output_path, config, verbose: bool):
     try:
         if verbose:
             print("Converting to original data types")
-        type_list = config.type_list
-        decompressed = np.transpose(decompressed)
-        for index, column in enumerate(decompressed):
-            decompressed[index] = decompressed[index].astype(type_list[index])
-        decompressed = np.transpose(decompressed)
+        decompressed = helper.convert_to_original_types(decompressed, config.type_list)
     except AttributeError:
         pass
 
