@@ -1,67 +1,109 @@
-name: Code-Quality
+name: CI
 
-on: [pull_request, workflow_dispatch]
+# lint + unit tests (lowest/highest supported Python) + a full baler round trip
+# (train -> compress -> decompress -> plot) on the bundled CMS example with its
+# config unchanged (25 epochs). The round trip is checked by
+# tests/roundtrip/check_roundtrip.py against tests/roundtrip/thresholds.json.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      roundtrip_runs:
+        description: >-
+          JSON list of run labels; one independent round-trip job per entry,
+          e.g. [1,2,3,4,5] to collect data for threshold calibration.
+        default: "[1]"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  # Highest Python supported by requires-python in pyproject.toml.
+  PYTHON_HIGHEST: "3.15"
 
 jobs:
   lint:
     runs-on: ubuntu-latest
-
     steps:
-      - name: "checkout repository"
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v7
 
-      - name: "set up python"
-        uses: actions/setup-python@v2
+      - uses: astral-sh/setup-uv@v10.3.3  # setup-uv publishes no floating major tag
         with:
-          python-version: "3.10"
+          python-version: ${{ env.PYTHON_HIGHEST }}
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
 
-      - name: "install poetry"
-        run: |
-          curl -sSL https://install.python-poetry.org | python3 - --version 1.3.2
+      - name: install dependencies (fails if uv.lock is stale)
+        run: uv sync --locked
 
-      - name: "cache dependencies"
-        uses: actions/cache@v2
-        with:
-          path: ~/.cache/pypoetry/virtualenvs
-          key: ${{ runner.os }}-poetry-${{ hashFiles('**/pyproject.toml') }}
-          restore-keys: ${{ runner.os }}-poetry-
+      - name: black
+        run: uv run --locked black --check baler tests
 
-      - name: "install dependencies"
-        run: poetry install
-
-      - name: "run syntax check"
-        run: |
-          ./bin/syntax.sh
-
-  test:
+  unit:
     runs-on: ubuntu-latest
-
+    strategy:
+      fail-fast: false
+      matrix:
+        # Lowest and highest Python supported by requires-python.
+        python-version: ["3.10", "3.15"]
     steps:
-      - name: "checkout repository"
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v7
 
-      - name: "set up python"
-        uses: actions/setup-python@v2
+      - uses: astral-sh/setup-uv@v10.3.3
         with:
-          python-version: "3.10"
+          python-version: ${{ matrix.python-version }}
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
 
-      - name: "install poetry"
-        run: |
-          curl -sSL https://install.python-poetry.org | python3 - --version 1.3.2
+      - name: install dependencies (fails if uv.lock is stale)
+        run: uv sync --locked
 
-      - name: "cache dependencies"
-        uses: actions/cache@v2
+      - name: pytest
+        run: uv run --locked pytest
+
+  roundtrip:
+    needs: unit
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        run: ${{ fromJSON(github.event.inputs.roundtrip_runs || '[1]') }}
+    name: roundtrip (run ${{ matrix.run }})
+    steps:
+      # The bundled example data (workspaces/CMS_workspace/data/example_CMS_data.npz,
+      # ~99.8 MB) is a plain git blob, so a normal checkout fetches it; no LFS.
+      - uses: actions/checkout@v7
+
+      - uses: astral-sh/setup-uv@v10.3.3
         with:
-          path: ~/.cache/pypoetry/virtualenvs
-          key: ${{ runner.os }}-poetry-${{ hashFiles('**/pyproject.toml') }}
-          restore-keys: ${{ runner.os }}-poetry-
+          python-version: ${{ env.PYTHON_HIGHEST }}
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
 
-      - name: "install dependencies"
-        run: poetry install
+      - name: install dependencies (fails if uv.lock is stale)
+        run: uv sync --locked
 
-      - name: "set python path"
-        run: echo "PYTHONPATH=.:baler" >> $GITHUB_ENV
-
-      - name: "run tests"
+      - name: round trip (train, compress, decompress, plot, check)
         run: |
-          ./bin/tests.sh
+          ROUNDTRIP_OUT=roundtrip_results \
+          ROUNDTRIP_SUMMARY_MD="$GITHUB_STEP_SUMMARY" \
+            uv run --locked tests/roundtrip/run_roundtrip.sh
+
+      - name: upload results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: roundtrip-results-run${{ matrix.run }}
+          path: |
+            roundtrip_results/
+            workspaces/CMS_workspace/CMS_project_v1/output/plotting/comparison.pdf
+            workspaces/CMS_workspace/CMS_project_v1/output/plotting/Loss_plot.pdf
+          if-no-files-found: warn

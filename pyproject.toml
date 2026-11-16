@@ -1,30 +1,69 @@
-[tool.poetry]
+[project]
 name = "baler"
 version = "1.4.0"
 description = "Baler aims to be a tool which will use lossy machine learning based compression methods to compress multi-dimensional data and evaluate the accuracy of the compressed data. The compression “algorithm” is derived by training an auto-encoder to compress and decompress multidimensional data."
-authors = ["Your Name <you@example.com>"]
 readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE"]
+authors = [{ name = "Baler collaboration" }]
+# Python range from torch wheel availability on Linux, macOS and Windows:
+# torch 2.14 covers 3.10-3.14 and torch 2.15 covers 3.11-3.15 (it dropped
+# 3.10). The lock resolves torch 2.14.x on Python 3.10.
+requires-python = ">=3.10,<3.16"
+dependencies = [
+    # torch >= 2.6: torch.load defaults to weights_only=True from 2.6 on.
+    "torch>=2.6",
+    "numpy>=2.0",
+    "matplotlib>=3.10.9",
+    "scikit-learn>=1.7.2",
+    "tqdm>=4.70.1",
+]
 
-[tool.poetry.scripts]
+[project.optional-dependencies]
+# FPGA conversion (`baler --mode convert_with_hls4ml`). Supported on Python
+# 3.10-3.13 only: tensorflow (needed by hls4ml 0.7's qkeras dependency; baler
+# itself does not use it) has no wheels for Python 3.14+. Baler's hls4ml
+# integration has not been worked on since mid-2023; it was last checked in
+# November 2026 (model conversion and HLS project writing, without Vivado).
+hls4ml = [
+    "hls4ml>=0.7.1,<0.8; python_version < '3.14'",
+    "tensorflow>=2.12.0,<3; python_version < '3.14'",
+]
+
+[project.scripts]
 baler = "baler.baler:main"
 
-[tool.poetry.dependencies]
-python = ">=3.8, <3.11.10"
-torch = ">=2.0.0, !=2.0.1"
-tqdm = "^4.64.1"
-matplotlib = "^3.6.2"
-scikit-learn = "^1.2.0"
-hls4ml = { version = "^0.7.1", optional = true }
-tensorflow = { version = "^2.12.0", optional = true }
-numpy = "1.23.5"
+[project.urls]
+Repository = "https://github.com/baler-collaboration/baler"
 
-[tool.poetry.group.dev.dependencies]
-pytest = "^7.2.1"
-black = "^23.1.0"
-
-[tool.poetry.extras]
-hls4ml = [ "hls4ml", "tensorflow" ]
+[dependency-groups]
+dev = [
+    "pytest>=9.2",
+    "black>=26.10",
+]
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+# Ship only the baler package (baler/ and baler/modules/). In particular the
+# bundled example data under workspaces/ (one file is ~100 MB) must not end up
+# in the wheel.
+packages = ["baler"]
+
+[tool.hatch.build.targets.sdist]
+only-include = ["baler", "tests", "README.md", "LICENSE", "NOTICE", "CITATION.cff"]
+
+# PyTorch: on Linux, take torch from the CPU-only PyTorch index so CI and the
+# CPU Docker images don't download the multi-GB CUDA wheels that PyPI ships for
+# Linux. macOS and Windows use PyPI (those wheels are CPU/MPS only anyway).
+# GPU users: see Dockerfile.gpu and docs/setup/python_setup_windows_native_gpu.md
+# for how to swap in a CUDA build of the locked torch version.
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = [{ index = "pytorch-cpu", marker = "sys_platform == 'linux'" }]

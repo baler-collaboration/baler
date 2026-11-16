@@ -13,6 +13,8 @@
 # limitations under the License.
 
 import os
+
+import numpy as np
 import shutil
 
 from baler.modules import helper
@@ -49,3 +51,20 @@ def test_create_new_project():
 
     # Clean up after the test
     shutil.rmtree(base_path)
+
+
+def test_convert_to_original_types_rounds_integer_columns():
+    data = np.array(
+        [
+            [2.999, 0.4, 1.25],
+            [3.001, 0.6, -1.75],
+            [-0.6, 1.5, 0.5],
+        ]
+    )
+    out = helper.convert_to_original_types(data.copy(), ["int", "int", "float64"])
+    # Integer columns are rounded, not truncated (astype(int) would give 2, 3, 0
+    # and 0, 0, 1)
+    np.testing.assert_array_equal(out[:, 0], [3, 3, -1])
+    np.testing.assert_array_equal(out[:, 1], [0, 1, 2])
+    # Float columns are unchanged
+    np.testing.assert_array_equal(out[:, 2], data[:, 2])

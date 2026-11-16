@@ -1,0 +1,13 @@
+# Keep the Docker build context small. The images only need pyproject.toml,
+# uv.lock, baler/, README.md, LICENSE, NOTICE, fixuid.sh and entrypoint.sh.
+# Workspaces (example data, outputs) are mounted at run time, not baked in.
+.git
+.venv
+**/__pycache__
+**/*.py[cod]
+workspaces
+roundtrip_results
+dist
+build
+docs
+.pytest_cache

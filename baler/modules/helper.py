@@ -319,6 +319,30 @@ def process(
     return (train_set, test_set, normalization_features, original_shape)
 
 
+def convert_to_original_types(data, type_list):
+    """Convert each column of decompressed data back to its original type.
+
+    Integer columns are rounded to the nearest integer first. A plain
+    `astype(int)` truncates toward zero, so a reconstructed 2.999 would become 2,
+    which biases integer variables low.
+
+    Args:
+        data (ndarray): Decompressed data, shape (n_rows, n_columns).
+        type_list (list of str): One numpy type name per column, e.g. "int" or
+            "float64".
+
+    Returns:
+        ndarray: Same shape as `data`, columns converted in place to the given
+            types (the array keeps the dtype of `data`).
+    """
+    columns = np.transpose(data)
+    for index, type_name in enumerate(type_list):
+        if np.issubdtype(np.dtype(type_name), np.integer):
+            columns[index] = np.rint(columns[index])
+        columns[index] = columns[index].astype(type_name)
+    return np.transpose(columns)
+
+
 def renormalize(data, true_min_list, feature_range_list):
     """Calls `data_processing.renormalize_func()`.
 
@@ -667,7 +691,9 @@ def decompress(
     model_name = config.model_name
     latent_space_size = len(data[0])
     bs = config.batch_size
-    model_dict = torch.load(str(model_path), map_location=get_device())
+    model_dict = torch.load(
+        str(model_path), map_location=get_device(), weights_only=True
+    )
     if config.data_dimension == 2 and config.model_type == "dense":
         number_of_columns = int((len(model_dict[list(model_dict.keys())[-1]])))
     else:
@@ -749,9 +775,14 @@ def perform_hls4ml_conversion(output_path, config):
     The output hls4ml project will be located in OutputDir defined in the config file.
     The model path is determined by the `output_path`. The 'output_path' should point to the output directory inside the project directory.
 
+    Note: this integration has not been worked on since mid-2023. It was last
+    checked in November 2026 (model conversion and HLS project writing with
+    hls4ml 0.7.1, without Vivado) and is supported on Python 3.10-3.13 only.
+
     Before running this function:
     1. Install Vivado 2020.1 and add in to path.
-    2. Install hls4ml and tensorflow to the projects virtual environment.
+    2. Install the optional hls4ml dependencies (Python 3.10-3.13):
+       `uv sync --extra hls4ml`.
     3. Add the following configuration options to the projects config:
 
         c.default_reuse_factor
@@ -806,7 +837,14 @@ def perform_hls4ml_conversion(output_path, config):
 
     """
 
-    import hls4ml
+    try:
+        import hls4ml
+    except ImportError as e:
+        raise ImportError(
+            "convert_with_hls4ml needs the optional hls4ml dependencies, which are "
+            "only available on Python 3.10-3.13. Install them with "
+            "`uv sync --extra hls4ml` on a supported Python version."
+        ) from e
 
     model_path = os.path.join(output_path, "compressed_output", "model.pt")
 

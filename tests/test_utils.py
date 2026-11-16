@@ -1,3 +1,4 @@
+import pytest
 import torch
 from torch.utils.data import DataLoader, TensorDataset
 
@@ -81,28 +82,65 @@ def test_accuracy():
 
 
 def test_lr_scheduler():
-    # Create a dummy model and optimizer
+    """LR is reduced by `factor` only after more than `patience` consecutive
+    non-improving steps, and never below `min_lr`."""
     model = torch.nn.Linear(10, 1)
     optimizer = torch.optim.SGD(model.parameters(), lr=0.1)
+    patience, factor, min_lr = 2, 0.5, 1e-5
+    lr_scheduler = LRScheduler(
+        optimizer, patience=patience, min_lr=min_lr, factor=factor
+    )
 
-    # Create a learning rate scheduler
-    lr_scheduler = LRScheduler(optimizer, patience=2, min_lr=1e-5, factor=0.5)
+    def lr():
+        return optimizer.param_groups[0]["lr"]
 
-    # Test that the learning rate is not reduced when the loss is improving
-    train_losses = [10.0, 9.0, 8.0, 7.0]
-    for train_loss in train_losses:
+    # Improving loss: no reduction
+    for train_loss in [10.0, 9.0, 8.0, 7.0]:
         lr_scheduler(train_loss)
-        assert optimizer.param_groups[0]["lr"] == 0.1
+        assert lr() == pytest.approx(0.1)
 
-    # Test that the learning rate is reduced when the loss is not improving
-    train_losses = [10.0, 9.0, 10.0, 11.0, 12.0]
-    for i, train_loss in enumerate(train_losses):
+    # `patience` non-improving steps are tolerated...
+    for train_loss in [8.0] * patience:
         lr_scheduler(train_loss)
-        if i >= 2:
-            assert optimizer.param_groups[0]["lr"] == 0.05
+        assert lr() == pytest.approx(0.1)
 
-    # Test that the learning rate does not go below the minimum value
-    train_losses = [10.0] * 100
-    for train_loss in train_losses:
+    # ...the next one reduces the LR by exactly `factor`
+    lr_scheduler(8.0)
+    assert lr() == pytest.approx(0.1 * factor)
+
+    # The counter restarts after a reduction: another `patience` bad steps
+    # keep the LR, the one after reduces it again
+    for train_loss in [8.0] * patience:
         lr_scheduler(train_loss)
-    assert optimizer.param_groups[0]["lr"] == 1e-5
+        assert lr() == pytest.approx(0.1 * factor)
+    lr_scheduler(8.0)
+    assert lr() == pytest.approx(0.1 * factor**2)
+
+    # The LR never goes below `min_lr`
+    for train_loss in [10.0] * 100:
+        lr_scheduler(train_loss)
+    assert lr() == pytest.approx(min_lr)
+
+
+def test_lr_scheduler_reports_reduction(capsys):
+    optimizer = torch.optim.SGD(torch.nn.Linear(2, 1).parameters(), lr=0.1)
+    lr_scheduler = LRScheduler(optimizer, patience=0, min_lr=1e-5, factor=0.5)
+    lr_scheduler(1.0)
+    assert capsys.readouterr().out == ""
+    lr_scheduler(2.0)
+    assert "reducing learning rate" in capsys.readouterr().out
+
+
+def test_lr_scheduler_reports_every_param_group(capsys):
+    # Group 0 already sits at min_lr, so only group 1 is reduced; the
+    # reduction must still be reported.
+    w0, w1 = torch.nn.Parameter(torch.zeros(1)), torch.nn.Parameter(torch.zeros(1))
+    optimizer = torch.optim.SGD(
+        [{"params": [w0], "lr": 1e-5}, {"params": [w1], "lr": 0.1}]
+    )
+    lr_scheduler = LRScheduler(optimizer, patience=0, min_lr=1e-5, factor=0.5)
+    lr_scheduler(1.0)
+    lr_scheduler(2.0)
+    assert [g["lr"] for g in optimizer.param_groups] == pytest.approx([1e-5, 0.05])
+    out = capsys.readouterr().out
+    assert "group 1" in out and "group 0" not in out

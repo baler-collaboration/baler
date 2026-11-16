@@ -21,65 +21,46 @@
 # SOFTWARE.
 
 ## -----------------------------------------------------------------------------
-## Base image with VENV
+## Builder: resolve the locked environment with uv
 
-# The following code was based on
+# The multi-stage layout was originally based on
 # https://github.com/michaeloliverx/python-poetry-docker-example/blob/master/docker/Dockerfile
+# and has since been ported from poetry to uv.
 
-FROM python:3.8-slim as python-base
+FROM python:3.10-slim AS builder
 
-# Configure environment
+COPY --from=ghcr.io/astral-sh/uv:0.13.5 /uv /uvx /bin/
 
-ENV PYTHONUNBUFFERED=1 \
-    PYTHONFAULTHANDLER=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    PIP_NO_CACHE_DIR=off \
-    PIP_DISABLE_PIP_VERSION_CHECK=on \
-    PIP_DEFAULT_TIMEOUT=100 \
-    POETRY_HOME="/opt/poetry" \
-    POETRY_VIRTUALENVS_IN_PROJECT=true \
-    POETRY_NO_INTERACTION=1 \
-    PYSETUP_PATH="/baler-root/baler" \
-    VENV_PATH="/baler-root/baler/.venv"
+ENV UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy \
+    UV_PYTHON_DOWNLOADS=never \
+    UV_PROJECT_ENVIRONMENT=/opt/venv
 
-ENV PATH="$POETRY_HOME/bin:$VENV_PATH/bin:$PATH"
+WORKDIR /baler-root
 
-# System deps:
-RUN pip install "poetry"
+# Install dependencies first (cached layer), then the project itself.
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-dev --no-install-project
 
-# Copy only requirements to cache them in docker layer
-WORKDIR $PYSETUP_PATH
-COPY ./poetry.lock ./pyproject.toml ./
-
-# Project initialization:
-RUN poetry remove torch && \
-    poetry install --no-interaction --no-ansi
-
-# Creating folders, and files for the project:
-COPY ./baler/ README.md ./tests/ ./
-
-# Creating python wheel
-RUN poetry build
+COPY baler/ ./baler/
+COPY README.md LICENSE NOTICE ./
+# Editable install: the venv imports baler from /baler-root/baler, so the
+# source files can be shadowed with bind mounts for live development
+# (see docs/setup/docker_setup.md, "Developing using Docker image").
+RUN uv sync --frozen --no-dev
 
 ## -----------------------------------------------------------------------------
 ## Baler layer
 
-FROM python:3.8-slim
+FROM python:3.10-slim
 
-# Copy virtual environment
-WORKDIR /baler-root/baler
-COPY --from=python-base /baler-root/baler/dist/*.whl ./
-
-# Install wheel
-RUN pip install *.whl && \
-    pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
-
-# Copy source
-COPY --from=python-base /baler-root/baler/modules/ ./modules
-COPY --from=python-base /baler-root/baler/*.py /baler-root/baler/README.md ./
+# Copy the virtual environment and the baler source it imports (editable install)
+COPY --from=builder /opt/venv /opt/venv
+COPY --from=builder /baler-root/baler /baler-root/baler
 
 # Configure run time
-ENV PYTHONUNBUFFERED=1
+ENV PYTHONUNBUFFERED=1 \
+    PATH="/opt/venv/bin:$PATH"
 WORKDIR /baler-root/
 
 # Install fixuid

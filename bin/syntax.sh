@@ -19,7 +19,7 @@ function is_ci() {
 # Function to run Black code formatter
 function run_black() {
   echo "Running Black on the codebase..."
-  if poetry run black ${BLACK_OPTIONS} ${CODEBASE}; then
+  if uv run black ${BLACK_OPTIONS} ${CODEBASE}; then
     echo "Black completed successfully."
   else
     if is_ci; then
@@ -32,7 +32,7 @@ function run_black() {
 
       if [[ "$apply_fix" =~ ^([yY][eE][sS]|[yY])$ ]] || [[ -z "$apply_fix" ]]; then
         echo "Applying Black to the codebase..."
-        poetry run black ${BLACK_APPLY_OPTIONS} ${CODEBASE}
+        uv run black ${BLACK_APPLY_OPTIONS} ${CODEBASE}
         echo "Black successfully applied to the codebase."
       else
         echo "Skipping Black auto-fix. Please fix the issues manually before committing."
