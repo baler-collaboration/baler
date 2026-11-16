@@ -99,14 +99,24 @@ def markdown_summary(metrics):
             "",
             "<details><summary>Per-variable rms/std</summary>",
             "",
-            "| variable | rms/std | limit |",
-            "|---|---|---|",
         ]
+        ref = metrics.get("reference")
+        if ref:
+            lines += [
+                f"Reference (not gated): {ref['epochs']}-epoch run, median rms/std "
+                f"{ref['median_rms_over_std']:.4f}, final loss {ref['final_train_loss']:.5g}",
+                "",
+                f"| variable | rms/std | limit | {ref['epochs']}-epoch ref |",
+                "|---|---|---|---|",
+            ]
+        else:
+            lines += ["| variable | rms/std | limit |", "|---|---|---|"]
+        fmt = lambda x: "n/a" if x is None else f"{x:.4f}"
         for name, pv in metrics["per_variable"].items():
-            r = pv["rms_over_std"]
-            lines.append(
-                f"| {name.split('.')[-1]} | {'n/a' if r is None else f'{r:.4f}'} | {pv['limit']:.4g} |"
-            )
+            row = f"| {name.split('.')[-1]} | {fmt(pv['rms_over_std'])} | {pv['limit']:.4g} |"
+            if ref:
+                row += f" {fmt(pv.get('reference'))} |"
+            lines.append(row)
         lines += ["", "</details>"]
     return "\n".join(lines) + "\n\n"
 
@@ -145,6 +155,7 @@ def main(argv=None):
     max_ratio_default = float(thresholds["max_rms_over_std"])
     max_ratio_per_var = thresholds.get("per_variable_max_rms_over_std", {})
     max_final_loss = float(thresholds["max_final_train_loss"])
+    reference = thresholds.get("_reference")  # informational only, never gated on
 
     config, config_path = load_config(args.workspace, args.project)
     out = os.path.join("workspaces", args.workspace, args.project, "output")
@@ -164,6 +175,14 @@ def main(argv=None):
         "config": config_path,
         "thresholds_file": os.path.relpath(args.thresholds),
         "thresholds_status": thresholds.get("_status"),
+        "reference": (
+            {
+                k: reference[k]
+                for k in ("epochs", "median_rms_over_std", "final_train_loss")
+            }
+            if reference
+            else None
+        ),
         "versions": {
             "python": sys.version.split()[0],
             "numpy": np.__version__,
@@ -281,6 +300,8 @@ def main(argv=None):
                 "rms_over_std": ratio,
                 "limit": limit,
             }
+            if reference:
+                per_var[name]["reference"] = reference["rms_over_std"].get(name)
             if ratio is None or not math.isfinite(ratio) or ratio > limit:
                 bad.append(f"{name}={ratio}")
         ratios = [
