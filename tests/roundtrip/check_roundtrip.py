@@ -169,6 +169,7 @@ def main(argv=None):
         "compressed": os.path.join(out, "compressed_output", "compressed.npz"),
         "decompressed": os.path.join(out, "decompressed_output", "decompressed.npz"),
         "loss": os.path.join(out, "training", "loss_data.npy"),
+        "original": config.input_path,
         "comparison_pdf": os.path.join(out, "plotting", "comparison.pdf"),
         "loss_pdf": os.path.join(out, "plotting", "Loss_plot.pdf"),
     }
@@ -216,125 +217,169 @@ def main(argv=None):
         return 0 if c.all_passed else 1
 
     if args.timings:
-        with open(args.timings) as f:
-            metrics["timings_s"] = json.load(f)
+        try:
+            with open(args.timings) as f:
+                metrics["timings_s"] = json.load(f)
+        except (OSError, ValueError) as e:  # informational only
+            metrics["timings_s"] = None
+            print(f"[INFO] could not read {args.timings}: {e}")
 
-    # 1. Output files exist
-    for key in ("model", "compressed", "decompressed"):
-        c.check(f"exists: {paths[key]}", os.path.isfile(paths[key]))
-    if not c.all_passed:
-        return finish()
+    def load_npz(key, keys):
+        """Load an .npz output and the arrays it must contain. A missing key or
+        an unreadable file is recorded as a failed check (returns None) rather
+        than raised, so the metrics JSON and summary are still written."""
+        path = paths[key]
+        try:
+            with np.load(path, allow_pickle=True) as f:
+                arrays = {k: f[k] for k in keys}
+        except Exception as e:
+            c.check(f"readable: {path}", False, f"{type(e).__name__}: {e}")
+            return None
+        c.check(f"readable: {path}", True, "keys " + ", ".join(keys))
+        return arrays
 
-    original = np.load(config.input_path, allow_pickle=True)
-    orig_data, orig_names = original["data"], original["names"]
-    n_rows, n_cols = orig_data.shape
+    def run_checks():
+        # 1. Output files exist
+        for key in ("model", "compressed", "decompressed"):
+            c.check(f"exists: {paths[key]}", os.path.isfile(paths[key]))
+        if not c.all_passed:
+            return
 
-    # 2. Latent shape, derived from the config the same way baler.py does
-    expected_latent = math.ceil(n_cols / config.compression_ratio)
-    compressed = np.load(paths["compressed"], allow_pickle=True)
-    comp_shape = tuple(compressed["data"].shape)
-    metrics["compressed_shape"] = list(comp_shape)
-    metrics["expected_latent_size"] = expected_latent
-    c.check(
-        "compressed shape",
-        comp_shape == (n_rows, expected_latent),
-        f"got {comp_shape}, expected {(n_rows, expected_latent)} "
-        f"= (rows, ceil({n_cols}/{config.compression_ratio}))",
-    )
+        original = load_npz("original", ("data", "names"))
+        if original is None:
+            return
+        orig_data, orig_names = original["data"], original["names"]
+        n_rows, n_cols = orig_data.shape
 
-    # 3. Decompressed data matches the original layout and is finite
-    decompressed = np.load(paths["decompressed"], allow_pickle=True)
-    dec_data, dec_names = decompressed["data"], decompressed["names"]
-    metrics["original_shape"] = list(orig_data.shape)
-    metrics["decompressed_shape"] = list(dec_data.shape)
-    shape_ok = c.check(
-        "decompressed shape == original shape",
-        dec_data.shape == orig_data.shape,
-        f"got {dec_data.shape}, expected {orig_data.shape}",
-    )
-    c.check(
-        "decompressed names == original names",
-        dec_names.shape == orig_names.shape and bool(np.all(dec_names == orig_names)),
-    )
-    dec_float = dec_data.astype(np.float64)
-    n_nonfinite = int(np.size(dec_float) - np.count_nonzero(np.isfinite(dec_float)))
-    c.check("decompressed values finite", n_nonfinite == 0, f"{n_nonfinite} non-finite")
-
-    # 4. Training loss
-    if c.check(f"exists: {paths['loss']}", os.path.isfile(paths["loss"])):
-        loss = np.load(paths["loss"])
-        metrics["loss_data_shape"] = list(loss.shape)
-        layout_ok = c.check(
-            "loss_data layout is (2, n_epochs)",
-            loss.ndim == 2 and loss.shape[0] == 2 and loss.shape[1] >= 1,
-            f"shape {loss.shape}",
-        )
-        if layout_ok:
-            final_train = float(loss[0, -1])
-            metrics["epochs_run"] = int(loss.shape[1])
-            metrics["epochs_configured"] = int(config.epochs)
-            metrics["final_train_loss"] = final_train
-            metrics["final_val_loss"] = float(loss[1, -1])
-            metrics["train_loss_per_epoch"] = [float(x) for x in loss[0]]
+        # 2. Latent shape, derived from the config the same way baler.py does
+        expected_latent = math.ceil(n_cols / config.compression_ratio)
+        metrics["expected_latent_size"] = expected_latent
+        compressed = load_npz("compressed", ("data", "names", "normalization_features"))
+        if compressed is not None:
+            comp_shape = tuple(compressed["data"].shape)
+            metrics["compressed_shape"] = list(comp_shape)
             c.check(
-                "final train loss finite",
-                math.isfinite(final_train),
-                f"{final_train:.6g}",
+                "compressed shape",
+                comp_shape == (n_rows, expected_latent),
+                f"got {comp_shape}, expected {(n_rows, expected_latent)} "
+                f"= (rows, ceil({n_cols}/{config.compression_ratio}))",
+            )
+
+        # 3. Decompressed data matches the original layout and is finite
+        metrics["original_shape"] = list(orig_data.shape)
+        decompressed = load_npz("decompressed", ("data", "names"))
+        shape_ok = False
+        if decompressed is not None:
+            dec_data, dec_names = decompressed["data"], decompressed["names"]
+            metrics["decompressed_shape"] = list(dec_data.shape)
+            shape_ok = c.check(
+                "decompressed shape == original shape",
+                dec_data.shape == orig_data.shape,
+                f"got {dec_data.shape}, expected {orig_data.shape}",
             )
             c.check(
-                "final train loss below threshold",
-                final_train < max_final_loss,
-                f"{final_train:.6g} < {max_final_loss}",
+                "decompressed names == original names",
+                dec_names.shape == orig_names.shape
+                and bool(np.all(dec_names == orig_names)),
+            )
+            dec_float = dec_data.astype(np.float64)
+            n_nonfinite = int(
+                np.size(dec_float) - np.count_nonzero(np.isfinite(dec_float))
+            )
+            c.check(
+                "decompressed values finite",
+                n_nonfinite == 0,
+                f"{n_nonfinite} non-finite",
+            )
+
+        # 4. Training loss
+        if c.check(f"exists: {paths['loss']}", os.path.isfile(paths["loss"])):
+            try:
+                loss = np.load(paths["loss"])
+            except Exception as e:
+                loss = None
+                c.check(f"readable: {paths['loss']}", False, f"{type(e).__name__}: {e}")
+            layout_ok = loss is not None and c.check(
+                "loss_data layout is (2, n_epochs)",
+                loss.ndim == 2 and loss.shape[0] == 2 and loss.shape[1] >= 1,
+                f"shape {loss.shape}",
+            )
+            if loss is not None:
+                metrics["loss_data_shape"] = list(loss.shape)
+            if layout_ok:
+                final_train = float(loss[0, -1])
+                metrics["epochs_run"] = int(loss.shape[1])
+                metrics["epochs_configured"] = int(config.epochs)
+                metrics["final_train_loss"] = final_train
+                metrics["final_val_loss"] = float(loss[1, -1])
+                metrics["train_loss_per_epoch"] = [float(x) for x in loss[0]]
+                c.check(
+                    "final train loss finite",
+                    math.isfinite(final_train),
+                    f"{final_train:.6g}",
+                )
+                c.check(
+                    "final train loss below threshold",
+                    final_train < max_final_loss,
+                    f"{final_train:.6g} < {max_final_loss}",
+                    kind="threshold",
+                )
+
+        # 5. Per-variable reconstruction quality: rms(residual) / std(original)
+        if shape_ok:
+            orig_f = orig_data.astype(np.float64)
+            residual = dec_float - orig_f
+            rms = np.sqrt(np.mean(residual**2, axis=0))
+            std = np.std(orig_f, axis=0)
+            per_var = {}
+            bad = []
+            for name, r, s in zip(orig_names, rms, std):
+                name = str(name)
+                ratio = float(r / s) if s > 0 else None
+                limit = float(max_ratio_per_var.get(name, max_ratio_default))
+                per_var[name] = {
+                    "rms_residual": float(r),
+                    "std_original": float(s),
+                    "rms_over_std": ratio,
+                    "limit": limit,
+                }
+                if reference:
+                    per_var[name]["reference"] = reference["rms_over_std"].get(name)
+                if ratio is None or not math.isfinite(ratio) or ratio > limit:
+                    bad.append(f"{name}={ratio}")
+            ratios = [
+                v["rms_over_std"]
+                for v in per_var.values()
+                if v["rms_over_std"] is not None
+            ]
+            metrics["per_variable"] = per_var
+            metrics["rms_over_std_summary"] = {
+                "median": float(np.median(ratios)) if ratios else None,
+                "max": float(np.max(ratios)) if ratios else None,
+                "argmax": max(per_var, key=lambda k: per_var[k]["rms_over_std"] or -1),
+            }
+            c.check(
+                "per-variable rms/std within thresholds",
+                not bad,
+                "all within limits" if not bad else "exceeded: " + ", ".join(bad),
                 kind="threshold",
             )
 
-    # 5. Per-variable reconstruction quality: rms(residual) / std(original)
-    if shape_ok:
-        orig_f = orig_data.astype(np.float64)
-        residual = dec_float - orig_f
-        rms = np.sqrt(np.mean(residual**2, axis=0))
-        std = np.std(orig_f, axis=0)
-        per_var = {}
-        bad = []
-        for name, r, s in zip(orig_names, rms, std):
-            name = str(name)
-            ratio = float(r / s) if s > 0 else None
-            limit = float(max_ratio_per_var.get(name, max_ratio_default))
-            per_var[name] = {
-                "rms_residual": float(r),
-                "std_original": float(s),
-                "rms_over_std": ratio,
-                "limit": limit,
-            }
-            if reference:
-                per_var[name]["reference"] = reference["rms_over_std"].get(name)
-            if ratio is None or not math.isfinite(ratio) or ratio > limit:
-                bad.append(f"{name}={ratio}")
-        ratios = [
-            v["rms_over_std"] for v in per_var.values() if v["rms_over_std"] is not None
-        ]
-        metrics["per_variable"] = per_var
-        metrics["rms_over_std_summary"] = {
-            "median": float(np.median(ratios)) if ratios else None,
-            "max": float(np.max(ratios)) if ratios else None,
-            "argmax": max(per_var, key=lambda k: per_var[k]["rms_over_std"] or -1),
-        }
-        c.check(
-            "per-variable rms/std within thresholds",
-            not bad,
-            "all within limits" if not bad else "exceeded: " + ", ".join(bad),
-            kind="threshold",
-        )
+        # 6. Plots
+        for key in ("comparison_pdf", "loss_pdf"):
+            path = paths[key]
+            size = os.path.getsize(path) if os.path.isfile(path) else 0
+            c.check(f"non-empty: {path}", size > 0, f"{size} bytes")
+        pages = count_pdf_pages(paths["comparison_pdf"])
+        metrics["comparison_pdf_pages"] = pages
+        print(f"[INFO] comparison.pdf page count (heuristic): {pages}")
 
-    # 6. Plots
-    for key in ("comparison_pdf", "loss_pdf"):
-        path = paths[key]
-        size = os.path.getsize(path) if os.path.isfile(path) else 0
-        c.check(f"non-empty: {path}", size > 0, f"{size} bytes")
-    pages = count_pdf_pages(paths["comparison_pdf"])
-    metrics["comparison_pdf_pages"] = pages
-    print(f"[INFO] comparison.pdf page count (heuristic): {pages}")
-
+    # Anything unforeseen (e.g. an artifact with an unexpected layout) becomes a
+    # failed structural check, so a broken run still leaves its diagnostics.
+    try:
+        run_checks()
+    except Exception as e:
+        c.check("checks ran to completion", False, f"{type(e).__name__}: {e}")
     return finish()
 
 

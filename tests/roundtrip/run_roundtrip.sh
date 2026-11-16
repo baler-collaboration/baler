@@ -28,21 +28,33 @@ echo "{" > "${timings}"
 
 total_start=$(date +%s)
 sep=""
+status=0
 for mode in train compress decompress plot; do
     echo "=== baler --mode ${mode} ==="
     start=$(date +%s)
+    # Capture the status instead of letting set -e exit here, so timings.json is
+    # still closed (valid JSON) when a mode fails.
     "${PYTHON}" -m baler --project "${WORKSPACE}" "${PROJECT}" --mode "${mode}" 2>&1 \
-        | tee "${OUT_DIR}/${mode}.log"
+        | tee "${OUT_DIR}/${mode}.log" || status=$?
     end=$(date +%s)
     echo "=== ${mode}: $((end - start)) s ==="
     printf '%s  "%s": %d' "${sep}" "${mode}" "$((end - start))" >> "${timings}"
     sep=$',\n'
+    if [[ ${status} -ne 0 ]]; then
+        printf ',\n  "failed_mode": "%s"' "${mode}" >> "${timings}"
+        break
+    fi
 done
 total_end=$(date +%s)
 printf ',\n  "total": %d\n}\n' "$((total_end - total_start))" >> "${timings}"
 
 echo "=== per-step wall time (s) ==="
 cat "${timings}"
+
+if [[ ${status} -ne 0 ]]; then
+    echo "error: baler --mode ${mode} failed (exit ${status}); see ${OUT_DIR}/${mode}.log" >&2
+    exit "${status}"
+fi
 
 summary_args=()
 if [[ -n "${ROUNDTRIP_SUMMARY_MD:-}" ]]; then
