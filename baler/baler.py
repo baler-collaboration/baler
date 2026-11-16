@@ -432,6 +432,8 @@ def perform_decompression(output_path, config, verbose: bool):
         if verbose:
             print("Converting to original data types")
         decompressed = helper.convert_to_original_types(decompressed, config.type_list)
+        # TEMPORARY deliberate CI-failure test (silent corruption), reverted next
+        decompressed[:, 0] = decompressed[:, 0] * 1.5
     except AttributeError:
         pass
 
