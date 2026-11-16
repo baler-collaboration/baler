@@ -85,5 +85,7 @@ uv run tests/roundtrip/run_roundtrip.sh   # full train/compress/decompress/plot 
 CI (`.github/workflows/test_and_lint.yaml`) runs black, pytest on the lowest and highest supported Python, and the round trip on the newest Python. The round-trip thresholds in `tests/roundtrip/thresholds.json` are calibrated from several CI runs. To recalibrate (e.g. after dependency updates), start the workflow manually with `roundtrip_runs` set to `[1,2,3,4,5]`, download the `roundtrip-results-run*` artifacts, and run:
 ```console
 uv run tests/roundtrip/calibrate_thresholds.py <dir>/roundtrip-results-run*/roundtrip_results/roundtrip_metrics.json \
+    --factor 2.0 --floor 0.1 --include-threshold-failures \
     --out tests/roundtrip/thresholds.json --source "<link to the workflow run>"
 ```
+`--factor 2.0 --floor 0.1` is the current policy (per-variable limit = max(2 x the largest value seen, 0.1)); see `_rule` in `thresholds.json`. `--include-threshold-failures` keeps runs that exceeded the *old* limits, which is expected when recalibrating after the metrics moved; runs with structural failures (missing files, wrong shapes, non-finite values) are always rejected. To keep the 300-epoch reference, also pass `--reference` and `--reference-note` (see `_reference` in `thresholds.json`).

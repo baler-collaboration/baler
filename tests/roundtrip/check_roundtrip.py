@@ -125,8 +125,13 @@ class Checker:
     def __init__(self):
         self.results = []
 
-    def check(self, name, ok, detail=""):
-        self.results.append({"check": name, "passed": bool(ok), "detail": detail})
+    def check(self, name, ok, detail="", kind="structural"):
+        """kind: "structural" (files, shapes, finiteness) or "threshold" (a
+        limit from thresholds.json). Calibration may use runs that fail only
+        threshold checks, never runs that fail structural ones."""
+        self.results.append(
+            {"check": name, "passed": bool(ok), "detail": detail, "kind": kind}
+        )
         print(
             f"[{'PASS' if ok else 'FAIL'}] {name}" + (f": {detail}" if detail else "")
         )
@@ -280,6 +285,7 @@ def main(argv=None):
                 "final train loss below threshold",
                 final_train < max_final_loss,
                 f"{final_train:.6g} < {max_final_loss}",
+                kind="threshold",
             )
 
     # 5. Per-variable reconstruction quality: rms(residual) / std(original)
@@ -317,6 +323,7 @@ def main(argv=None):
             "per-variable rms/std within thresholds",
             not bad,
             "all within limits" if not bad else "exceeded: " + ", ".join(bad),
+            kind="threshold",
         )
 
     # 6. Plots

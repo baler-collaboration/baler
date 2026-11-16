@@ -16,18 +16,40 @@ import argparse
 import json
 import sys
 
+# Checks that compare against a limit from thresholds.json. Metrics files
+# written before checks carried a "kind" field are classified by name.
+THRESHOLD_CHECKS = {
+    "final train loss below threshold",
+    "per-variable rms/std within thresholds",
+}
+
+
+def check_kind(result):
+    return result.get(
+        "kind", "threshold" if result["check"] in THRESHOLD_CHECKS else "structural"
+    )
+
 
 def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     p.add_argument("metrics", nargs="+", help="roundtrip_metrics.json files")
     p.add_argument("--out", required=True)
-    p.add_argument("--factor", type=float, default=1.5)
+    # Defaults are the committed CI policy (see "_rule" in thresholds.json).
+    p.add_argument("--factor", type=float, default=2.0)
     p.add_argument(
         "--floor",
         type=float,
-        default=0.0,
-        help="minimum per-variable rms/std limit (e.g. 0.1). Rare-count variables "
-        "(nearly all zeros, tiny std) make rms/std jump with a few miscounted rows.",
+        default=0.1,
+        help="minimum per-variable rms/std limit. Rare-count variables (nearly all "
+        "zeros, tiny std) make rms/std jump with a few miscounted rows.",
+    )
+    p.add_argument(
+        "--include-threshold-failures",
+        action="store_true",
+        help="also use runs that failed only threshold checks (e.g. when "
+        "recalibrating after a dependency update moved the metrics). Runs with "
+        "structural failures (missing files, wrong shapes, non-finite values) are "
+        "always rejected.",
     )
     p.add_argument("--source", default="", help="free text: where the runs came from")
     p.add_argument(
@@ -40,14 +62,26 @@ def main(argv=None):
     )
     args = p.parse_args(argv)
 
-    runs = []
+    runs, n_threshold_only = [], 0
     for path in args.metrics:
         with open(path) as f:
             m = json.load(f)
-        if not m.get("all_passed"):
+        failed = [r for r in m.get("checks", []) if not r["passed"]]
+        structural = [r for r in failed if check_kind(r) != "threshold"]
+        if structural or "per_variable" not in m or "final_train_loss" not in m:
             sys.exit(
-                f"{path}: run did not pass its checks; not using it for calibration"
+                f"{path}: structural check(s) failed, not usable for calibration: "
+                + ", ".join(r["check"] for r in structural)
             )
+        if failed:
+            if not args.include_threshold_failures:
+                sys.exit(
+                    f"{path}: run failed threshold check(s) "
+                    f"({', '.join(r['check'] for r in failed)}). Pass "
+                    "--include-threshold-failures to use it anyway (e.g. when "
+                    "recalibrating after the metrics moved)."
+                )
+            n_threshold_only += 1
         runs.append(m)
 
     names = list(runs[0]["per_variable"])
@@ -126,6 +160,8 @@ def main(argv=None):
         f.write("\n")
 
     print(f"{len(runs)} runs -> {args.out}")
+    if n_threshold_only:
+        print(f"{n_threshold_only} of them failed only threshold checks (included)")
     print(
         f"final train loss: {min(losses):.5g}..{max(losses):.5g} -> ceiling {loss_limit:.5g}"
     )
