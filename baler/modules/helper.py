@@ -319,6 +319,30 @@ def process(
     return (train_set, test_set, normalization_features, original_shape)
 
 
+def convert_to_original_types(data, type_list):
+    """Convert each column of decompressed data back to its original type.
+
+    Integer columns are rounded to the nearest integer first. A plain
+    `astype(int)` truncates toward zero, so a reconstructed 2.999 would become 2,
+    which biases integer variables low.
+
+    Args:
+        data (ndarray): Decompressed data, shape (n_rows, n_columns).
+        type_list (list of str): One numpy type name per column, e.g. "int" or
+            "float64".
+
+    Returns:
+        ndarray: Same shape as `data`, columns converted in place to the given
+            types (the array keeps the dtype of `data`).
+    """
+    columns = np.transpose(data)
+    for index, type_name in enumerate(type_list):
+        if np.issubdtype(np.dtype(type_name), np.integer):
+            columns[index] = np.rint(columns[index])
+        columns[index] = columns[index].astype(type_name)
+    return np.transpose(columns)
+
+
 def renormalize(data, true_min_list, feature_range_list):
     """Calls `data_processing.renormalize_func()`.
 
