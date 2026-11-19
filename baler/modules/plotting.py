@@ -152,9 +152,7 @@ def plot_1D(output_path: str, config):
                 before[index],
                 bins=np.linspace(x_min - 0.1 * x_diff, x_max + 0.1 * x_diff, 200),
             )
-            ax1.hist(
-                bins_before[:-1], bins_before, weights=counts_before, label="Before"
-            )
+            ax1.hist(bins_before[:-1], bins_before, weights=counts_before, label="Before")
 
             # After Histogram
             counts_after, bins_after = np.histogram(
@@ -182,10 +180,8 @@ def plot_1D(output_path: str, config):
             ax3.axhline(y=0, linewidth=0.2, color="black")
             ax3.set_xlabel(f"{column_name}", ha="right", x=1.0)
             ax3.set_ylim(
-                -max(counts_after - counts_before)
-                - 0.05 * max(counts_after - counts_before),
-                max(counts_after - counts_before)
-                + 0.05 * max(counts_after - counts_before),
+                -max(counts_after - counts_before) - 0.05 * max(counts_after - counts_before),
+                max(counts_after - counts_before) + 0.05 * max(counts_after - counts_before),
             )
             ax3.set_ylabel("Residual")
 
@@ -257,9 +253,7 @@ def plot_2D_old(project_path, config):
     """
 
     data = np.load(config.input_path)["data"]
-    data_decompressed = np.load(project_path + "/decompressed_output/decompressed.npz")[
-        "data"
-    ]
+    data_decompressed = np.load(project_path + "/decompressed_output/decompressed.npz")["data"]
 
     if data.shape[0] > 1:
         num_tiles = data.shape[0]
@@ -284,9 +278,7 @@ def plot_2D_old(project_path, config):
 
         diff = tile_data - tile_data_decompressed
 
-        fig, axs = plt.subplots(
-            1, 3, figsize=(29.7 * (1 / 2.54), 10 * (1 / 2.54)), sharey=True
-        )
+        fig, axs = plt.subplots(1, 3, figsize=(29.7 * (1 / 2.54), 10 * (1 / 2.54)), sharey=True)
         axs[0].set_title("Original", fontsize=11)
         im1 = axs[0].imshow(
             tile_data,
@@ -352,9 +344,7 @@ def plot_2D_old(project_path, config):
         cb2.set_label("x-velocity [m/s]")
         # fig.colorbar(im3, cax=cbar_ax)
 
-        fig.savefig(
-            project_path + "/plotting/CFD" + str(ind) + ".png", bbox_inches="tight"
-        )
+        fig.savefig(project_path + "/plotting/CFD" + str(ind) + ".png", bbox_inches="tight")
         # sys.exit()
 
     # import imageio.v2 as imageio
@@ -381,14 +371,10 @@ def plot_2D(project_path, config):
     """
 
     data = np.load(config.input_path)["data"]
-    data_decompressed = np.load(project_path + "/decompressed_output/decompressed.npz")[
-        "data"
-    ]
+    data_decompressed = np.load(project_path + "/decompressed_output/decompressed.npz")["data"]
 
     if config.convert_to_blocks:
-        data_decompressed = data_decompressed.reshape(
-            data.shape[0], data.shape[1], data.shape[2]
-        )
+        data_decompressed = data_decompressed.reshape(data.shape[0], data.shape[1], data.shape[2])
 
     if data.shape[0] > 1:
         num_tiles = data.shape[0]
@@ -414,12 +400,22 @@ def plot_2D(project_path, config):
 
         diff = tile_data - tile_data_decompressed
 
-        max_value = np.amax([np.amax(tile_data), np.amax(tile_data_decompressed)])
-        min_value = np.amin([np.amin(tile_data), np.amin(tile_data_decompressed)])
+        try:
+            if config.plot_negative:
+                max_value = np.amax(
+                    [np.amax(tile_data), np.amax(tile_data_decompressed), np.amax(diff)]
+                )
+                min_value = np.amin(
+                    [np.amin(tile_data), np.amin(tile_data_decompressed), np.amin(diff)]
+                )
+            else:
+                max_value = np.amax([np.amax(tile_data), np.amax(tile_data_decompressed)])
+                min_value = np.amin([np.amin(tile_data), np.amin(tile_data_decompressed)])
+        except AttributeError as _:
+            max_value = np.amax([np.amax(tile_data), np.amax(tile_data_decompressed)])
+            min_value = np.amin([np.amin(tile_data), np.amin(tile_data_decompressed)])
 
-        fig, axs = plt.subplots(
-            1, 3, figsize=(29.7 * (1 / 2.54), 10 * (1 / 2.54)), sharey=True
-        )
+        fig, axs = plt.subplots(1, 3, figsize=(29.7 * (1 / 2.54), 10 * (1 / 2.54)), sharey=True)
         axs[0].set_title("Original", fontsize=11)
         im1 = axs[0].imshow(tile_data, vmax=max_value, vmin=min_value)
         axs[1].set_title("Reconstructed", fontsize=11)
@@ -431,9 +427,7 @@ def plot_2D(project_path, config):
         cbar_ax = fig.add_axes([0.815, 0.2, 0.02, 0.59])
         cb2 = fig.colorbar(im3, cax=cbar_ax, location="right", aspect=10)
 
-        fig.savefig(
-            project_path + "/plotting/CFD" + str(ind) + ".png", bbox_inches="tight"
-        )
+        fig.savefig(project_path + "/plotting/CFD" + str(ind) + ".png", bbox_inches="tight")
         # sys.exit()
 
 
